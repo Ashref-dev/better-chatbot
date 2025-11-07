@@ -102,6 +102,7 @@ export const chatApiSchemaRequestBodySchema = z.object({
       model: z.string(),
     })
     .optional(),
+  customOpenRouterModelId: z.string().optional(),
   toolChoice: z.enum(["auto", "none", "manual"]),
   mentions: z.array(ChatMentionSchema).optional(),
   imageTool: z.object({ model: z.string().optional() }).optional(),

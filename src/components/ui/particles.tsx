@@ -114,15 +114,15 @@ const Particles: React.FC<ParticlesProps> = ({
   const getDefaultColors = (): [number, number, number][] => {
     if (theme === "dark") {
       return [
-        [1.0, 1.0, 1.0], // 순수 흰색
-        [0.9, 0.9, 0.9], // 밝은 회색
-        [0.8, 0.8, 0.8], // 회색
+        [1.0, 1.0, 1.0], // white
+        [0.9, 0.9, 0.9], // light gray
+        [0.8, 0.8, 0.8], // gray
       ];
     } else {
       return [
-        [0.0, 0.0, 0.0], // 순수 검은색
-        [0.1, 0.1, 0.1], // 어두운 회색
-        [0.2, 0.2, 0.2], // 회색
+        [0.0, 0.0, 0.0], // black
+        [0.1, 0.1, 0.1], // dark gray
+        [0.2, 0.2, 0.2], // gray
       ];
     }
   };

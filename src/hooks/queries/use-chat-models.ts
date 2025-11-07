@@ -1,9 +1,32 @@
 import { appStore } from "@/app/store";
 import { fetcher } from "lib/utils";
 import useSWR, { SWRConfiguration } from "swr";
+import { useEffect, useState } from "react";
+import { customOpenRouterModelsManager } from "@/lib/ai/custom-openrouter-models";
 
 export const useChatModels = (options?: SWRConfiguration) => {
-  return useSWR<
+  const [customModels, setCustomModels] = useState(
+    customOpenRouterModelsManager.getAll(),
+  );
+
+  useEffect(() => {
+    const handleCustomModelsChange = () => {
+      setCustomModels(customOpenRouterModelsManager.getAll());
+    };
+
+    window.addEventListener(
+      "openrouter-models-changed",
+      handleCustomModelsChange,
+    );
+    return () => {
+      window.removeEventListener(
+        "openrouter-models-changed",
+        handleCustomModelsChange,
+      );
+    };
+  }, []);
+
+  const result = useSWR<
     {
       provider: string;
       hasAPIKey: boolean;
@@ -28,4 +51,27 @@ export const useChatModels = (options?: SWRConfiguration) => {
     },
     ...options,
   });
+
+  // Merge custom OpenRouter models with the API data
+  const dataWithCustomModels = result.data?.map((providerInfo) => {
+    if (providerInfo.provider === "openRouter" && customModels.length > 0) {
+      const customModelEntries = customModels.map((model) => ({
+        name: model.displayName,
+        isToolCallUnsupported: !model.supportsTools,
+        isImageInputUnsupported: true,
+        supportedFileMimeTypes: [],
+      }));
+
+      return {
+        ...providerInfo,
+        models: [...providerInfo.models, ...customModelEntries],
+      };
+    }
+    return providerInfo;
+  });
+
+  return {
+    ...result,
+    data: dataWithCustomModels,
+  };
 };

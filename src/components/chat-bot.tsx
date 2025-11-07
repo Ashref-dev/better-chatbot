@@ -49,6 +49,7 @@ import { getStorageManager } from "lib/browser-stroage";
 import { AnimatePresence, motion } from "framer-motion";
 import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
 import { useFileDragOverlay } from "@/hooks/use-file-drag-overlay";
+import { customOpenRouterModelsManager } from "@/lib/ai/custom-openrouter-models";
 
 type Props = {
   threadId: string;
@@ -194,11 +195,26 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           (p) => (p as any)?.type === "file",
         );
 
+        const currentChatModel =
+          (body as { model: ChatModel })?.model ?? latestRef.current.model;
+
+        // Check if this is a custom OpenRouter model
+        let customOpenRouterModelId: string | undefined;
+        if (currentChatModel?.provider === "openRouter") {
+          const customModels = customOpenRouterModelsManager.getAll();
+          const customModel = customModels.find(
+            (m) => m.displayName === currentChatModel.model,
+          );
+          if (customModel) {
+            customOpenRouterModelId = customModel.modelId;
+          }
+        }
+
         const requestBody: ChatApiSchemaRequestBody = {
           ...body,
           id,
-          chatModel:
-            (body as { model: ChatModel })?.model ?? latestRef.current.model,
+          chatModel: currentChatModel,
+          customOpenRouterModelId,
           toolChoice: latestRef.current.toolChoice,
           allowedAppDefaultToolkit:
             latestRef.current.mentions?.length || hasFilePart
@@ -299,21 +315,21 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
             exit={{ opacity: 0 }}
             transition={{ duration: 5 }}
           >
-            <div className="absolute top-0 left-0 w-full h-full z-10">
+            <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
               <LightRays />
             </div>
-            <div className="absolute top-0 left-0 w-full h-full z-10">
-              <Particles particleCount={400} particleBaseSize={10} />
+            <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
+              <Particles particleCount={400} particleBaseSize={1} />
             </div>
 
-            <div className="absolute top-0 left-0 w-full h-full z-10">
-              <div className="w-full h-full bg-gradient-to-t from-background to-50% to-transparent z-20" />
+            <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
+              <div className="w-full h-full bg-linear-to-t from-background to-50% to-transparent z-20" />
             </div>
-            <div className="absolute top-0 left-0 w-full h-full z-10">
-              <div className="w-full h-full bg-gradient-to-l from-background to-20% to-transparent z-20" />
+            <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
+              <div className="w-full h-full bg-linear-to-l from-background to-20% to-transparent z-20" />
             </div>
-            <div className="absolute top-0 left-0 w-full h-full z-10">
-              <div className="w-full h-full bg-gradient-to-r from-background to-20% to-transparent z-20" />
+            <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
+              <div className="w-full h-full bg-linear-to-r from-background to-20% to-transparent z-20" />
             </div>
           </motion.div>
         )}
@@ -323,7 +339,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
 
   const handleFocus = useCallback(() => {
     setShowParticles(false);
-    debounce(() => setShowParticles(true), 60000);
+    debounce(() => setShowParticles(true), 20000);
   }, []);
 
   const handleScroll = useCallback(() => {
@@ -513,7 +529,11 @@ function DeleteThreadPopup({
   threadId,
   onClose,
   open,
-}: { threadId: string; onClose: () => void; open: boolean }) {
+}: {
+  threadId: string;
+  onClose: () => void;
+  open: boolean;
+}) {
   const t = useTranslations();
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();

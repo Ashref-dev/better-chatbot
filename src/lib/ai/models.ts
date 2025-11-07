@@ -213,6 +213,12 @@ function checkProviderAPIKey(provider: keyof typeof staticModels) {
     case "groq":
       key = process.env.GROQ_API_KEY;
       break;
+    case "ollama":
+      // Ollama typically runs locally (no API key) but may be configured via
+      // OLLAMA_BASE_URL or an optional OLLAMA_API_KEY. Only consider Ollama
+      // available when one of these is set.
+      key = process.env.OLLAMA_BASE_URL || process.env.OLLAMA_API_KEY;
+      break;
     case "openRouter":
       key = process.env.OPENROUTER_API_KEY;
       break;

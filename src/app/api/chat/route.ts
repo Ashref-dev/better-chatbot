@@ -69,6 +69,7 @@ export async function POST(request: Request) {
       id,
       message,
       chatModel,
+      customOpenRouterModelId,
       toolChoice,
       allowedAppDefaultToolkit,
       allowedMcpServers,
@@ -77,7 +78,10 @@ export async function POST(request: Request) {
       attachments = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
 
-    const model = customModelProvider.getModel(chatModel);
+    const model = customModelProvider.getModel(
+      chatModel,
+      customOpenRouterModelId,
+    );
 
     let thread = await chatRepository.selectThreadDetails(id);
 

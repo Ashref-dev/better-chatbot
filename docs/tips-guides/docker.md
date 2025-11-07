@@ -19,11 +19,11 @@ Docker provides a streamlined and efficient method for managing containerized ap
     ```
 
 2.  **Set up Environment Variables:**
-    Run `pnpm initial:env` to generate the `.env` file.  
+    Run `bun run initial:env` to generate the `.env` file.  
     Then, enter the API keys only for the LLM providers you plan to use.
 
     You can generate an authentication secret (`BETTER_AUTH_SECRET`) with the command:  
-    `pnpx auth secret`
+    `bunx auth secret`
 
     For the database, Docker will handle all necessary configuration automatically,  
     so the default `docker/.env` file is sufficient.
@@ -34,7 +34,7 @@ Docker provides a streamlined and efficient method for managing containerized ap
     From the project's root directory, build the Docker image and start the container in detached mode (running in the background):
 
     ```sh
-    pnpm docker-compose:up
+    bun run docker-compose:up
     ```
 
     Your application should now be running. You can access it by visiting `http://<ipofserver>:3000/` in your web browser. Replace `<ipofserver>` with the IP address of the server where Docker is running (this will likely be `localhost` if you're running it on your local machine).
@@ -49,13 +49,13 @@ If you don't want to host your own db, here are some steps
 3. Migrate the DB
 
 ```sh
-pnpm db:migrate
+bun run db:migrate
 ```
 
 4. Run the app
 
 ```sh
-pnpm docker-compose:up
+bun run docker-compose:up
 ```
 
 ## What is possible in docker and what is not
@@ -71,7 +71,7 @@ pnpm docker-compose:up
 To stop the running container, ensure you are in the project's root directory and execute:
 
 ```sh
-pnpm docker-compose:down
+bun run docker-compose:down
 ```
 
 ### Updating the Application
@@ -79,5 +79,5 @@ pnpm docker-compose:down
 To update the application to the latest version:
 
 ```sh
-pnpm docker-compose:update
+bun run docker-compose:update
 ```

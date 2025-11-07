@@ -76,13 +76,8 @@ const staticModels = {
     "qwen3-32b": groq("qwen/qwen3-32b"),
   },
   openRouter: {
-    "gpt-oss-20b:free": openrouter("openai/gpt-oss-20b:free"),
-    "qwen3-8b:free": openrouter("qwen/qwen3-8b:free"),
-    "qwen3-14b:free": openrouter("qwen/qwen3-14b:free"),
     "qwen3-coder:free": openrouter("qwen/qwen3-coder:free"),
-    "deepseek-r1:free": openrouter("deepseek/deepseek-r1-0528:free"),
-    "deepseek-v3:free": openrouter("deepseek/deepseek-chat-v3-0324:free"),
-    "gemini-2.0-flash-exp:free": openrouter("google/gemini-2.0-flash-exp:free"),
+    "deepseek-v3.1:free": openrouter("deepseek/deepseek-chat-v3.1:free"),
   },
   nvidia: {
     "deepseek-v3.1": nvidia("deepseek-ai/deepseek-v3.1"),
@@ -101,11 +96,7 @@ const staticUnsupportedModels = new Set([
   staticModels.ollama["gemma3:1b"],
   staticModels.ollama["gemma3:4b"],
   staticModels.ollama["gemma3:12b"],
-  staticModels.openRouter["gpt-oss-20b:free"],
-  staticModels.openRouter["qwen3-8b:free"],
-  staticModels.openRouter["qwen3-14b:free"],
-  staticModels.openRouter["deepseek-r1:free"],
-  staticModels.openRouter["gemini-2.0-flash-exp:free"],
+  staticModels.openRouter["deepseek-v3.1:free"],
 ]);
 
 const staticSupportImageInputModels = {
@@ -163,10 +154,6 @@ registerFileSupport(staticModels.xai["grok-4-fast"], XAI_FILE_MIME_TYPES);
 registerFileSupport(staticModels.xai["grok-4"], XAI_FILE_MIME_TYPES);
 registerFileSupport(staticModels.xai["grok-3"], XAI_FILE_MIME_TYPES);
 registerFileSupport(staticModels.xai["grok-3-mini"], XAI_FILE_MIME_TYPES);
-registerFileSupport(
-  staticModels.openRouter["gemini-2.0-flash-exp:free"],
-  GEMINI_FILE_MIME_TYPES,
-);
 
 const openaiCompatibleProviders = openaiCompatibleModelsSafeParse(
   process.env.OPENAI_COMPATIBLE_DATA,
@@ -209,8 +196,17 @@ export const customModelProvider = {
     })),
     hasAPIKey: checkProviderAPIKey(provider as keyof typeof staticModels),
   })),
-  getModel: (model?: ChatModel): LanguageModel => {
+  getModel: (
+    model?: ChatModel,
+    customOpenRouterModelId?: string,
+  ): LanguageModel => {
     if (!model) return fallbackModel;
+
+    // Handle custom OpenRouter models
+    if (model.provider === "openRouter" && customOpenRouterModelId) {
+      return openrouter(customOpenRouterModelId);
+    }
+
     return allModels[model.provider]?.[model.model] || fallbackModel;
   },
 };
@@ -232,6 +228,12 @@ function checkProviderAPIKey(provider: keyof typeof staticModels) {
       break;
     case "groq":
       key = process.env.GROQ_API_KEY;
+      break;
+    case "ollama":
+      // Ollama typically runs locally (no API key) but may be configured via
+      // OLLAMA_BASE_URL or an optional OLLAMA_API_KEY. Only consider Ollama
+      // available when one of these is set.
+      key = process.env.OLLAMA_BASE_URL || process.env.OLLAMA_API_KEY;
       break;
     case "openRouter":
       key = process.env.OPENROUTER_API_KEY;

@@ -219,50 +219,50 @@ Try it out and see what else it can do!
 
 ## Getting Started
 
-> This project uses [pnpm](https://pnpm.io/) as the recommended package manager.
+> This project uses [Bun](https://bun.sh/) as the recommended package manager and runtime.
 
 ```bash
-# If you don't have pnpm:
-npm install -g pnpm
+# If you don't have bun:
+curl -fsSL https://bun.sh/install | bash
 ```
 
 ### Quick Start (Docker Compose Version) 🐳
 
 ```bash
 # 1. Install dependencies
-pnpm i
+bun install
 
 # 2. Enter only the LLM PROVIDER API key(s) you want to use in the .env file at the project root.
 # Example: The app works with just OPENAI_API_KEY filled in.
-# (The .env file is automatically created when you run pnpm i.)
+# (The .env file is automatically created when you run bun install.)
 
 # 3. Build and start all services (including PostgreSQL) with Docker Compose
-pnpm docker-compose:up
+bun run docker-compose:up
 
 ```
 
 ### Quick Start (Local Version) 🚀
 
 ```bash
-pnpm i
+bun install
 
 #(Optional) Start a local PostgreSQL instance
 # If you already have your own PostgreSQL running, you can skip this step.
 # In that case, make sure to update the PostgreSQL URL in your .env file.
-pnpm docker:pg
+bun run docker:pg
 
 # Enter required information in the .env file
 # The .env file is created automatically. Just fill in the required values.
 # For the fastest setup, provide at least one LLM provider's API key (e.g., OPENAI_API_KEY, CLAUDE_API_KEY, GEMINI_API_KEY, etc.) and the PostgreSQL URL you want to use.
 
-pnpm build:local && pnpm start
+bun run build:local && bun start
 
 # (Recommended for most cases. Ensures correct cookie settings.)
 # For development mode with hot-reloading and debugging, you can use:
-# pnpm dev
+# bun run dev
 ```
 
-Alternative: Use Docker Compose for DB only (run app via pnpm)
+Alternative: Use Docker Compose for DB only (run app via bun)
 
 ```bash
 # Start Postgres only via compose
@@ -270,18 +270,18 @@ Alternative: Use Docker Compose for DB only (run app via pnpm)
 docker compose -f docker/compose.yml up -d postgres
 
 # Apply migrations
-pnpm db:migrate
+bun run db:migrate
 
 
 # Run app locally
-pnpm dev   # or: pnpm build && pnpm start
+bun run dev   # or: bun run build && bun start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to get started.
 
 ### Environment Variables
 
-The `pnpm i` command generates a `.env` file. Add your API keys there.
+The `bun install` command generates a `.env` file. Add your API keys there.
 
 ```dotenv
 # === LLM Provider API Keys ===
@@ -303,7 +303,7 @@ BETTER_AUTH_SECRET=****
 BETTER_AUTH_URL=
 
 # === Database ===
-# If you don't have PostgreSQL running locally, start it with: pnpm docker:pg
+# If you don't have PostgreSQL running locally, start it with: bun run docker:pg
 POSTGRES_URL=postgres://your_username:your_password@localhost:5432/your_database_name
 
 # (Optional)

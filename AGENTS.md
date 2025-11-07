@@ -9,14 +9,14 @@
 - Assets in `public/`. End‑to‑end tests in `tests/`. Scripts in `scripts/`. Docker files in `docker/`.
 
 ## Build, Test, and Development Commands
-- `pnpm dev` — Run the app locally (Next.js dev server).
-- `pnpm build` / `pnpm start` — Production build and run.
-- `pnpm lint` / `pnpm lint:fix` — ESLint + Biome checks and autofix.
-- `pnpm format` — Format with Biome.
-- `pnpm test` / `pnpm test:watch` — Unit tests (Vitest).
-- `pnpm test:e2e` — Playwright tests; uses `playwright.config.ts` webServer.
-- DB: `pnpm db:push`, `pnpm db:studio`, `pnpm db:migrate` (Drizzle Kit).
-- Docker: `pnpm docker-compose:up` / `:down` to run local stack.
+- `bun run dev` — Run the app locally (Next.js dev server).
+- `bun run build` / `bun start` — Production build and run.
+- `bun run lint` / `bun run lint:fix` — ESLint + Biome checks and autofix.
+- `bun run format` — Format with Biome.
+- `bun run test` / `bun run test:watch` — Unit tests (Vitest).
+- `bun run test:e2e` — Playwright tests; uses `playwright.config.ts` webServer.
+- DB: `bun run db:push`, `bun run db:studio`, `bun run db:migrate` (Drizzle Kit).
+- Docker: `bun run docker-compose:up` / `:down` to run local stack.
 
 ## Coding Style & Naming Conventions
 - TypeScript everywhere. Prefer `zod` for validation.
@@ -28,15 +28,15 @@
 ## Testing Guidelines
 - Unit tests: Vitest, filename `*.test.ts(x)`.
 - E2E: Playwright under `tests/`, filename `*.spec.ts`.
-- Run locally: `pnpm test` and `pnpm test:e2e` (ensure app is running or let Playwright start via config).
+- Run locally: `bun run test` and `bun run test:e2e` (ensure app is running or let Playwright start via config).
 - Add tests for new features and bug fixes; cover happy path + one failure mode.
 
 ## Commit & Pull Request Guidelines
 - Conventional Commits: `feat:`, `fix:`, `chore:`, `docs:`, etc. Example: `feat: add image generation tool`.
 - Branch names: `feat/…`, `fix/…`, `chore/…`.
 - PRs: clear description, linked issues, screenshots or terminal output when UI/CLI changes; list test coverage and manual steps.
-- Before opening PR: `pnpm check` (lint+types+tests) should pass.
+- Before opening PR: `bun run check` (lint+types+tests) should pass.
 
 ## Security & Configuration Tips
-- Copy `.env.example` to `.env`; never commit secrets. For local HTTP use `NO_HTTPS=1` or `pnpm build:local`.
+- Copy `.env.example` to `.env`; never commit secrets. For local HTTP use `NO_HTTPS=1` or `bun run build:local`.
 - If using DB/Redis locally, start services via Docker scripts or your own stack.

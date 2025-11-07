@@ -1,19 +1,21 @@
-FROM node:23-alpine AS builder
+FROM oven/bun:1.3.0-alpine AS builder
 ARG DOCKER_BUILD="1"
 WORKDIR /app
 
+# Ensure postinstall detects Docker build and skips non-Docker steps
+ENV DOCKER_BUILD=$DOCKER_BUILD
+
+COPY package.json bun.lock* ./
 COPY . . 
 
-# Install pnpm
-RUN corepack enable pnpm
-
-RUN pnpm install --frozen-lockfile
+# Install dependencies without running postinstall, then run it with bun
+RUN bun install --frozen-lockfile --ignore-scripts && bun run scripts/postinstall.ts
 
 # Makes the next output standalone
 # https://github.com/vercel/next.js/discussions/65511
 ENV NEXT_STANDALONE_OUTPUT="true"
 
-RUN pnpm build
+RUN bun run build
 
 FROM node:23-alpine AS runner
 

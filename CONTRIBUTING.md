@@ -61,27 +61,27 @@ If you are fixing a bug, please add tests to prevent the same bug from happening
 5. **Test your changes thoroughly**:
 
    ```bash
-   pnpm dev
-   pnpm test
+   bun run dev
+   bun run test
    ```
 
 6. **Run e2e tests**:
 
    ```bash
-   pnpm playwright:install # install playwright browsers
-   pnpm test:e2e # run all e2e tests (48 tests covering core functionality)
+   bun run playwright:install # install playwright browsers
+   bun run test:e2e # run all e2e tests (48 tests covering core functionality)
 
    # Optional: run specific test suites
-   pnpm test:e2e -- tests/agents/
-   pnpm test:e2e -- tests/models/
+   bun run test:e2e -- tests/agents/
+   bun run test:e2e -- tests/models/
 
    # Debug specific test
-   pnpm test:e2e -- tests/agents/agent-visibility.spec.ts --headed
+   bun run test:e2e -- tests/agents/agent-visibility.spec.ts --headed
    ```
 
    **E2E Test Requirements:**
 
-   - PostgreSQL database (use `pnpm docker:pg` for quick setup)
+   - PostgreSQL database (use `bun run docker:pg` for quick setup)
    - At least one LLM provider API key (OpenAI, Anthropic, or Google)
    - `BETTER_AUTH_SECRET` environment variable set
 
@@ -127,8 +127,8 @@ We use [Release Please](https://github.com/googleapis/release-please) to automat
 1. **Format, check code quality and run tests**:
 
    ```bash
-   pnpm check # lint, type check, and run unit tests
-   pnpm test:e2e # run comprehensive e2e test suite (recommended)
+   bun run check # lint, type check, and run unit tests
+   bun run test:e2e # run comprehensive e2e test suite (recommended)
    ```
 
 2. **Commit and push**:

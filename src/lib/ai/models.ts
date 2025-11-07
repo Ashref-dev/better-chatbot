@@ -7,6 +7,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { xai } from "@ai-sdk/xai";
 import { LanguageModelV2, openrouter } from "@openrouter/ai-sdk-provider";
 import { createGroq } from "@ai-sdk/groq";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { LanguageModel } from "ai";
 import {
   createOpenAICompatibleModels,
@@ -27,6 +28,11 @@ const ollama = createOllama({
 const groq = createGroq({
   baseURL: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
   apiKey: process.env.GROQ_API_KEY,
+});
+const nvidia = createOpenAICompatible({
+  name: "Nvidia",
+  baseURL: "https://integrate.api.nvidia.com/v1",
+  apiKey: process.env.NVIDIA_API_KEY,
 });
 
 const staticModels = {
@@ -77,6 +83,16 @@ const staticModels = {
     "deepseek-r1:free": openrouter("deepseek/deepseek-r1-0528:free"),
     "deepseek-v3:free": openrouter("deepseek/deepseek-chat-v3-0324:free"),
     "gemini-2.0-flash-exp:free": openrouter("google/gemini-2.0-flash-exp:free"),
+  },
+  nvidia: {
+    "deepseek-v3.1": nvidia("deepseek-ai/deepseek-v3.1"),
+    "deepseek-v3.1-terminus": nvidia("deepseek-ai/deepseek-v3.1-terminus"),
+    "minimax-m2": nvidia("minimaxai/minimax-m2"),
+    "kimi-k2-instruct": nvidia("moonshotai/kimi-k2-instruct-0905"),
+    "qwen3-next-80b-thinking": nvidia("qwen/qwen3-next-80b-a3b-thinking"),
+    "qwen3-coder-480b": nvidia("qwen/qwen3-coder-480b-a35b-instruct"),
+    "gpt-oss-120b": nvidia("openai/gpt-oss-120b"),
+    "seed-oss-36b": nvidia("bytedance/seed-oss-36b-instruct"),
   },
 };
 
@@ -219,6 +235,9 @@ function checkProviderAPIKey(provider: keyof typeof staticModels) {
       break;
     case "openRouter":
       key = process.env.OPENROUTER_API_KEY;
+      break;
+    case "nvidia":
+      key = process.env.NVIDIA_API_KEY;
       break;
     default:
       return true; // assume the provider has an API key

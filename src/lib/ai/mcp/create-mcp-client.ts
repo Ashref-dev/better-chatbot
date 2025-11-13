@@ -232,10 +232,14 @@ export class MCPClient {
         const config = MCPRemoteConfigZodSchema.parse(this.serverConfig);
         const abortController = new AbortController();
         const url = new URL(config.url);
+
+        // Normalize headers to proper Headers object for Bun compatibility
+        const normalizedHeaders = new Headers(config.headers || {});
+
         try {
           this.transport = new StreamableHTTPClientTransport(url, {
             requestInit: {
-              headers: config.headers,
+              headers: normalizedHeaders,
               signal: abortController.signal,
             },
             authProvider: this.createOAuthProvider(oauthState),
@@ -265,7 +269,7 @@ export class MCPClient {
 
             this.transport = new SSEClientTransport(url, {
               requestInit: {
-                headers: config.headers,
+                headers: normalizedHeaders,
                 signal: abortController.signal,
               },
               authProvider: this.createOAuthProvider(oauthState),

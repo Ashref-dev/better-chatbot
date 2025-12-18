@@ -17,7 +17,7 @@ ENV NEXT_STANDALONE_OUTPUT="true"
 
 RUN bun run build
 
-FROM node:23-alpine AS runner
+FROM oven/bun:1.3.0-alpine AS runner
 
 WORKDIR /app
 
@@ -38,6 +38,16 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy migrations content
 COPY --from=builder /app/src/lib/db/migrations ./src/lib/db/migrations
 
+# Copy peer dependencies that Next.js standalone doesn't include
+# These are required by @modelcontextprotocol/sdk
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/ws ./node_modules/ws
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/undici ./node_modules/undici
+
+# Provide `npx` shim that forwards to `bunx` so tools (like MCP playwright clients)
+# that spawn `npx` work when runtime is Bun-based. This avoids installing npm.
+RUN printf '%s\n' '#!/bin/sh' 'exec bunx "$@"' > /usr/local/bin/npx \
+	&& chmod +x /usr/local/bin/npx
+
 USER nextjs
 
 ENV PORT=3000
@@ -47,4 +57,4 @@ EXPOSE 3000
 
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
-CMD ["node", "server.js"]
+CMD ["bun", "server.js"]

@@ -49,6 +49,7 @@ import {
 } from "ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
+import { usePasteHandler } from "@/hooks/use-paste-handler";
 
 import { EMOJI_DATA } from "lib/const";
 import { AgentSummary } from "app-types/agent";
@@ -220,6 +221,25 @@ export default function PromptInput({
     },
     [uploadFiles],
   );
+
+  // Handle paste to upload images
+  const handlePasteFiles = useCallback(
+    async (files: File[]) => {
+      if (!threadId) return;
+      if (modelInfo?.isImageInputUnsupported || !canUploadImages) {
+        toast.error(t("imageUploadUnsupported"));
+        return;
+      }
+      await uploadFiles(files);
+    },
+    [threadId, modelInfo, canUploadImages, uploadFiles, t],
+  );
+
+  usePasteHandler({
+    editorRef,
+    onPasteFiles: handlePasteFiles,
+    enabled: !!threadId && !modelInfo?.isImageInputUnsupported,
+  });
 
   const handleGenerateImage = useCallback(
     (provider?: "google" | "openai") => {

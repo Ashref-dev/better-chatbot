@@ -339,7 +339,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
 
   const handleFocus = useCallback(() => {
     setShowParticles(false);
-    debounce(() => setShowParticles(true), 20000);
+    debounce(() => setShowParticles(true), 45000);
   }, []);
 
   const handleScroll = useCallback(() => {

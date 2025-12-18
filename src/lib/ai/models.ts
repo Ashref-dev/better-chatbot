@@ -34,17 +34,20 @@ const nvidia = createOpenAICompatible({
   baseURL: "https://integrate.api.nvidia.com/v1",
   apiKey: process.env.NVIDIA_API_KEY,
 });
+const uncloseai = createOpenAICompatible({
+  name: "uncloseai",
+  baseURL: "https://qwen.ai.unturf.com/v1",
+  apiKey: "dummy-api-key",
+});
 
 const staticModels = {
   openai: {
-    "gpt-4.1": openai("gpt-4.1"),
-    "gpt-4.1-mini": openai("gpt-4.1-mini"),
-    "o4-mini": openai("o4-mini"),
-    o3: openai("o3"),
-    "gpt-5-chat": openai("gpt-5-chat-latest"),
+    "gpt-5.2-chat": openai("gpt-5.2-chat"),
+    "gpt-5.2": openai("gpt-5.2"),
+    "gpt-5.1-chat": openai("gpt-5.1-chat"),
+    "gpt-5.1-codex": openai("gpt-5.1-codex"),
     "gpt-5": openai("gpt-5"),
     "gpt-5-mini": openai("gpt-5-mini"),
-    "gpt-5-codex": openai("gpt-5-codex"),
     "gpt-5-nano": openai("gpt-5-nano"),
   },
   google: {
@@ -76,27 +79,39 @@ const staticModels = {
     "qwen3-32b": groq("qwen/qwen3-32b"),
   },
   openRouter: {
-    "qwen3-coder:free": openrouter("qwen/qwen3-coder:free"),
-    "deepseek-v3.1:free": openrouter("deepseek/deepseek-chat-v3.1:free"),
+    "qwen3-coder": openrouter("qwen/qwen3-coder:free"),
+    "gpt-oss-120b": openrouter("openai/gpt-oss-120b:free"),
+    "glm-4.5-air": openrouter("z-ai/glm-4.5-air:free"),
+    "tng-r1t-chimera": openrouter("tngtech/tng-r1t-chimera:free"),
   },
   nvidia: {
     "deepseek-v3.1": nvidia("deepseek-ai/deepseek-v3.1"),
-    "deepseek-v3.1-terminus": nvidia("deepseek-ai/deepseek-v3.1-terminus"),
+    "deepseek-v3.2": nvidia("deepseek-ai/deepseek-v3.2"),
     "minimax-m2": nvidia("minimaxai/minimax-m2"),
     "kimi-k2-instruct": nvidia("moonshotai/kimi-k2-instruct-0905"),
+    "kimi-k2-thinking": nvidia("moonshotai/kimi-k2-thinking"),
     "qwen3-next-80b-thinking": nvidia("qwen/qwen3-next-80b-a3b-thinking"),
     "qwen3-coder-480b": nvidia("qwen/qwen3-coder-480b-a35b-instruct"),
     "gpt-oss-120b": nvidia("openai/gpt-oss-120b"),
     "seed-oss-36b": nvidia("bytedance/seed-oss-36b-instruct"),
+    "devstral-2-123b": nvidia("mistralai/devstral-2-123b-instruct-2512"),
+    "mistral-large-3-675b": nvidia(
+      "mistralai/mistral-large-3-675b-instruct-2512",
+    ),
+    "nemotron-3-nano-30b": nvidia("nvidia/nemotron-3-nano-30b-a3b"),
+  },
+  uncloseai: {
+    "qwen3-coder-30b": uncloseai(
+      "hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:Q4_K_M",
+    ),
   },
 };
 
 const staticUnsupportedModels = new Set([
-  staticModels.openai["o4-mini"],
   staticModels.ollama["gemma3:1b"],
   staticModels.ollama["gemma3:4b"],
   staticModels.ollama["gemma3:12b"],
-  staticModels.openRouter["deepseek-v3.1:free"],
+  // deepseek-v3.1:free removed from OpenRouter (no longer available)
 ]);
 
 const staticSupportImageInputModels = {
@@ -119,9 +134,17 @@ const registerFileSupport = (
   staticFilePartSupportByModel.set(model, Array.from(mimeTypes));
 };
 
-registerFileSupport(staticModels.openai["gpt-4.1"], OPENAI_FILE_MIME_TYPES);
 registerFileSupport(
-  staticModels.openai["gpt-4.1-mini"],
+  staticModels.openai["gpt-5.2-chat"],
+  OPENAI_FILE_MIME_TYPES,
+);
+registerFileSupport(staticModels.openai["gpt-5.2"], OPENAI_FILE_MIME_TYPES);
+registerFileSupport(
+  staticModels.openai["gpt-5.1-chat"],
+  OPENAI_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.openai["gpt-5.1-codex"],
   OPENAI_FILE_MIME_TYPES,
 );
 registerFileSupport(staticModels.openai["gpt-5"], OPENAI_FILE_MIME_TYPES);
@@ -183,7 +206,7 @@ export const getFilePartSupportedMimeTypes = (model: LanguageModel) => {
   return staticFilePartSupportByModel.get(model) ?? [];
 };
 
-const fallbackModel = staticModels.openai["gpt-4.1"];
+const fallbackModel = staticModels.openai["gpt-5.2-chat"];
 
 export const customModelProvider = {
   modelsInfo: Object.entries(allModels).map(([provider, models]) => ({

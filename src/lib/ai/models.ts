@@ -49,21 +49,28 @@ const staticModels = {
     "gpt-5": openai("gpt-5"),
     "gpt-5-mini": openai("gpt-5-mini"),
     "gpt-5-nano": openai("gpt-5-nano"),
+
+    "gpt-4.1": openai("gpt-4.1"),
+    "gpt-4.1-mini": openai("gpt-4.1-mini"),
+    "o4-mini": openai("o4-mini"),
+    o3: openai("o3"),
+    "gpt-5.1": openai("gpt-5.1"),
+    "gpt-5.1-codex-mini": openai("gpt-5.1-codex-mini"),
   },
   google: {
     "gemini-2.5-flash-lite": google("gemini-2.5-flash-lite"),
     "gemini-2.5-flash": google("gemini-2.5-flash"),
+    "gemini-3-pro": google("gemini-3-pro-preview"),
     "gemini-2.5-pro": google("gemini-2.5-pro"),
   },
   anthropic: {
     "sonnet-4.5": anthropic("claude-sonnet-4-5"),
     "haiku-4.5": anthropic("claude-haiku-4-5"),
-    "opus-4.1": anthropic("claude-opus-4-1"),
+    "opus-4.5": anthropic("claude-opus-4-5"),
   },
   xai: {
-    "grok-4-fast": xai("grok-4-fast-non-reasoning"),
-    "grok-4": xai("grok-4"),
-    "grok-3": xai("grok-3"),
+    "grok-4-1-fast": xai("grok-4-1-fast-non-reasoning"),
+    "grok-4-1": xai("grok-4-1"),
     "grok-3-mini": xai("grok-3-mini"),
   },
   ollama: {

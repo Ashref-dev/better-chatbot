@@ -1,4 +1,5 @@
-FROM oven/bun:1.3.0-alpine AS builder
+FROM oven/bun:1.3.5-alpine AS builder
+RUN apk add --no-cache libc6-compat
 ARG DOCKER_BUILD="1"
 WORKDIR /app
 
@@ -17,7 +18,8 @@ ENV NEXT_STANDALONE_OUTPUT="true"
 
 RUN bun run build
 
-FROM oven/bun:1.3.0-alpine AS runner
+FROM oven/bun:1.3.5-alpine AS runner
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 

@@ -498,12 +498,14 @@ export function ChatMentionInputSuggestion({
         className={cn("p-0", className)}
         align="start"
         side="top"
-        style={{
-          ...style,
-          width: style?.width || (isMobile ? "100%" : "auto"),
-          minWidth: isMobile ? undefined : "600px",
-          maxWidth: isMobile ? undefined : "800px",
-        }}
+        style={
+          {
+            ...style,
+            width: style?.width || (isMobile ? "100%" : "auto"),
+            minWidth: isMobile ? undefined : "600px",
+            maxWidth: isMobile ? undefined : "800px",
+          } as React.ComponentProps<typeof PopoverContent>["style"]
+        }
       >
         <div className="flex flex-col">
           <div className="flex items-center gap-2 px-3 py-2 border-b">

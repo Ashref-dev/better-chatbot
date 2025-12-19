@@ -191,7 +191,7 @@ function Sidebar({
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
+            } as React.ComponentProps<typeof SheetContent>["style"]
           }
           side={side}
         >

@@ -1,11 +1,21 @@
 "use client";
 
 import { appStore } from "@/app/store";
+import { useModelLabelOverrides } from "@/hooks/use-model-label-overrides";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
 import { ChatModel } from "app-types/chat";
+import { resolveModelDisplay } from "lib/ai/model-labels";
 import { cn } from "lib/utils";
 import { CheckIcon, ChevronDown, Settings } from "lucide-react";
-import { Fragment, memo, PropsWithChildren, useEffect, useState } from "react";
+import {
+  Fragment,
+  memo,
+  PropsWithChildren,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { Badge } from "ui/badge";
 import { Button } from "ui/button";
 
 import {
@@ -32,7 +42,16 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
   const [open, setOpen] = useState(false);
   const [openRouterDialogOpen, setOpenRouterDialogOpen] = useState(false);
   const { data: providers } = useChatModels();
+  const modelLabelOverrides = useModelLabelOverrides();
   const [model, setModel] = useState(props.currentModel);
+
+  const selectedDisplay = useMemo(() => {
+    return resolveModelDisplay(
+      model?.provider,
+      model?.model,
+      modelLabelOverrides,
+    );
+  }, [model?.provider, model?.model, modelLabelOverrides]);
 
   useEffect(() => {
     const modelToUse = props.currentModel ?? appStore.getState().chatModel;
@@ -60,9 +79,15 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
                     className="size-2.5 mr-1"
                   />
                 )}
-                <p data-testid="selected-model-name">
-                  {model?.model || "model"}
-                </p>
+                <p data-testid="selected-model-name">{selectedDisplay.label}</p>
+                {selectedDisplay.badge && (
+                  <Badge
+                    variant="secondary"
+                    className="h-4 px-1 py-0 text-[10px] leading-none"
+                  >
+                    {selectedDisplay.badge}
+                  </Badge>
+                )}
               </div>
               <ChevronDown className="size-3" />
             </Button>
@@ -110,42 +135,73 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
                     }}
                     data-testid={`model-provider-${provider.provider}`}
                   >
-                    {provider.models.map((item) => (
-                      <CommandItem
-                        key={item.name}
-                        disabled={!provider.hasAPIKey}
-                        className="cursor-pointer"
-                        onSelect={() => {
-                          setModel({
-                            provider: provider.provider,
-                            model: item.name,
-                          });
-                          props.onSelect({
-                            provider: provider.provider,
-                            model: item.name,
-                          });
-                          setOpen(false);
-                        }}
-                        value={item.name}
-                        data-testid={`model-option-${provider.provider}-${item.name}`}
-                      >
-                        {model?.provider === provider.provider &&
-                        model?.model === item.name ? (
-                          <CheckIcon
-                            className="size-3"
-                            data-testid="selected-model-check"
-                          />
-                        ) : (
-                          <div className="ml-3" />
-                        )}
-                        <span className="pr-2">{item.name}</span>
-                        {item.isToolCallUnsupported && (
-                          <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-                            No tools
-                          </div>
-                        )}
-                      </CommandItem>
-                    ))}
+                    {provider.models.map((item) =>
+                      (() => {
+                        const itemDisplay = resolveModelDisplay(
+                          provider.provider,
+                          item.name,
+                          modelLabelOverrides,
+                        );
+
+                        return (
+                          <CommandItem
+                            key={item.name}
+                            disabled={!provider.hasAPIKey}
+                            className="cursor-pointer"
+                            onSelect={() => {
+                              setModel({
+                                provider: provider.provider,
+                                model: item.name,
+                              });
+                              props.onSelect({
+                                provider: provider.provider,
+                                model: item.name,
+                              });
+                              setOpen(false);
+                            }}
+                            value={`${item.name} ${itemDisplay.label} ${itemDisplay.badge || ""}`}
+                            data-testid={`model-option-${provider.provider}-${item.name}`}
+                          >
+                            {model?.provider === provider.provider &&
+                            model?.model === item.name ? (
+                              <CheckIcon
+                                className="size-3"
+                                data-testid="selected-model-check"
+                              />
+                            ) : (
+                              <div className="ml-3" />
+                            )}
+
+                            <div className="pr-2 min-w-0 flex flex-col">
+                              <div className="flex items-center gap-1 min-w-0">
+                                <span className="truncate">
+                                  {itemDisplay.label}
+                                </span>
+                                {itemDisplay.badge && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="h-4 px-1 py-0 text-[10px] leading-none"
+                                  >
+                                    {itemDisplay.badge}
+                                  </Badge>
+                                )}
+                              </div>
+                              {itemDisplay.label !== item.name && (
+                                <span className="text-[10px] text-muted-foreground truncate">
+                                  {item.name}
+                                </span>
+                              )}
+                            </div>
+
+                            {item.isToolCallUnsupported && (
+                              <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+                                No tools
+                              </div>
+                            )}
+                          </CommandItem>
+                        );
+                      })(),
+                    )}
                   </CommandGroup>
                   {i < providers?.length - 1 && <CommandSeparator />}
                 </Fragment>

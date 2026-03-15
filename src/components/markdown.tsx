@@ -36,29 +36,29 @@ const components: Partial<Components> = {
   table: ({ node, children, ...props }) => {
     return (
       <div className="my-4">
-        <Table {...props}>{children}</Table>
+        <Table {...toAny(props)}>{children}</Table>
       </div>
     );
   },
   thead: ({ node, children, ...props }) => {
-    return <TableHeader {...props}>{children}</TableHeader>;
+    return <TableHeader {...toAny(props)}>{children}</TableHeader>;
   },
   tbody: ({ node, children, ...props }) => {
-    return <TableBody {...props}>{children}</TableBody>;
+    return <TableBody {...toAny(props)}>{children}</TableBody>;
   },
   tr: ({ node, children, ...props }) => {
-    return <TableRow {...props}>{children}</TableRow>;
+    return <TableRow {...toAny(props)}>{children}</TableRow>;
   },
   th: ({ node, children, ...props }) => {
     return (
-      <TableHead {...props}>
+      <TableHead {...toAny(props)}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </TableHead>
     );
   },
   td: ({ node, children, ...props }) => {
     return (
-      <TableCell {...props}>
+      <TableCell {...toAny(props)}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </TableCell>
     );
@@ -95,28 +95,28 @@ const components: Partial<Components> = {
   },
   ol: ({ node, children, ...props }) => {
     return (
-      <ol className="px-8 list-decimal list-outside" {...props}>
+      <ol className="px-8 list-decimal list-outside" {...toAny(props)}>
         {children}
       </ol>
     );
   },
   li: ({ node, children, ...props }) => {
     return (
-      <li className="py-2 break-words" {...props}>
+      <li className="py-2 break-words" {...toAny(props)}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </li>
     );
   },
   ul: ({ node, children, ...props }) => {
     return (
-      <ul className="px-8 list-outside list-disc" {...props}>
+      <ul className="px-8 list-outside list-disc" {...toAny(props)}>
         {children}
       </ul>
     );
   },
   strong: ({ node, children, ...props }) => {
     return (
-      <span className="font-semibold" {...props}>
+      <span className="font-semibold" {...toAny(props)}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </span>
     );
@@ -136,42 +136,42 @@ const components: Partial<Components> = {
   },
   h1: ({ node, children, ...props }) => {
     return (
-      <h1 className="text-3xl font-semibold mt-6 mb-2" {...props}>
+      <h1 className="text-3xl font-semibold mt-6 mb-2" {...toAny(props)}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </h1>
     );
   },
   h2: ({ node, children, ...props }) => {
     return (
-      <h2 className="text-2xl font-semibold mt-6 mb-2" {...props}>
+      <h2 className="text-2xl font-semibold mt-6 mb-2" {...toAny(props)}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </h2>
     );
   },
   h3: ({ node, children, ...props }) => {
     return (
-      <h3 className="text-xl font-semibold mt-6 mb-2" {...props}>
+      <h3 className="text-xl font-semibold mt-6 mb-2" {...toAny(props)}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </h3>
     );
   },
   h4: ({ node, children, ...props }) => {
     return (
-      <h4 className="text-lg font-semibold mt-6 mb-2" {...props}>
+      <h4 className="text-lg font-semibold mt-6 mb-2" {...toAny(props)}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </h4>
     );
   },
   h5: ({ node, children, ...props }) => {
     return (
-      <h5 className="text-base font-semibold mt-6 mb-2" {...props}>
+      <h5 className="text-base font-semibold mt-6 mb-2" {...toAny(props)}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </h5>
     );
   },
   h6: ({ node, children, ...props }) => {
     return (
-      <h6 className="text-sm font-semibold mt-6 mb-2" {...props}>
+      <h6 className="text-sm font-semibold mt-6 mb-2" {...toAny(props)}>
         <WordByWordFadeIn>{children}</WordByWordFadeIn>
       </h6>
     );
@@ -181,7 +181,12 @@ const components: Partial<Components> = {
 
     return src ? (
       // eslint-disable-next-line @next/next/no-img-element
-      <img className="mx-auto rounded-lg" src={src} alt={alt} {...rest} />
+      <img
+        className="mx-auto rounded-lg"
+        src={src}
+        alt={alt}
+        {...toAny(rest)}
+      />
     ) : null;
   },
 };

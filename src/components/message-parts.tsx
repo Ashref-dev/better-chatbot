@@ -64,6 +64,8 @@ import { notify } from "lib/notify";
 import { ModelProviderIcon } from "ui/model-provider-icon";
 import { appStore } from "@/app/store";
 import { BACKGROUND_COLORS, EMOJI_DATA } from "lib/const";
+import { useModelLabelOverrides } from "@/hooks/use-model-label-overrides";
+import { resolveModelDisplay } from "lib/ai/model-labels";
 
 type MessagePart = UIMessage["parts"][number];
 type TextMessagePart = Extract<MessagePart, { type: "text" }>;
@@ -302,10 +304,20 @@ export const AssistMessagePart = memo(function AssistMessagePart({
   const [isDeleting, setIsDeleting] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const metadata = message.metadata as ChatMetadata | undefined;
+  const modelLabelOverrides = useModelLabelOverrides();
 
   const agent = useMemo(() => {
     return agentList.find((a) => a.id === metadata?.agentId);
   }, [metadata, agentList]);
+
+  const metadataModelDisplay = useMemo(() => {
+    if (!metadata?.chatModel) return null;
+    return resolveModelDisplay(
+      metadata.chatModel.provider,
+      metadata.chatModel.model,
+      modelLabelOverrides,
+    );
+  }, [metadata?.chatModel, modelLabelOverrides]);
 
   const deleteMessage = useCallback(async () => {
     if (!setMessages) return;
@@ -494,7 +506,18 @@ export const AssistMessagePart = memo(function AssistMessagePart({
                               {metadata.chatModel.provider}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {metadata.chatModel.model}
+                              <span className="mr-1">
+                                {metadataModelDisplay?.label ||
+                                  metadata.chatModel.model}
+                              </span>
+                              {metadataModelDisplay?.badge && (
+                                <Badge
+                                  variant="secondary"
+                                  className="h-4 px-1 py-0 text-[10px] leading-none mr-1"
+                                >
+                                  {metadataModelDisplay.badge}
+                                </Badge>
+                              )}
                               {metadata.toolCount !== undefined &&
                                 metadata.toolCount > 0 && (
                                   <span className="ml-2">

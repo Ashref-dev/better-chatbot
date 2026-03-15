@@ -156,17 +156,19 @@ export const openaiImageTool = createTool({
       abortSignal,
       messages: latestMessages,
       tools: {
-        image_generation: openai.tools.imageGeneration({
-          outputFormat: "webp",
-          model: "gpt-image-1-mini",
-        }),
+        image_generation: toAny(
+          openai.tools.imageGeneration({
+            outputFormat: "webp",
+            model: "gpt-image-1-mini",
+          }),
+        ),
       },
       toolChoice: "required",
     });
 
     for (const toolResult of result.staticToolResults) {
       if (toolResult.toolName === "image_generation") {
-        const base64Image = toolResult.output.result;
+        const base64Image = toAny(toolResult).output.result;
         const uploadedImage = await serverFileStorage
           .upload(Buffer.from(base64Image, "base64"), {
             contentType: "image/webp",

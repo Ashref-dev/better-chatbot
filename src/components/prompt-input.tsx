@@ -57,6 +57,9 @@ import { FileUIPart, TextUIPart } from "ai";
 import { toast } from "sonner";
 import { isFilePartSupported, isIngestSupported } from "@/lib/ai/file-support";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
+import { useModelLabelOverrides } from "@/hooks/use-model-label-overrides";
+import { resolveModelDisplay } from "lib/ai/model-labels";
+import { Badge } from "ui/badge";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -101,6 +104,7 @@ export default function PromptInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadFiles } = useThreadFileUploader(threadId);
   const { data: providers } = useChatModels();
+  const modelLabelOverrides = useModelLabelOverrides();
 
   const [
     globalModel,
@@ -150,6 +154,14 @@ export default function PromptInput({
   const chatModel = useMemo(() => {
     return model ?? globalModel;
   }, [model, globalModel]);
+
+  const selectedModelDisplay = useMemo(() => {
+    return resolveModelDisplay(
+      chatModel?.provider,
+      chatModel?.model,
+      modelLabelOverrides,
+    );
+  }, [chatModel?.provider, chatModel?.model, modelLabelOverrides]);
 
   const editorRef = useRef<Editor | null>(null);
 
@@ -625,8 +637,16 @@ export default function PromptInput({
                           className="text-foreground group-data-[state=open]:text-foreground  "
                           data-testid="selected-model-name"
                         >
-                          {chatModel.model}
+                          {selectedModelDisplay.label}
                         </span>
+                        {selectedModelDisplay.badge && (
+                          <Badge
+                            variant="secondary"
+                            className="h-4 px-1 py-0 text-[10px] leading-none"
+                          >
+                            {selectedModelDisplay.badge}
+                          </Badge>
+                        )}
                       </>
                     ) : (
                       <span className="text-muted-foreground">model</span>

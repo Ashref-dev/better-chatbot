@@ -15,7 +15,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Badge } from "ui/badge";
 import { Button } from "ui/button";
 
 import {
@@ -72,7 +71,7 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
               className="data-[state=open]:bg-input! hover:bg-input! "
               data-testid="model-selector-button"
             >
-              <div className="mr-auto flex items-center gap-1">
+              <div className="mr-auto flex items-center gap-[0.1rem]">
                 {(props.showProvider ?? true) && (
                   <ModelProviderIcon
                     provider={model?.provider || ""}
@@ -81,12 +80,9 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
                 )}
                 <p data-testid="selected-model-name">{selectedDisplay.label}</p>
                 {selectedDisplay.badge && (
-                  <Badge
-                    variant="secondary"
-                    className="h-4 px-1 py-0 text-[10px] leading-none"
-                  >
+                  <span className="text-[8px] px-1 py-px rounded-sm bg-muted/40 text-muted-foreground/70 font-medium leading-none uppercase tracking-wider">
                     {selectedDisplay.badge}
-                  </Badge>
+                  </span>
                 )}
               </div>
               <ChevronDown className="size-3" />
@@ -173,17 +169,14 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
                             )}
 
                             <div className="pr-2 min-w-0 flex flex-col">
-                              <div className="flex items-center gap-1 min-w-0">
+                              <div className="flex items-center gap-[0.1rem] min-w-0">
                                 <span className="truncate">
                                   {itemDisplay.label}
                                 </span>
                                 {itemDisplay.badge && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="h-4 px-1 py-0 text-[10px] leading-none"
-                                  >
+                                  <span className="text-[8px] px-1 py-px rounded-sm bg-muted/40 text-muted-foreground/70 font-medium leading-none uppercase tracking-wider shrink-0">
                                     {itemDisplay.badge}
-                                  </Badge>
+                                  </span>
                                 )}
                               </div>
                               {itemDisplay.label !== item.name && (

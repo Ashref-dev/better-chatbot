@@ -59,7 +59,6 @@ import { isFilePartSupported, isIngestSupported } from "@/lib/ai/file-support";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
 import { useModelLabelOverrides } from "@/hooks/use-model-label-overrides";
 import { resolveModelDisplay } from "lib/ai/model-labels";
-import { Badge } from "ui/badge";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -634,19 +633,16 @@ export default function PromptInput({
                           <GeminiIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
                         ) : null}
                         <span
-                          className="text-foreground group-data-[state=open]:text-foreground  "
+                          className="inline-flex items-center gap-[0.1rem] text-foreground group-data-[state=open]:text-foreground"
                           data-testid="selected-model-name"
                         >
-                          {selectedModelDisplay.label}
+                          <span>{selectedModelDisplay.label}</span>
+                          {selectedModelDisplay.badge && (
+                            <span className="text-[8px] px-1 py-px rounded-sm bg-muted/40 text-muted-foreground/70 font-medium leading-none uppercase tracking-wider shrink-0">
+                              {selectedModelDisplay.badge}
+                            </span>
+                          )}
                         </span>
-                        {selectedModelDisplay.badge && (
-                          <Badge
-                            variant="secondary"
-                            className="h-4 px-1 py-0 text-[10px] leading-none"
-                          >
-                            {selectedModelDisplay.badge}
-                          </Badge>
-                        )}
                       </>
                     ) : (
                       <span className="text-muted-foreground">model</span>

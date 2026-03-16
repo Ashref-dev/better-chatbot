@@ -638,7 +638,7 @@ export default function PromptInput({
                         >
                           <span>{selectedModelDisplay.label}</span>
                           {selectedModelDisplay.badge && (
-                            <span className="text-[8px] px-1 py-px rounded-sm bg-muted/40 text-muted-foreground/70 font-medium leading-none uppercase tracking-wider shrink-0">
+                            <span className="text-[11px] text-muted-foreground/50 font-normal leading-none ml-0.5 shrink-0">
                               {selectedModelDisplay.badge}
                             </span>
                           )}

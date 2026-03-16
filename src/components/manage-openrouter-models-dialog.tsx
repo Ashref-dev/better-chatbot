@@ -16,6 +16,7 @@ import {
   customOpenRouterModelsManager,
   CustomOpenRouterModel,
 } from "@/lib/ai/custom-openrouter-models";
+import { modelLabelOverridesManager } from "@/lib/ai/model-label-overrides";
 import { Trash2, Plus, Loader } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,6 +32,8 @@ export function ManageOpenRouterModelsDialog({
   const [models, setModels] = useState<CustomOpenRouterModel[]>([]);
   const [displayName, setDisplayName] = useState("");
   const [modelId, setModelId] = useState("");
+  const [customLabel, setCustomLabel] = useState("");
+  const [customBadge, setCustomBadge] = useState("");
   const [supportsTools, setSupportsTools] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -62,8 +65,19 @@ export function ManageOpenRouterModelsDialog({
         modelId.trim(),
         supportsTools,
       );
+
+      // Save custom label/badge override if provided
+      if (customLabel.trim() || customBadge.trim()) {
+        modelLabelOverridesManager.set("openRouter", modelId.trim(), {
+          label: customLabel.trim() || undefined,
+          badge: customBadge.trim() || undefined,
+        });
+      }
+
       setDisplayName("");
       setModelId("");
+      setCustomLabel("");
+      setCustomBadge("");
       setSupportsTools(true);
       loadModels();
       toast.success("Model added successfully");
@@ -77,7 +91,11 @@ export function ManageOpenRouterModelsDialog({
   };
 
   const handleRemove = (id: string) => {
+    const model = models.find((m) => m.id === id);
     customOpenRouterModelsManager.remove(id);
+    if (model) {
+      modelLabelOverridesManager.remove("openRouter", model.modelId);
+    }
     loadModels();
     toast.success("Model removed successfully");
     // Trigger a re-render of model selector
@@ -126,6 +144,36 @@ export function ManageOpenRouterModelsDialog({
                   }
                 }}
               />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="customLabel">Label (optional)</Label>
+                <Input
+                  id="customLabel"
+                  placeholder="e.g., GPT 5"
+                  value={customLabel}
+                  onChange={(e) => setCustomLabel(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isAdding) {
+                      handleAdd();
+                    }
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customBadge">Subtitle (optional)</Label>
+                <Input
+                  id="customBadge"
+                  placeholder="e.g., beta"
+                  value={customBadge}
+                  onChange={(e) => setCustomBadge(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isAdding) {
+                      handleAdd();
+                    }
+                  }}
+                />
+              </div>
             </div>
             <div className="flex items-center justify-between space-x-2">
               <div className="space-y-0.5">
@@ -179,6 +227,17 @@ export function ManageOpenRouterModelsDialog({
                         <p className="font-medium text-sm truncate">
                           {model.displayName}
                         </p>
+                        {(() => {
+                          const override = modelLabelOverridesManager.get(
+                            "openRouter",
+                            model.modelId,
+                          );
+                          return override?.badge ? (
+                            <span className="text-[11px] text-muted-foreground/50 font-normal leading-none">
+                              {override.badge}
+                            </span>
+                          ) : null;
+                        })()}
                         {!model.supportsTools && (
                           <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
                             No tools

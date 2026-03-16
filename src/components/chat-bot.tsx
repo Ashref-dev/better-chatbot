@@ -43,27 +43,25 @@ import {
 import { useTranslations } from "next-intl";
 import { Think } from "ui/think";
 import { useGenerateThreadTitle } from "@/hooks/queries/use-generate-thread-title";
-import dynamic from "next/dynamic";
 import { useMounted } from "@/hooks/use-mounted";
 import { getStorageManager } from "lib/browser-stroage";
 import { AnimatePresence, motion } from "framer-motion";
 import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
 import { useFileDragOverlay } from "@/hooks/use-file-drag-overlay";
 import { customOpenRouterModelsManager } from "@/lib/ai/custom-openrouter-models";
+import {
+  effects,
+  pickRandomEffect,
+  type BackgroundEffect,
+} from "@/lib/background-effects";
+import { effectPreferencesManager } from "@/lib/background-effect-preferences";
+import { useEffectPreferences } from "@/hooks/use-effect-preferences";
 
 type Props = {
   threadId: string;
   initialMessages: Array<UIMessage>;
   selectedChatModel?: string;
 };
-
-const LightRays = dynamic(() => import("ui/light-rays"), {
-  ssr: false,
-});
-
-const Particles = dynamic(() => import("ui/particles"), {
-  ssr: false,
-});
 
 const debounce = createDebounce();
 
@@ -114,7 +112,14 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     threadId,
   });
 
-  const [showParticles, setShowParticles] = useState(isFirstTime);
+  const [showParticles, setShowParticles] = useState(false);
+  const [chosenEffect, setChosenEffect] = useState<BackgroundEffect | null>(
+    () => pickRandomEffect(),
+  );
+
+  // Subscribe to effect preference changes (for debug toggle reactivity)
+  useEffectPreferences();
+  const debugEffects = effectPreferencesManager.isDebug();
 
   const onFinish = useCallback(() => {
     const messages = latestRef.current.messages;
@@ -272,6 +277,16 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     [messages.length, error],
   );
 
+  const isHome = emptyMessage;
+
+  // Home: show effect after 2s. Chat: only on 45s idle.
+  useEffect(() => {
+    if (isHome) {
+      const timer = setTimeout(() => setShowParticles(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isHome]);
+
   const isInitialThreadEntry = useMemo(
     () =>
       initialMessages.length > 0 &&
@@ -306,6 +321,9 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
   }, [isLoading, messages.at(-1)]);
 
   const particle = useMemo(() => {
+    if (!chosenEffect) return null;
+    const EffectComponent = chosenEffect.component;
+    const OverlayComponent = chosenEffect.overlay;
     return (
       <AnimatePresence>
         {showParticles && (
@@ -316,11 +334,13 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
             transition={{ duration: 5 }}
           >
             <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
-              <LightRays />
+              <EffectComponent />
             </div>
-            <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
-              <Particles particleCount={400} particleBaseSize={1} />
-            </div>
+            {OverlayComponent && (
+              <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
+                <OverlayComponent />
+              </div>
+            )}
 
             <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
               <div className="w-full h-full bg-linear-to-t from-background to-50% to-transparent z-20" />
@@ -335,12 +355,13 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
         )}
       </AnimatePresence>
     );
-  }, [showParticles]);
+  }, [showParticles, chosenEffect]);
 
   const handleFocus = useCallback(() => {
+    if (isHome) return;
     setShowParticles(false);
     debounce(() => setShowParticles(true), 45000);
-  }, []);
+  }, [isHome]);
 
   const handleScroll = useCallback(() => {
     const container = containerRef.current;
@@ -520,6 +541,33 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           onClose={() => setIsDeleteThreadPopupOpen(false)}
           open={isDeleteThreadPopupOpen}
         />
+
+        {/* Debug: effect switcher */}
+        {debugEffects && (
+          <div className="fixed bottom-4 right-4 z-50 flex gap-1 opacity-30 hover:opacity-100 transition-opacity">
+            {effects.map((effect) => (
+              <button
+                key={effect.name}
+                onClick={() => {
+                  setShowParticles(false);
+                  // Wait for the 5s exit animation to finish before swapping
+                  setTimeout(() => {
+                    setChosenEffect(effect);
+                    setShowParticles(true);
+                  }, 5000);
+                }}
+                className={cn(
+                  "px-2 py-1 text-[10px] rounded border bg-background/80 backdrop-blur-sm",
+                  chosenEffect?.name === effect.name
+                    ? "border-primary text-primary"
+                    : "border-border text-muted-foreground",
+                )}
+              >
+                {effect.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

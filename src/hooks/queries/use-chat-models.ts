@@ -56,7 +56,7 @@ export const useChatModels = (options?: SWRConfiguration) => {
   const dataWithCustomModels = result.data?.map((providerInfo) => {
     if (providerInfo.provider === "openRouter" && customModels.length > 0) {
       const customModelEntries = customModels.map((model) => ({
-        name: model.displayName,
+        name: model.modelId,
         isToolCallUnsupported: !model.supportsTools,
         isImageInputUnsupported: true,
         supportedFileMimeTypes: [],

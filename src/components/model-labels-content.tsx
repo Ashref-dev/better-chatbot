@@ -7,8 +7,8 @@ import {
   modelLabelOverridesManager,
 } from "lib/ai/model-label-overrides";
 import { resolveModelDisplay } from "lib/ai/model-labels";
-import { Check, RotateCcw, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { RotateCcw, Search } from "lucide-react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -28,6 +28,25 @@ export function ModelLabelsContent() {
   const [drafts, setDrafts] = useState<
     Record<string, { label: string; badge: string }>
   >({});
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const autoSave = useCallback(
+    (
+      provider: string,
+      model: string,
+      draft: { label: string; badge: string },
+    ) => {
+      const key = getModelLabelOverrideKey(provider, model);
+      if (saveTimers.current[key]) clearTimeout(saveTimers.current[key]);
+      saveTimers.current[key] = setTimeout(() => {
+        modelLabelOverridesManager.set(provider, model, {
+          label: draft.label,
+          badge: draft.badge,
+        });
+      }, 500);
+    },
+    [],
+  );
 
   const rows = useMemo<ModelRow[]>(() => {
     return (
@@ -73,22 +92,12 @@ export function ModelLabelsContent() {
   ) => {
     const key = getModelLabelOverrideKey(provider, model);
     const current = getDraft(provider, model);
+    const updated = { ...current, ...patch };
     setDrafts((prev) => ({
       ...prev,
-      [key]: {
-        ...current,
-        ...patch,
-      },
+      [key]: updated,
     }));
-  };
-
-  const saveRow = (provider: string, model: string) => {
-    const draft = getDraft(provider, model);
-    modelLabelOverridesManager.set(provider, model, {
-      label: draft.label,
-      badge: draft.badge,
-    });
-    toast.success("Model label saved");
+    autoSave(provider, model, updated);
   };
 
   const resetRow = (provider: string, model: string) => {
@@ -193,13 +202,6 @@ export function ModelLabelsContent() {
                       >
                         <RotateCcw className="size-3.5 mr-1" />
                         Reset
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => saveRow(provider, model)}
-                      >
-                        <Check className="size-3.5 mr-1" />
-                        Save
                       </Button>
                     </div>
                   </div>

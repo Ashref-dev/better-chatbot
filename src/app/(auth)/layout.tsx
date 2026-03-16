@@ -19,7 +19,7 @@ export default async function AuthLayout({
               <div className="relative z-10 flex flex-col h-full p-14">
                 <h1 className="text-xl font-semibold flex items-center gap-3 animate-in fade-in duration-1000 text-white">
                   <Think />
-                  <span>Chat Bot</span>
+                  <span>Ashref Chat</span>
                 </h1>
                 <div className="flex-1" />
                 <p className="text-white/50 text-sm mb-6 animate-in fade-in duration-1000 delay-300">

@@ -1517,3 +1517,69 @@
     @apply transition-colors duration-300;
   }
 }
+
+/* Global custom scrollbars */
+html,
+body,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s;
+}
+
+html:hover,
+body:hover,
+*:hover {
+  scrollbar-color: rgb(0 0 0 / 0.15) transparent;
+}
+
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 4px;
+  height: 4px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+::-webkit-scrollbar-track-piece {
+  -webkit-appearance: none;
+  background: transparent;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-button {
+  -webkit-appearance: none;
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+::-webkit-scrollbar-thumb {
+  -webkit-appearance: none;
+  background: transparent;
+  border-radius: 9999px;
+  border: none;
+  box-shadow: none;
+  transition: background 0.3s;
+}
+
+html:hover::-webkit-scrollbar-thumb,
+body:hover::-webkit-scrollbar-thumb,
+*:hover::-webkit-scrollbar-thumb {
+  background: rgb(0 0 0 / 0.15);
+}
+
+html:hover::-webkit-scrollbar-thumb,
+body:hover::-webkit-scrollbar-thumb,
+*:hover::-webkit-scrollbar-thumb {
+  background: rgb(0 0 0 / 0.15);
+}

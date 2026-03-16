@@ -1530,7 +1530,7 @@ body,
 html:hover,
 body:hover,
 *:hover {
-  scrollbar-color: rgb(0 0 0 / 0.15) transparent;
+  scrollbar-color: rgb(45 45 45 / 0.15) transparent;
 }
 
 ::-webkit-scrollbar {

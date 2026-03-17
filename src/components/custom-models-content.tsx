@@ -491,8 +491,15 @@ function VisibilitySection() {
     dedupingInterval: 60_000 * 5,
     revalidateOnFocus: false,
   });
-  const { hiddenModels, isLoading, toggleModel, resetToDefaults } =
-    useHiddenModels();
+  const { models: customModels } = useCustomModels();
+  const {
+    hiddenModels,
+    isLoading,
+    toggleModel,
+    resetToDefaults,
+    hideAll,
+    showAll,
+  } = useHiddenModels();
   const overrides = useModelLabelOverrides();
 
   if (isLoading) {
@@ -503,26 +510,68 @@ function VisibilitySection() {
     );
   }
 
-  // Get the unfiltered model list from the raw SWR data
-  const providers = rawProviders ?? [];
+  // Merge custom models into provider lists
+  const providers = (rawProviders ?? []).map((providerInfo) => {
+    const providerCustom = customModels.filter(
+      (m) => m.provider === providerInfo.provider,
+    );
+    return {
+      ...providerInfo,
+      models: [
+        ...providerInfo.models,
+        ...providerCustom.map((m) => ({ name: m.modelId, isCustom: true })),
+      ],
+    };
+  });
+
+  // Count totals for buttons
+  const allModelKeys = providers.flatMap((p) =>
+    p.models.map((m) => `${p.provider}:${m.name}`),
+  );
+  const visibleCount = allModelKeys.filter(
+    (k) => !hiddenModels.includes(k),
+  ).length;
+  const hiddenCount = hiddenModels.length;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
-          Toggle which models appear in the model selector.
+          Toggle which models appear in the selector.
         </p>
-        {hiddenModels.length > 0 && (
+        <div className="flex items-center gap-1 shrink-0">
           <Button
             size="sm"
             variant="ghost"
             className="h-7 text-xs"
-            onClick={resetToDefaults}
+            onClick={() => showAll()}
+            disabled={hiddenCount === 0}
           >
-            <RotateCcw className="size-3 mr-1" />
-            Reset
+            <Eye className="size-3 mr-1" />
+            Show All
           </Button>
-        )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs"
+            onClick={() => hideAll(allModelKeys)}
+            disabled={visibleCount === 0}
+          >
+            <EyeOff className="size-3 mr-1" />
+            Hide All
+          </Button>
+          {hiddenCount > 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs"
+              onClick={resetToDefaults}
+            >
+              <RotateCcw className="size-3 mr-1" />
+              Reset
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -545,6 +594,7 @@ function VisibilitySection() {
                   model.name,
                   overrides,
                 );
+                const isCustom = (model as any).isCustom;
 
                 return (
                   <button
@@ -571,6 +621,11 @@ function VisibilitySection() {
                         {display.badge && (
                           <span className="text-[11px] text-muted-foreground/50 font-normal leading-none shrink-0">
                             {display.badge}
+                          </span>
+                        )}
+                        {isCustom && (
+                          <span className="text-[9px] text-muted-foreground px-1 py-0.5 rounded bg-muted shrink-0">
+                            Custom
                           </span>
                         )}
                       </div>

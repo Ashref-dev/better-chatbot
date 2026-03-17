@@ -49,6 +49,33 @@ export function useHiddenModels() {
     window.dispatchEvent(new Event("hidden-models-changed"));
   }, [mutate]);
 
+  const showAll = useCallback(async () => {
+    hiddenModelsStorage.set([]);
+    await mutate([], false);
+    await fetch("/api/user/hidden-models", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify([]),
+    });
+    await mutate();
+    window.dispatchEvent(new Event("hidden-models-changed"));
+  }, [mutate]);
+
+  const hideAll = useCallback(
+    async (allModelKeys: string[]) => {
+      hiddenModelsStorage.set(allModelKeys);
+      await mutate(allModelKeys, false);
+      await fetch("/api/user/hidden-models", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(allModelKeys),
+      });
+      await mutate();
+      window.dispatchEvent(new Event("hidden-models-changed"));
+    },
+    [mutate],
+  );
+
   const isHidden = useCallback(
     (key: string) => hiddenModels.includes(key),
     [hiddenModels],
@@ -60,6 +87,8 @@ export function useHiddenModels() {
     error,
     toggleModel,
     resetToDefaults,
+    showAll,
+    hideAll,
     isHidden,
   };
 }

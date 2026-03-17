@@ -39,6 +39,11 @@ const uncloseai = createOpenAICompatible({
   baseURL: "https://qwen.ai.unturf.com/v1",
   apiKey: "dummy-api-key",
 });
+const hermesai = createOpenAICompatible({
+  name: "hermesai",
+  baseURL: "https://hermes.ai.unturf.com/v1",
+  apiKey: "dummy-api-key",
+});
 
 const staticModels = {
   openai: {
@@ -118,6 +123,7 @@ const staticModels = {
     "qwen3-coder-30b": uncloseai(
       "hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:Q4_K_M",
     ),
+    "hermes-3-8b": hermesai("adamo1139/Hermes-3-Llama-3.1-8B-FP8-Dynamic"),
   },
 };
 

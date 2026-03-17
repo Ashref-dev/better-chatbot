@@ -68,22 +68,22 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   "deepseek-v3.1": { label: "DeepSeek", badge: "v3.1" },
   "deepseek-v3.2": { label: "DeepSeek", badge: "v3.2" },
   "kimi-k2-thinking": { label: "Kimi K2", badge: "thinking" },
-  "qwen3-next-80b-thinking": { label: "Qwen 3", badge: "thinking" },
+  "qwen3-next-80b-thinking": { label: "Qwen 3", badge: "next" },
   "qwen3-coder-480b": { label: "Qwen 3", badge: "coder" },
   "seed-oss-36b": { label: "Seed OSS", badge: "36b" },
   "devstral-2-123b": { label: "Devstral 2", badge: "123b" },
-  "mistral-large-3-675b": { label: "Mistral Large 3", badge: "675b" },
+  "mistral-large-3-675b": { label: "Mistral 3", badge: "large" },
   "nemotron-3-super-120b": { label: "Nemotron 3", badge: "super" },
-  "nemotron-nano-12b-v2-vl": { label: "Nemotron Nano", badge: "12b" },
-  "mistral-small-4-119b": { label: "Mistral Small 4", badge: "119b" },
-  "qwen3.5-122b": { label: "Qwen 3.5", badge: "medium" },
-  "qwen3.5-397b": { label: "Qwen 3.5", badge: "397b" },
+  "nemotron-nano-12b-v2-vl": { label: "Nemotron", badge: "nano" },
+  "mistral-small-4-119b": { label: "Mistral 4", badge: "small" },
+  "qwen3.5-122b": { label: "Qwen 3.5", badge: "122b" },
+  "qwen3.5-397b": { label: "Qwen 3.5" },
   "step-3.5-flash": { label: "Step 3.5", badge: "flash" },
   "glm4.7": { label: "GLM 4.7" },
   glm5: { label: "GLM 5" },
 
   // UncloseAI
-  "qwen3-coder-30b": { label: "Qwen 3", badge: "coder 30b" },
+  "qwen3-coder-30b": { label: "Qwen 3", badge: "30b" },
 };
 
 export const getDefaultModelDisplay = (

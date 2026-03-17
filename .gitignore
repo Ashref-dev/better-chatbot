@@ -62,3 +62,4 @@ certificates
 public/uploads
 test-nvidia.ts
 test-nvidia-simple.ts
+vps_key

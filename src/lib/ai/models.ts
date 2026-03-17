@@ -86,15 +86,15 @@ const staticModels = {
     "qwen3-32b": groq("qwen/qwen3-32b"),
   },
   openRouter: {
-    "qwen3-coder": openrouter("qwen/qwen3-coder:free"),
     "gpt-oss-120b": openrouter("openai/gpt-oss-120b:free"),
     "glm-4.5-air": openrouter("z-ai/glm-4.5-air:free"),
-    "tng-r1t-chimera": openrouter("tngtech/tng-r1t-chimera:free"),
+    "minimax-m2.5": openrouter("minimax/minimax-m2.5:free"),
+    "trinity-mini": openrouter("arcee-ai/trinity-mini:free"),
+    "trinity-large": openrouter("arcee-ai/trinity-large-preview:free"),
   },
   nvidia: {
     "deepseek-v3.1": nvidia("deepseek-ai/deepseek-v3.1"),
     "deepseek-v3.2": nvidia("deepseek-ai/deepseek-v3.2"),
-    "minimax-m2": nvidia("minimaxai/minimax-m2"),
     "kimi-k2-instruct": nvidia("moonshotai/kimi-k2-instruct-0905"),
     "kimi-k2-thinking": nvidia("moonshotai/kimi-k2-thinking"),
     "qwen3-next-80b-thinking": nvidia("qwen/qwen3-next-80b-a3b-thinking"),
@@ -105,7 +105,14 @@ const staticModels = {
     "mistral-large-3-675b": nvidia(
       "mistralai/mistral-large-3-675b-instruct-2512",
     ),
-    "nemotron-3-nano-30b": nvidia("nvidia/nemotron-3-nano-30b-a3b"),
+    "nemotron-3-super-120b": nvidia("nvidia/nemotron-3-super-120b-a12b"),
+    "nemotron-nano-12b-v2-vl": nvidia("nvidia/nemotron-nano-12b-v2-vl"),
+    "mistral-small-4-119b": nvidia("mistralai/mistral-small-4-119b-2603"),
+    "qwen3.5-122b": nvidia("qwen/qwen3.5-122b-a10b"),
+    "qwen3.5-397b": nvidia("qwen/qwen3.5-397b-a17b"),
+    "step-3.5-flash": nvidia("stepfun-ai/step-3.5-flash"),
+    "glm4.7": nvidia("z-ai/glm4.7"),
+    glm5: nvidia("z-ai/glm5"),
   },
   uncloseai: {
     "qwen3-coder-30b": uncloseai(

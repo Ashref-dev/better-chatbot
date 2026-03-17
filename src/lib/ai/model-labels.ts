@@ -8,193 +8,88 @@ import {
 export type ResolvedModelDisplay = {
   label: string;
   badge?: string;
-  source: "override" | "suggested" | "fallback";
+  source: "override" | "default" | "fallback";
 };
 
-type SuggestionRule = {
-  test: RegExp;
-  label: string;
-  variants: string[];
+// Default display labels for all known models.
+// Key = model key as used in staticModels (e.g. "gpt-5.2-chat").
+// Users can override any of these per-device via the Model Labels settings.
+const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
+  // OpenAI
+  "gpt-5.2-chat": { label: "GPT 5.2", badge: "chat" },
+  "gpt-5.2": { label: "GPT 5.2" },
+  "gpt-5.1-chat": { label: "GPT 5.1", badge: "chat" },
+  "gpt-5.1-codex": { label: "GPT 5.1", badge: "codex" },
+  "gpt-5.1-codex-mini": { label: "GPT 5.1", badge: "codex mini" },
+  "gpt-5.1": { label: "GPT 5.1" },
+  "gpt-5": { label: "GPT 5" },
+  "gpt-5-mini": { label: "GPT 5", badge: "mini" },
+  "gpt-5-nano": { label: "GPT 5", badge: "nano" },
+  "gpt-4.1": { label: "GPT 4.1" },
+  "gpt-4.1-mini": { label: "GPT 4.1", badge: "mini" },
+  "o4-mini": { label: "o4", badge: "mini" },
+  o3: { label: "o3" },
+
+  // Google
+  "gemini-2.5-flash-lite": { label: "Gemini 2.5", badge: "flash lite" },
+  "gemini-2.5-flash": { label: "Gemini 2.5", badge: "flash" },
+  "gemini-3-pro": { label: "Gemini 3", badge: "pro" },
+  "gemini-2.5-pro": { label: "Gemini 2.5", badge: "pro" },
+
+  // Anthropic
+  "sonnet-4.5": { label: "Claude 4.5", badge: "sonnet" },
+  "haiku-4.5": { label: "Claude 4.5", badge: "haiku" },
+  "opus-4.5": { label: "Claude 4.5", badge: "opus" },
+
+  // xAI
+  "grok-4-1-fast": { label: "Grok 4.1", badge: "fast" },
+  "grok-4-1": { label: "Grok 4.1" },
+  "grok-3-mini": { label: "Grok 3", badge: "mini" },
+
+  // Ollama
+  "gemma3:1b": { label: "Gemma 3", badge: "1b" },
+  "gemma3:4b": { label: "Gemma 3", badge: "4b" },
+  "gemma3:12b": { label: "Gemma 3", badge: "12b" },
+
+  // Groq
+  "kimi-k2-instruct": { label: "Kimi K2", badge: "instruct" },
+  "llama-4-scout-17b": { label: "Llama 4", badge: "scout" },
+  "gpt-oss-20b": { label: "GPT OSS", badge: "20b" },
+  "gpt-oss-120b": { label: "GPT OSS", badge: "120b" },
+  "qwen3-32b": { label: "Qwen 3", badge: "32b" },
+
+  // OpenRouter
+  "glm-4.5-air": { label: "GLM 4.5", badge: "air" },
+  "minimax-m2.5": { label: "MiniMax M2.5" },
+  "trinity-mini": { label: "Trinity", badge: "mini" },
+  "trinity-large": { label: "Trinity", badge: "large" },
+
+  // NVIDIA
+  "deepseek-v3.1": { label: "DeepSeek", badge: "v3.1" },
+  "deepseek-v3.2": { label: "DeepSeek", badge: "v3.2" },
+  "kimi-k2-thinking": { label: "Kimi K2", badge: "thinking" },
+  "qwen3-next-80b-thinking": { label: "Qwen 3", badge: "thinking" },
+  "qwen3-coder-480b": { label: "Qwen 3", badge: "coder" },
+  "seed-oss-36b": { label: "Seed OSS", badge: "36b" },
+  "devstral-2-123b": { label: "Devstral 2", badge: "123b" },
+  "mistral-large-3-675b": { label: "Mistral Large 3", badge: "675b" },
+  "nemotron-3-super-120b": { label: "Nemotron 3", badge: "super" },
+  "nemotron-nano-12b-v2-vl": { label: "Nemotron Nano", badge: "12b" },
+  "mistral-small-4-119b": { label: "Mistral Small 4", badge: "119b" },
+  "qwen3.5-122b": { label: "Qwen 3.5", badge: "medium" },
+  "qwen3.5-397b": { label: "Qwen 3.5", badge: "397b" },
+  "step-3.5-flash": { label: "Step 3.5", badge: "flash" },
+  "glm4.7": { label: "GLM 4.7" },
+  glm5: { label: "GLM 5" },
+
+  // UncloseAI
+  "qwen3-coder-30b": { label: "Qwen 3", badge: "coder 30b" },
 };
 
-const SUGGESTION_RULES: SuggestionRule[] = [
-  {
-    test: /gpt[-_ ]?5(?:\.|_)?2/i,
-    label: "GPT 5.2",
-    variants: ["chat", "codex", "mini", "nano", "pro", "latest"],
-  },
-  {
-    test: /gpt[-_ ]?5(?:\.|_)?1/i,
-    label: "GPT 5.1",
-    variants: ["chat", "codex", "mini", "nano", "pro", "latest"],
-  },
-  {
-    test: /gpt[-_ ]?5/i,
-    label: "GPT 5",
-    variants: ["chat", "codex", "mini", "nano", "pro", "latest"],
-  },
-  {
-    test: /gpt[-_ ]?4(?:\.|_)?1/i,
-    label: "GPT 4.1",
-    variants: ["mini", "nano", "preview", "latest"],
-  },
-  {
-    test: /gpt[-_ ]?4o/i,
-    label: "GPT 4o",
-    variants: ["mini", "audio", "realtime", "preview", "latest"],
-  },
-  {
-    test: /gpt[-_ ]?oss[-_ ]?120b/i,
-    label: "GPT OSS",
-    variants: ["120b", "instruct"],
-  },
-  {
-    test: /gpt[-_ ]?oss[-_ ]?20b/i,
-    label: "GPT OSS",
-    variants: ["20b", "instruct"],
-  },
-  {
-    test: /qwen[-_ ]?3/i,
-    label: "Qwen 3",
-    variants: ["next", "coder", "thinking", "instruct", "mini", "max"],
-  },
-  {
-    test: /qwen[-_ ]?2(?:\.|_)?5/i,
-    label: "Qwen 2.5",
-    variants: ["coder", "instruct", "mini", "max"],
-  },
-  {
-    test: /deepseek/i,
-    label: "DeepSeek",
-    variants: ["r1", "v3.2", "v3.1", "v3", "coder", "lite", "chat"],
-  },
-  {
-    test: /claude[-_ ]?4(?:\.|_)?5|sonnet[-_ ]?4(?:\.|_)?5|haiku[-_ ]?4(?:\.|_)?5|opus[-_ ]?4(?:\.|_)?5/i,
-    label: "Claude 4.5",
-    variants: ["sonnet", "haiku", "opus"],
-  },
-  {
-    test: /claude[-_ ]?3(?:\.|_)?7/i,
-    label: "Claude 3.7",
-    variants: ["sonnet", "opus", "haiku"],
-  },
-  {
-    test: /claude[-_ ]?3(?:\.|_)?5/i,
-    label: "Claude 3.5",
-    variants: ["sonnet", "opus", "haiku"],
-  },
-  {
-    test: /gemini[-_ ]?3/i,
-    label: "Gemini 3",
-    variants: ["pro", "flash", "thinking", "lite", "preview"],
-  },
-  {
-    test: /gemini[-_ ]?2(?:\.|_)?5/i,
-    label: "Gemini 2.5",
-    variants: ["flash", "pro", "thinking", "lite"],
-  },
-  {
-    test: /grok[-_ ]?4(?:\.|_)?1/i,
-    label: "Grok 4.1",
-    variants: ["fast", "thinking", "mini"],
-  },
-  {
-    test: /grok[-_ ]?4/i,
-    label: "Grok 4",
-    variants: ["fast", "thinking", "mini"],
-  },
-  {
-    test: /grok[-_ ]?3/i,
-    label: "Grok 3",
-    variants: ["mini", "fast", "thinking"],
-  },
-  {
-    test: /llama[-_ ]?4/i,
-    label: "Llama 4",
-    variants: ["scout", "maverick", "instruct"],
-  },
-  {
-    test: /mistral[-_ ]?large[-_ ]?3/i,
-    label: "Mistral Large 3",
-    variants: ["instruct", "mini"],
-  },
-  {
-    test: /devstral[-_ ]?2/i,
-    label: "Devstral 2",
-    variants: ["instruct", "mini"],
-  },
-  {
-    test: /gemma[-_ ]?3/i,
-    label: "Gemma 3",
-    variants: ["1b", "4b", "12b", "27b", "it"],
-  },
-  {
-    test: /kimi[-_ ]?k2/i,
-    label: "Kimi K2",
-    variants: ["thinking", "instruct", "chat", "lite"],
-  },
-  {
-    test: /glm[-_ ]?4(?:\.|_)?5/i,
-    label: "GLM 4.5",
-    variants: ["air", "instruct", "chat"],
-  },
-  {
-    test: /minimax[-_ ]?m2/i,
-    label: "MiniMax M2",
-    variants: ["thinking", "instruct", "chat"],
-  },
-  {
-    test: /seed[-_ ]?oss[-_ ]?36b/i,
-    label: "Seed OSS",
-    variants: ["36b", "instruct"],
-  },
-  {
-    test: /nemotron[-_ ]?3/i,
-    label: "Nemotron 3",
-    variants: ["nano", "30b", "instruct"],
-  },
-  {
-    test: /o3/i,
-    label: "o3",
-    variants: ["mini", "high", "medium", "low"],
-  },
-  {
-    test: /o4/i,
-    label: "o4",
-    variants: ["mini", "high", "medium", "low"],
-  },
-];
-
-const toTokenList = (value: string) => {
-  return value
-    .toLowerCase()
-    .split(/[/:._\-\s]+/)
-    .filter(Boolean);
-};
-
-const pickVariant = (model: string, variants: string[]) => {
-  const tokens = toTokenList(model);
-  const exact = variants.find((variant) => tokens.includes(variant));
-  if (exact) return exact;
-
-  const joined = model.toLowerCase();
-  return variants.find((variant) => joined.includes(variant));
-};
-
-export const getSuggestedModelDisplay = (
+export const getDefaultModelDisplay = (
   model: string,
 ): Pick<ResolvedModelDisplay, "label" | "badge"> | null => {
-  const rawModel = model.trim();
-  if (!rawModel) return null;
-
-  const rule = SUGGESTION_RULES.find((item) => item.test.test(rawModel));
-  if (!rule) return null;
-
-  const variant = pickVariant(rawModel, rule.variants);
-  return {
-    label: rule.label,
-    badge: variant,
-  };
+  return DEFAULT_LABELS[model.trim()] ?? null;
 };
 
 export const resolveModelDisplay = (
@@ -214,23 +109,23 @@ export const resolveModelDisplay = (
     ? overrides[getModelLabelOverrideKey(provider, rawModel)]
     : undefined;
 
-  const suggested = getSuggestedModelDisplay(rawModel);
+  const defaultDisplay = getDefaultModelDisplay(rawModel);
 
   const overrideLabel = override?.label?.trim();
   const overrideBadge = override?.badge?.trim();
 
   if (overrideLabel || overrideBadge) {
     return {
-      label: overrideLabel || suggested?.label || rawModel,
-      badge: overrideBadge, // Fixed: use exactly what's in override if present
+      label: overrideLabel || defaultDisplay?.label || rawModel,
+      badge: overrideBadge,
       source: "override",
     };
   }
 
-  if (suggested) {
+  if (defaultDisplay) {
     return {
-      ...suggested,
-      source: "suggested",
+      ...defaultDisplay,
+      source: "default",
     };
   }
 

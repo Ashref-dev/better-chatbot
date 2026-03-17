@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { AutoHeight } from "ui/auto-height";
 
 import { appStore } from "@/app/store";
@@ -18,7 +18,16 @@ import {
   UserInstructionsContent,
   ExportsManagementContent,
 } from "./chat-preferences-content";
-import { UserIcon, X, Share2, Tags, Sparkles, Boxes } from "lucide-react";
+import {
+  UserIcon,
+  X,
+  Share2,
+  Tags,
+  Sparkles,
+  Boxes,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
 import { MCPIcon } from "ui/mcp-icon";
@@ -27,8 +36,12 @@ import { BackgroundEffectsContent } from "./background-effects-content";
 import { CustomModelsContent } from "./custom-models-content";
 
 export function ChatPreferencesPopup() {
-  const [openChatPreferences, appStoreMutate] = appStore(
-    useShallow((state) => [state.openChatPreferences, state.mutate]),
+  const [openChatPreferences, chatPreferencesTab, appStoreMutate] = appStore(
+    useShallow((state) => [
+      state.openChatPreferences,
+      state.chatPreferencesTab,
+      state.mutate,
+    ]),
   );
 
   const t = useTranslations();
@@ -93,7 +106,13 @@ export function ChatPreferencesPopup() {
   }, [openChatPreferences]);
 
   useEffect(() => {
-    if (!openChatPreferences) setTab(0);
+    if (!openChatPreferences) {
+      setTab(0);
+      appStoreMutate({ chatPreferencesTab: undefined });
+    } else if (chatPreferencesTab !== undefined) {
+      setTab(chatPreferencesTab);
+      appStoreMutate({ chatPreferencesTab: undefined });
+    }
   }, [openChatPreferences]);
 
   return (
@@ -120,25 +139,8 @@ export function ChatPreferencesPopup() {
 
           <div className="flex justify-center">
             <div className="w-full mt-4 lg:w-5xl lg:mt-14">
-              {/* Mobile: Tabs as horizontal scroll */}
-              <div className="md:hidden">
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {tabs.map((tabItem, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setTab(index)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                        tab === index
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted/50 text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {tabItem.icon}
-                      <span>{tabItem.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Mobile: Tabs as horizontal scroll with arrows */}
+              <MobileTabScroller tabs={tabs} tab={tab} setTab={setTab} />
 
               <div className="flex flex-1 overflow-hidden">
                 {/* Desktop: Sidebar */}
@@ -189,5 +191,95 @@ export function ChatPreferencesPopup() {
         </DrawerContent>
       </DrawerPortal>
     </Drawer>
+  );
+}
+
+function MobileTabScroller({
+  tabs,
+  tab,
+  setTab,
+}: {
+  tabs: { label: string; icon: React.ReactNode }[];
+  tab: number;
+  setTab: (i: number) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      ro.disconnect();
+    };
+  }, [checkScroll]);
+
+  const scroll = (dir: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === "left" ? -120 : 120, behavior: "smooth" });
+  };
+
+  return (
+    <div className="md:hidden flex items-center gap-1 pb-2">
+      <button
+        onClick={() => scroll("left")}
+        disabled={!canScrollLeft}
+        className={`shrink-0 size-8 flex items-center justify-center rounded-md transition-all ${
+          canScrollLeft
+            ? "text-muted-foreground hover:text-foreground hover:bg-muted"
+            : "text-muted-foreground/20 cursor-default"
+        }`}
+        aria-label="Scroll left"
+      >
+        <ChevronLeft className="size-4" />
+      </button>
+
+      <div
+        ref={scrollRef}
+        className="flex-1 flex gap-2 overflow-x-auto scrollbar-none"
+      >
+        {tabs.map((tabItem, index) => (
+          <button
+            key={index}
+            onClick={() => setTab(index)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+              tab === index
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted/50 text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {tabItem.icon}
+            <span>{tabItem.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <button
+        onClick={() => scroll("right")}
+        disabled={!canScrollRight}
+        className={`shrink-0 size-8 flex items-center justify-center rounded-md transition-all ${
+          canScrollRight
+            ? "text-muted-foreground hover:text-foreground hover:bg-muted"
+            : "text-muted-foreground/20 cursor-default"
+        }`}
+        aria-label="Scroll right"
+      >
+        <ChevronRight className="size-4" />
+      </button>
+    </div>
   );
 }

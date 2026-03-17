@@ -3,23 +3,33 @@ import { fetcher } from "lib/utils";
 import useSWR, { SWRConfiguration } from "swr";
 import { useEffect, useState } from "react";
 import { customModelsManager } from "@/lib/ai/custom-models";
+import { getStorageManager } from "@/lib/browser-stroage";
+
+const hiddenModelsStorage = getStorageManager<string[]>("hidden-models");
 
 export const useChatModels = (options?: SWRConfiguration) => {
   const [customModels, setCustomModels] = useState(
     customModelsManager.getAll(),
+  );
+  const [hiddenModels, setHiddenModels] = useState<string[]>(
+    hiddenModelsStorage.get() ?? [],
   );
 
   useEffect(() => {
     const handleChange = () => {
       setCustomModels(customModelsManager.getAll());
     };
+    const handleHiddenChange = () => {
+      setHiddenModels(hiddenModelsStorage.get() ?? []);
+    };
 
     window.addEventListener("custom-models-changed", handleChange);
-    // Keep legacy event for backward compat
     window.addEventListener("openrouter-models-changed", handleChange);
+    window.addEventListener("hidden-models-changed", handleHiddenChange);
     return () => {
       window.removeEventListener("custom-models-changed", handleChange);
       window.removeEventListener("openrouter-models-changed", handleChange);
+      window.removeEventListener("hidden-models-changed", handleHiddenChange);
     };
   }, []);
 
@@ -54,18 +64,28 @@ export const useChatModels = (options?: SWRConfiguration) => {
     const providerCustom = customModels.filter(
       (m) => m.provider === providerInfo.provider,
     );
-    if (providerCustom.length === 0) return providerInfo;
 
-    const customModelEntries = providerCustom.map((model) => ({
-      name: model.modelId,
-      isToolCallUnsupported: !model.supportsTools,
-      isImageInputUnsupported: true,
-      supportedFileMimeTypes: [] as string[],
-    }));
+    const allModels =
+      providerCustom.length === 0
+        ? providerInfo.models
+        : [
+            ...providerInfo.models,
+            ...providerCustom.map((model) => ({
+              name: model.modelId,
+              isToolCallUnsupported: !model.supportsTools,
+              isImageInputUnsupported: true,
+              supportedFileMimeTypes: [] as string[],
+            })),
+          ];
+
+    // Filter out hidden models
+    const visibleModels = allModels.filter(
+      (m) => !hiddenModels.includes(`${providerInfo.provider}:${m.name}`),
+    );
 
     return {
       ...providerInfo,
-      models: [...providerInfo.models, ...customModelEntries],
+      models: visibleModels,
     };
   });
 

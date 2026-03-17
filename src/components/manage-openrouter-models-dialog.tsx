@@ -14,8 +14,10 @@ import { Label } from "ui/label";
 import { Switch } from "ui/switch";
 import { customModelsManager, CustomModel } from "@/lib/ai/custom-models";
 import { modelLabelOverridesManager } from "@/lib/ai/model-label-overrides";
-import { Trash2, Plus, Loader } from "lucide-react";
+import { resolveModelDisplay } from "@/lib/ai/model-labels";
+import { Trash2, Plus, Loader, Settings2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { appStore } from "@/app/store";
 
 interface ManageOpenRouterModelsDialogProps {
   open: boolean;
@@ -58,7 +60,6 @@ export function ManageOpenRouterModelsDialog({
     try {
       customModelsManager.add("openRouter", modelId.trim(), supportsTools);
 
-      // Save custom label/badge override if provided
       if (customLabel.trim() || customBadge.trim()) {
         modelLabelOverridesManager.set("openRouter", modelId.trim(), {
           label: customLabel.trim() || undefined,
@@ -72,7 +73,6 @@ export function ManageOpenRouterModelsDialog({
       setSupportsTools(true);
       loadModels();
       toast.success("Model added successfully");
-      // Trigger a re-render of model selector by dispatching custom event
       window.dispatchEvent(new Event("custom-models-changed"));
     } catch (_error) {
       toast.error("Failed to add model");
@@ -85,165 +85,205 @@ export function ManageOpenRouterModelsDialog({
     const model = models.find((m) => m.id === id);
     customModelsManager.remove(id);
     if (model) {
-      modelLabelOverridesManager.remove("openRouter", model.modelId);
+      modelLabelOverridesManager.remove(model.provider, model.modelId);
     }
     loadModels();
-    toast.success("Model removed successfully");
+    toast.success("Model removed");
     window.dispatchEvent(new Event("custom-models-changed"));
   };
 
+  const openFullSettings = () => {
+    onOpenChange(false);
+    // Tab index 3 = Custom Models
+    appStore.setState({
+      openChatPreferences: true,
+      chatPreferencesTab: 3,
+    });
+  };
+
+  // Group by provider for display
+  const grouped = [
+    { key: "openRouter", label: "OpenRouter" },
+    { key: "nvidia", label: "NVIDIA" },
+    { key: "groq", label: "Groq" },
+    { key: "openai", label: "OpenAI" },
+    { key: "google", label: "Google" },
+    { key: "anthropic", label: "Anthropic" },
+    { key: "xai", label: "xAI" },
+    { key: "ollama", label: "Ollama" },
+    { key: "uncloseai", label: "UncloseAI" },
+    { key: "hermesai", label: "HermesAI" },
+  ]
+    .map((p) => ({
+      ...p,
+      models: models.filter((m) => m.provider === p.key),
+    }))
+    .filter((g) => g.models.length > 0);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-lg w-[calc(100vw-2rem)] max-h-[85vh] overflow-hidden flex flex-col gap-4">
         <DialogHeader>
-          <DialogTitle>Manage OpenRouter Models</DialogTitle>
+          <DialogTitle>Quick Add — OpenRouter</DialogTitle>
           <DialogDescription>
-            Add custom OpenRouter model IDs to access the latest models. Use the
-            format: <code className="text-xs">provider/model-name</code> (e.g.,
-            openai/gpt-5-beta)
+            Quickly add an OpenRouter model. Use{" "}
+            <code className="text-xs">provider/model-name</code> format.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-          {/* Add new model form */}
-          <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
-            <div className="space-y-2">
-              <Label htmlFor="modelId">Model ID</Label>
+        {/* Compact add form */}
+        <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
+          <div className="space-y-1.5">
+            <Label htmlFor="or-modelId" className="text-xs">
+              Model ID
+            </Label>
+            <Input
+              id="or-modelId"
+              placeholder="e.g., openai/gpt-5-beta"
+              value={modelId}
+              onChange={(e) => setModelId(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !isAdding) handleAdd();
+              }}
+              className="h-8 text-sm"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="or-label" className="text-xs">
+                Label
+              </Label>
               <Input
-                id="modelId"
-                placeholder="e.g., openai/gpt-5-beta"
-                value={modelId}
-                onChange={(e) => setModelId(e.target.value)}
+                id="or-label"
+                placeholder="optional"
+                value={customLabel}
+                onChange={(e) => setCustomLabel(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isAdding) {
-                    handleAdd();
-                  }
+                  if (e.key === "Enter" && !isAdding) handleAdd();
                 }}
+                className="h-8 text-sm"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="customLabel">Label (optional)</Label>
-                <Input
-                  id="customLabel"
-                  placeholder="e.g., GPT 5"
-                  value={customLabel}
-                  onChange={(e) => setCustomLabel(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !isAdding) {
-                      handleAdd();
-                    }
-                  }}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="customBadge">Subtitle (optional)</Label>
-                <Input
-                  id="customBadge"
-                  placeholder="e.g., beta"
-                  value={customBadge}
-                  onChange={(e) => setCustomBadge(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !isAdding) {
-                      handleAdd();
-                    }
-                  }}
-                />
-              </div>
-            </div>
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="supportsTools">Supports Tool Calls</Label>
-                <p className="text-xs text-muted-foreground">
-                  Enable if this model can make function/tool calls
-                </p>
-              </div>
-              <Switch
-                id="supportsTools"
-                checked={supportsTools}
-                onCheckedChange={setSupportsTools}
+            <div className="space-y-1.5">
+              <Label htmlFor="or-badge" className="text-xs">
+                Subtitle
+              </Label>
+              <Input
+                id="or-badge"
+                placeholder="optional"
+                value={customBadge}
+                onChange={(e) => setCustomBadge(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isAdding) handleAdd();
+                }}
+                className="h-8 text-sm"
               />
             </div>
-            <Button
-              onClick={handleAdd}
-              disabled={isAdding}
-              className="w-full"
-              size="sm"
-            >
-              {isAdding ? (
-                <>
-                  <Loader className="size-3.5 mr-2 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                <>
-                  <Plus className="size-3.5 mr-2" />
-                  Add Model
-                </>
-              )}
-            </Button>
+          </div>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="or-tools" className="text-xs">
+              Tool calls
+            </Label>
+            <Switch
+              id="or-tools"
+              checked={supportsTools}
+              onCheckedChange={setSupportsTools}
+            />
+          </div>
+          <Button
+            onClick={handleAdd}
+            disabled={isAdding}
+            className="w-full"
+            size="sm"
+          >
+            {isAdding ? (
+              <Loader className="size-3.5 mr-2 animate-spin" />
+            ) : (
+              <Plus className="size-3.5 mr-2" />
+            )}
+            Add Model
+          </Button>
+        </div>
+
+        {/* Scrollable model list — all custom models */}
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+          <div className="flex items-center justify-between mb-2">
+            <Label className="text-xs text-muted-foreground">
+              Custom Models ({models.length})
+            </Label>
           </div>
 
-          {/* List of custom models */}
-          <div className="flex-1 overflow-y-auto space-y-2">
-            <Label>Your Custom Models ({models.length})</Label>
-            {models.length === 0 ? (
-              <div className="text-sm text-muted-foreground text-center py-8">
-                No custom models yet. Add one above to get started.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {models.map((model) => (
-                  <div
-                    key={model.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm truncate">
-                          {(() => {
-                            const override = modelLabelOverridesManager.get(
-                              "openRouter",
-                              model.modelId,
-                            );
-                            return override?.label || model.modelId;
-                          })()}
-                        </p>
-                        {(() => {
-                          const override = modelLabelOverridesManager.get(
-                            "openRouter",
-                            model.modelId,
-                          );
-                          return override?.badge ? (
-                            <span className="text-[11px] text-muted-foreground/50 font-normal leading-none">
-                              {override.badge}
-                            </span>
-                          ) : null;
-                        })()}
-                        {!model.supportsTools && (
-                          <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
-                            No tools
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {model.modelId}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemove(model.id)}
-                      className="ml-2 shrink-0 hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+          {grouped.length === 0 ? (
+            <div className="text-xs text-muted-foreground text-center py-6">
+              No custom models yet.
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
+              {grouped.map((group) => (
+                <div key={group.key}>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                    {group.label}
+                  </p>
+                  <div className="space-y-1">
+                    {group.models.map((model) => {
+                      const display = resolveModelDisplay(
+                        model.provider,
+                        model.modelId,
+                      );
+                      return (
+                        <div
+                          key={model.id}
+                          className="flex items-center justify-between p-2 border rounded-md hover:bg-muted/50 transition-colors group/item"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-xs truncate">
+                                {display.label}
+                              </span>
+                              {display.badge && (
+                                <span className="text-[10px] text-muted-foreground/50 leading-none shrink-0">
+                                  {display.badge}
+                                </span>
+                              )}
+                              {!model.supportsTools && (
+                                <span className="text-[9px] text-muted-foreground px-1 py-0.5 rounded bg-muted shrink-0">
+                                  No tools
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground/50 truncate">
+                              {model.modelId}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemove(model.id)}
+                            className="ml-1 size-7 shrink-0 opacity-0 group-hover/item:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
+                          >
+                            <Trash2 className="size-3" />
+                          </Button>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Full settings link */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={openFullSettings}
+          className="w-full text-xs"
+        >
+          <Settings2 className="size-3.5 mr-2" />
+          Full Settings
+          <ArrowRight className="size-3 ml-auto" />
+        </Button>
       </DialogContent>
     </Dialog>
   );

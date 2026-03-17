@@ -12,10 +12,12 @@ export type CustomModelEntry = {
 
 export type UserPreferences = {
   displayName?: string;
-  profession?: string; // User's job or profession
-  responseStyleExample?: string; // Example of preferred response style
-  botName?: string; // Name of the bot
+  profession?: string;
+  responseStyleExample?: string;
+  botName?: string;
   customModels?: CustomModelEntry[];
+  apiKeys?: Record<string, string>; // provider -> encrypted API key
+  hiddenModels?: string[]; // ["provider:modelId", ...]
 };
 
 // user without password
@@ -100,4 +102,6 @@ export const UserPreferencesZodSchema = z.object({
   responseStyleExample: z.string().optional(),
   botName: z.string().optional(),
   customModels: z.array(CustomModelEntryZodSchema).optional(),
+  apiKeys: z.record(z.string(), z.string()).optional(),
+  hiddenModels: z.array(z.string()).optional(),
 });

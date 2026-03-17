@@ -1,11 +1,15 @@
 import "server-only";
 
 import { createOllama } from "ollama-ai-provider-v2";
-import { openai } from "@ai-sdk/openai";
-import { google } from "@ai-sdk/google";
-import { anthropic } from "@ai-sdk/anthropic";
-import { xai } from "@ai-sdk/xai";
-import { LanguageModelV2, openrouter } from "@openrouter/ai-sdk-provider";
+import { openai, createOpenAI } from "@ai-sdk/openai";
+import { google, createGoogleGenerativeAI } from "@ai-sdk/google";
+import { anthropic, createAnthropic } from "@ai-sdk/anthropic";
+import { xai, createXai } from "@ai-sdk/xai";
+import {
+  LanguageModelV2,
+  openrouter,
+  createOpenRouter,
+} from "@openrouter/ai-sdk-provider";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { LanguageModel } from "ai";
@@ -228,6 +232,64 @@ export const getFilePartSupportedMimeTypes = (model: LanguageModel) => {
 
 const fallbackModel = staticModels.openai["gpt-5.2-chat"];
 
+// Create a provider model instance, optionally with a user-provided API key
+function createProviderModel(
+  provider: string,
+  modelId: string,
+  userApiKey?: string,
+): LanguageModel {
+  if (userApiKey) {
+    switch (provider) {
+      case "openai":
+        return createOpenAI({ apiKey: userApiKey })(modelId) as LanguageModel;
+      case "google":
+        return createGoogleGenerativeAI({ apiKey: userApiKey })(
+          modelId,
+        ) as LanguageModel;
+      case "anthropic":
+        return createAnthropic({ apiKey: userApiKey })(
+          modelId,
+        ) as LanguageModel;
+      case "xai":
+        return createXai({ apiKey: userApiKey })(modelId) as LanguageModel;
+      case "groq":
+        return createGroq({ apiKey: userApiKey })(modelId) as LanguageModel;
+      case "openRouter":
+        return createOpenRouter({ apiKey: userApiKey })(
+          modelId,
+        ) as LanguageModel;
+      case "nvidia":
+        return createOpenAICompatible({
+          name: "Nvidia",
+          baseURL: "https://integrate.api.nvidia.com/v1",
+          apiKey: userApiKey,
+        })(modelId) as LanguageModel;
+      case "ollama":
+        return createOllama({
+          baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
+        })(modelId) as LanguageModel;
+      default:
+        break;
+    }
+  }
+
+  // Default providers (env-based keys)
+  const defaultMap: Record<string, (id: string) => LanguageModel> = {
+    openRouter: (id) => openrouter(id) as LanguageModel,
+    nvidia: (id) => nvidia(id) as LanguageModel,
+    groq: (id) => groq(id) as LanguageModel,
+    openai: (id) => openai(id) as LanguageModel,
+    google: (id) => google(id) as LanguageModel,
+    anthropic: (id) => anthropic(id) as LanguageModel,
+    xai: (id) => xai(id) as LanguageModel,
+    ollama: (id) => ollama(id) as LanguageModel,
+    uncloseai: (id) => uncloseai(id) as LanguageModel,
+    hermesai: (id) => hermesai(id) as LanguageModel,
+  };
+  const factory = defaultMap[provider];
+  return factory ? factory(modelId) : fallbackModel;
+}
+
 export const customModelProvider = {
   modelsInfo: Object.entries(allModels).map(([provider, models]) => ({
     provider,
@@ -239,25 +301,23 @@ export const customModelProvider = {
     })),
     hasAPIKey: checkProviderAPIKey(provider as keyof typeof staticModels),
   })),
-  getModel: (model?: ChatModel, customModelId?: string): LanguageModel => {
+  getModel: (
+    model?: ChatModel,
+    customModelId?: string,
+    userApiKeys?: Record<string, string>,
+  ): LanguageModel => {
     if (!model) return fallbackModel;
 
-    // Handle custom models not in staticModels
+    const userKey = userApiKeys?.[model.provider];
+
+    // Custom model ID → always create dynamically
     if (customModelId) {
-      const providerMap: Record<string, (id: string) => LanguageModel> = {
-        openRouter: (id) => openrouter(id) as LanguageModel,
-        nvidia: (id) => nvidia(id) as LanguageModel,
-        groq: (id) => groq(id) as LanguageModel,
-        openai: (id) => openai(id) as LanguageModel,
-        google: (id) => google(id) as LanguageModel,
-        anthropic: (id) => anthropic(id) as LanguageModel,
-        xai: (id) => xai(id) as LanguageModel,
-        ollama: (id) => ollama(id) as LanguageModel,
-        uncloseai: (id) => uncloseai(id) as LanguageModel,
-        hermesai: (id) => hermesai(id) as LanguageModel,
-      };
-      const factory = providerMap[model.provider];
-      if (factory) return factory(customModelId);
+      return createProviderModel(model.provider, customModelId, userKey);
+    }
+
+    // User has their own API key → create provider with that key
+    if (userKey) {
+      return createProviderModel(model.provider, model.model, userKey);
     }
 
     return allModels[model.provider]?.[model.model] || fallbackModel;

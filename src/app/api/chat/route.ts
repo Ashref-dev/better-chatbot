@@ -13,8 +13,13 @@ import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
-import { agentRepository, chatRepository } from "lib/db/repository";
+import {
+  agentRepository,
+  chatRepository,
+  userRepository,
+} from "lib/db/repository";
 import globalLogger from "logger";
+import { decrypt } from "lib/encryption";
 import {
   buildMcpServerCustomizationsSystemPrompt,
   buildUserSystemPrompt,
@@ -78,7 +83,29 @@ export async function POST(request: Request) {
       attachments = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
 
-    const model = customModelProvider.getModel(chatModel, customModelId);
+    // Load user's custom API keys (if any)
+    let userApiKeys: Record<string, string> | undefined;
+    try {
+      const prefs = await userRepository.getPreferences(session.user.id);
+      if (prefs?.apiKeys) {
+        userApiKeys = {};
+        for (const [provider, encrypted] of Object.entries(prefs.apiKeys)) {
+          try {
+            userApiKeys[provider] = decrypt(encrypted);
+          } catch {
+            // Skip corrupted keys
+          }
+        }
+      }
+    } catch {
+      // Continue without user keys
+    }
+
+    const model = customModelProvider.getModel(
+      chatModel,
+      customModelId,
+      userApiKeys,
+    );
 
     let thread = await chatRepository.selectThreadDetails(id);
 

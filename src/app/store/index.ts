@@ -49,6 +49,7 @@ export interface AppState {
   chatModel?: ChatModel;
   openShortcutsPopup: boolean;
   openChatPreferences: boolean;
+  chatPreferencesTab?: number;
   openUserSettings: boolean;
   mcpCustomizationPopup?: MCPServerInfo & { id: string };
   temporaryChat: {

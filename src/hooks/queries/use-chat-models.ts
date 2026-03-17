@@ -2,27 +2,24 @@ import { appStore } from "@/app/store";
 import { fetcher } from "lib/utils";
 import useSWR, { SWRConfiguration } from "swr";
 import { useEffect, useState } from "react";
-import { customOpenRouterModelsManager } from "@/lib/ai/custom-openrouter-models";
+import { customModelsManager } from "@/lib/ai/custom-models";
 
 export const useChatModels = (options?: SWRConfiguration) => {
   const [customModels, setCustomModels] = useState(
-    customOpenRouterModelsManager.getAll(),
+    customModelsManager.getAll(),
   );
 
   useEffect(() => {
-    const handleCustomModelsChange = () => {
-      setCustomModels(customOpenRouterModelsManager.getAll());
+    const handleChange = () => {
+      setCustomModels(customModelsManager.getAll());
     };
 
-    window.addEventListener(
-      "openrouter-models-changed",
-      handleCustomModelsChange,
-    );
+    window.addEventListener("custom-models-changed", handleChange);
+    // Keep legacy event for backward compat
+    window.addEventListener("openrouter-models-changed", handleChange);
     return () => {
-      window.removeEventListener(
-        "openrouter-models-changed",
-        handleCustomModelsChange,
-      );
+      window.removeEventListener("custom-models-changed", handleChange);
+      window.removeEventListener("openrouter-models-changed", handleChange);
     };
   }, []);
 
@@ -52,22 +49,24 @@ export const useChatModels = (options?: SWRConfiguration) => {
     ...options,
   });
 
-  // Merge custom OpenRouter models with the API data
+  // Merge custom models into their respective providers
   const dataWithCustomModels = result.data?.map((providerInfo) => {
-    if (providerInfo.provider === "openRouter" && customModels.length > 0) {
-      const customModelEntries = customModels.map((model) => ({
-        name: model.modelId,
-        isToolCallUnsupported: !model.supportsTools,
-        isImageInputUnsupported: true,
-        supportedFileMimeTypes: [],
-      }));
+    const providerCustom = customModels.filter(
+      (m) => m.provider === providerInfo.provider,
+    );
+    if (providerCustom.length === 0) return providerInfo;
 
-      return {
-        ...providerInfo,
-        models: [...providerInfo.models, ...customModelEntries],
-      };
-    }
-    return providerInfo;
+    const customModelEntries = providerCustom.map((model) => ({
+      name: model.modelId,
+      isToolCallUnsupported: !model.supportsTools,
+      isImageInputUnsupported: true,
+      supportedFileMimeTypes: [] as string[],
+    }));
+
+    return {
+      ...providerInfo,
+      models: [...providerInfo.models, ...customModelEntries],
+    };
   });
 
   return {

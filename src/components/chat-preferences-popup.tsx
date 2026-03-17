@@ -18,12 +18,13 @@ import {
   UserInstructionsContent,
   ExportsManagementContent,
 } from "./chat-preferences-content";
-import { UserIcon, X, Share2, Tags, Sparkles } from "lucide-react";
+import { UserIcon, X, Share2, Tags, Sparkles, Boxes } from "lucide-react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
 import { MCPIcon } from "ui/mcp-icon";
 import { ModelLabelsContent } from "./model-labels-content";
 import { BackgroundEffectsContent } from "./background-effects-content";
+import { CustomModelsContent } from "./custom-models-content";
 
 export function ChatPreferencesPopup() {
   const [openChatPreferences, appStoreMutate] = appStore(
@@ -45,6 +46,10 @@ export function ChatPreferencesPopup() {
       {
         label: t("Chat.ChatPreferences.myExports"),
         icon: <Share2 className="w-4 h-4" />,
+      },
+      {
+        label: "Custom Models",
+        icon: <Boxes className="w-4 h-4" />,
       },
       {
         label: "Model Labels",
@@ -168,8 +173,10 @@ export function ChatPreferencesPopup() {
                         ) : tab == 2 ? (
                           <ExportsManagementContent />
                         ) : tab == 3 ? (
-                          <ModelLabelsContent />
+                          <CustomModelsContent />
                         ) : tab == 4 ? (
+                          <ModelLabelsContent />
+                        ) : tab == 5 ? (
                           <BackgroundEffectsContent />
                         ) : null}
                       </>

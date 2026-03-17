@@ -12,10 +12,7 @@ import { Button } from "ui/button";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { Switch } from "ui/switch";
-import {
-  customOpenRouterModelsManager,
-  CustomOpenRouterModel,
-} from "@/lib/ai/custom-openrouter-models";
+import { customModelsManager, CustomModel } from "@/lib/ai/custom-models";
 import { modelLabelOverridesManager } from "@/lib/ai/model-label-overrides";
 import { Trash2, Plus, Loader } from "lucide-react";
 import { toast } from "sonner";
@@ -29,7 +26,7 @@ export function ManageOpenRouterModelsDialog({
   open,
   onOpenChange,
 }: ManageOpenRouterModelsDialogProps) {
-  const [models, setModels] = useState<CustomOpenRouterModel[]>([]);
+  const [models, setModels] = useState<CustomModel[]>([]);
   const [modelId, setModelId] = useState("");
   const [customLabel, setCustomLabel] = useState("");
   const [customBadge, setCustomBadge] = useState("");
@@ -43,7 +40,7 @@ export function ManageOpenRouterModelsDialog({
   }, [open]);
 
   const loadModels = () => {
-    setModels(customOpenRouterModelsManager.getAll());
+    setModels(customModelsManager.getByProvider("openRouter"));
   };
 
   const handleAdd = () => {
@@ -52,14 +49,14 @@ export function ManageOpenRouterModelsDialog({
       return;
     }
 
-    if (customOpenRouterModelsManager.exists(modelId)) {
+    if (customModelsManager.exists("openRouter", modelId)) {
       toast.error("This model ID already exists");
       return;
     }
 
     setIsAdding(true);
     try {
-      customOpenRouterModelsManager.add(modelId.trim(), supportsTools);
+      customModelsManager.add("openRouter", modelId.trim(), supportsTools);
 
       // Save custom label/badge override if provided
       if (customLabel.trim() || customBadge.trim()) {
@@ -76,7 +73,7 @@ export function ManageOpenRouterModelsDialog({
       loadModels();
       toast.success("Model added successfully");
       // Trigger a re-render of model selector by dispatching custom event
-      window.dispatchEvent(new Event("openrouter-models-changed"));
+      window.dispatchEvent(new Event("custom-models-changed"));
     } catch (_error) {
       toast.error("Failed to add model");
     } finally {
@@ -86,14 +83,13 @@ export function ManageOpenRouterModelsDialog({
 
   const handleRemove = (id: string) => {
     const model = models.find((m) => m.id === id);
-    customOpenRouterModelsManager.remove(id);
+    customModelsManager.remove(id);
     if (model) {
       modelLabelOverridesManager.remove("openRouter", model.modelId);
     }
     loadModels();
     toast.success("Model removed successfully");
-    // Trigger a re-render of model selector
-    window.dispatchEvent(new Event("openrouter-models-changed"));
+    window.dispatchEvent(new Event("custom-models-changed"));
   };
 
   return (

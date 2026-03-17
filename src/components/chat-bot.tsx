@@ -48,7 +48,7 @@ import { getStorageManager } from "lib/browser-stroage";
 import { AnimatePresence, motion } from "framer-motion";
 import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
 import { useFileDragOverlay } from "@/hooks/use-file-drag-overlay";
-import { customOpenRouterModelsManager } from "@/lib/ai/custom-openrouter-models";
+import { customModelsManager } from "@/lib/ai/custom-models";
 import {
   effects,
   pickRandomEffect,
@@ -203,15 +203,15 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
         const currentChatModel =
           (body as { model: ChatModel })?.model ?? latestRef.current.model;
 
-        // Check if this is a custom OpenRouter model
-        let customOpenRouterModelId: string | undefined;
-        if (currentChatModel?.provider === "openRouter") {
-          const customModels = customOpenRouterModelsManager.getAll();
-          const customModel = customModels.find(
-            (m) => m.modelId === currentChatModel.model,
+        // Check if this is a custom model (any provider)
+        let customModelId: string | undefined;
+        if (currentChatModel) {
+          const isCustom = customModelsManager.exists(
+            currentChatModel.provider,
+            currentChatModel.model,
           );
-          if (customModel) {
-            customOpenRouterModelId = customModel.modelId;
+          if (isCustom) {
+            customModelId = currentChatModel.model;
           }
         }
 
@@ -219,7 +219,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           ...body,
           id,
           chatModel: currentChatModel,
-          customOpenRouterModelId,
+          customModelId,
           toolChoice: latestRef.current.toolChoice,
           allowedAppDefaultToolkit:
             latestRef.current.mentions?.length || hasFilePart

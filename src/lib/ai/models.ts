@@ -239,15 +239,25 @@ export const customModelProvider = {
     })),
     hasAPIKey: checkProviderAPIKey(provider as keyof typeof staticModels),
   })),
-  getModel: (
-    model?: ChatModel,
-    customOpenRouterModelId?: string,
-  ): LanguageModel => {
+  getModel: (model?: ChatModel, customModelId?: string): LanguageModel => {
     if (!model) return fallbackModel;
 
-    // Handle custom OpenRouter models
-    if (model.provider === "openRouter" && customOpenRouterModelId) {
-      return openrouter(customOpenRouterModelId);
+    // Handle custom models not in staticModels
+    if (customModelId) {
+      const providerMap: Record<string, (id: string) => LanguageModel> = {
+        openRouter: (id) => openrouter(id) as LanguageModel,
+        nvidia: (id) => nvidia(id) as LanguageModel,
+        groq: (id) => groq(id) as LanguageModel,
+        openai: (id) => openai(id) as LanguageModel,
+        google: (id) => google(id) as LanguageModel,
+        anthropic: (id) => anthropic(id) as LanguageModel,
+        xai: (id) => xai(id) as LanguageModel,
+        ollama: (id) => ollama(id) as LanguageModel,
+        uncloseai: (id) => uncloseai(id) as LanguageModel,
+        hermesai: (id) => hermesai(id) as LanguageModel,
+      };
+      const factory = providerMap[model.provider];
+      if (factory) return factory(customModelId);
     }
 
     return allModels[model.provider]?.[model.model] || fallbackModel;

@@ -208,7 +208,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
         if (currentChatModel?.provider === "openRouter") {
           const customModels = customOpenRouterModelsManager.getAll();
           const customModel = customModels.find(
-            (m) => m.displayName === currentChatModel.model,
+            (m) => m.modelId === currentChatModel.model,
           );
           if (customModel) {
             customOpenRouterModelId = customModel.modelId;

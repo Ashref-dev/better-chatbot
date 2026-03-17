@@ -30,7 +30,6 @@ export function ManageOpenRouterModelsDialog({
   onOpenChange,
 }: ManageOpenRouterModelsDialogProps) {
   const [models, setModels] = useState<CustomOpenRouterModel[]>([]);
-  const [displayName, setDisplayName] = useState("");
   const [modelId, setModelId] = useState("");
   const [customLabel, setCustomLabel] = useState("");
   const [customBadge, setCustomBadge] = useState("");
@@ -48,8 +47,8 @@ export function ManageOpenRouterModelsDialog({
   };
 
   const handleAdd = () => {
-    if (!displayName.trim() || !modelId.trim()) {
-      toast.error("Please provide both display name and model ID");
+    if (!modelId.trim()) {
+      toast.error("Please provide a model ID");
       return;
     }
 
@@ -60,11 +59,7 @@ export function ManageOpenRouterModelsDialog({
 
     setIsAdding(true);
     try {
-      customOpenRouterModelsManager.add(
-        displayName.trim(),
-        modelId.trim(),
-        supportsTools,
-      );
+      customOpenRouterModelsManager.add(modelId.trim(), supportsTools);
 
       // Save custom label/badge override if provided
       if (customLabel.trim() || customBadge.trim()) {
@@ -74,7 +69,6 @@ export function ManageOpenRouterModelsDialog({
         });
       }
 
-      setDisplayName("");
       setModelId("");
       setCustomLabel("");
       setCustomBadge("");
@@ -117,20 +111,6 @@ export function ManageOpenRouterModelsDialog({
         <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
           {/* Add new model form */}
           <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
-            <div className="space-y-2">
-              <Label htmlFor="displayName">Display Name</Label>
-              <Input
-                id="displayName"
-                placeholder="e.g., GPT-5 Beta"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isAdding) {
-                    handleAdd();
-                  }
-                }}
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="modelId">Model ID</Label>
               <Input
@@ -225,7 +205,13 @@ export function ManageOpenRouterModelsDialog({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-sm truncate">
-                          {model.displayName}
+                          {(() => {
+                            const override = modelLabelOverridesManager.get(
+                              "openRouter",
+                              model.modelId,
+                            );
+                            return override?.label || model.modelId;
+                          })()}
                         </p>
                         {(() => {
                           const override = modelLabelOverridesManager.get(

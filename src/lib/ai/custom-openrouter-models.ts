@@ -4,7 +4,6 @@ import { getStorageManager } from "lib/browser-stroage";
 
 export interface CustomOpenRouterModel {
   id: string;
-  displayName: string;
   modelId: string; // e.g., "openai/gpt-5-nano"
   supportsTools: boolean;
   createdAt: number;
@@ -24,15 +23,10 @@ export const customOpenRouterModelsManager = {
     }));
   },
 
-  add: (
-    displayName: string,
-    modelId: string,
-    supportsTools: boolean,
-  ): CustomOpenRouterModel => {
+  add: (modelId: string, supportsTools: boolean): CustomOpenRouterModel => {
     const models = storage.get([]);
     const newModel: CustomOpenRouterModel = {
       id: `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      displayName,
       modelId,
       supportsTools,
       createdAt: Date.now(),
@@ -48,9 +42,7 @@ export const customOpenRouterModelsManager = {
 
   update: (
     id: string,
-    updates: Partial<
-      Pick<CustomOpenRouterModel, "displayName" | "modelId" | "supportsTools">
-    >,
+    updates: Partial<Pick<CustomOpenRouterModel, "modelId" | "supportsTools">>,
   ): void => {
     const models = storage.get([]);
     storage.set(models.map((m) => (m.id === id ? { ...m, ...updates } : m)));

@@ -84,6 +84,7 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
 
   // UncloseAI
   "qwen3-coder-30b": { label: "Qwen 3", badge: "30b" },
+  "hermes-3-8b": { label: "Hermes 3", badge: "8b" },
 };
 
 export const getDefaultModelDisplay = (

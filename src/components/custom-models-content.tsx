@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { customModelsManager, CustomModel } from "@/lib/ai/custom-models";
+import { useState } from "react";
+import { useCustomModels } from "@/hooks/use-custom-models";
 import { modelLabelOverridesManager } from "@/lib/ai/model-label-overrides";
 import { resolveModelDisplay } from "@/lib/ai/model-labels";
 import { useModelLabelOverrides } from "@/hooks/use-model-label-overrides";
@@ -9,7 +9,7 @@ import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { Switch } from "ui/switch";
 import { Button } from "ui/button";
-import { Trash2, Plus, Boxes } from "lucide-react";
+import { Trash2, Plus, Boxes, Loader } from "lucide-react";
 import { toast } from "sonner";
 
 const PROVIDERS = [
@@ -24,10 +24,8 @@ const PROVIDERS = [
   { key: "uncloseai", label: "UncloseAI" },
 ] as const;
 
-const EVENT_NAME = "custom-models-changed";
-
 export function CustomModelsContent() {
-  const [models, setModels] = useState<CustomModel[]>([]);
+  const { models, isLoading, add, remove, exists } = useCustomModels();
   const [provider, setProvider] = useState<string>(PROVIDERS[0].key);
   const [modelId, setModelId] = useState("");
   const [customLabel, setCustomLabel] = useState("");
@@ -35,28 +33,16 @@ export function CustomModelsContent() {
   const [supportsTools, setSupportsTools] = useState(true);
   const overrides = useModelLabelOverrides();
 
-  const loadModels = useCallback(() => {
-    setModels(customModelsManager.getAll());
-  }, []);
-
-  useEffect(() => {
-    loadModels();
-    window.addEventListener(EVENT_NAME, loadModels);
-    return () => window.removeEventListener(EVENT_NAME, loadModels);
-  }, [loadModels]);
-
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const trimmedId = modelId.trim();
     if (!trimmedId) {
       toast.error("Please provide a model ID");
       return;
     }
-    if (customModelsManager.exists(provider, trimmedId)) {
+    if (exists(provider, trimmedId)) {
       toast.error("This model already exists for this provider");
       return;
     }
-
-    customModelsManager.add(provider, trimmedId, supportsTools);
 
     if (customLabel.trim() || customBadge.trim()) {
       modelLabelOverridesManager.set(provider, trimmedId, {
@@ -65,21 +51,18 @@ export function CustomModelsContent() {
       });
     }
 
+    await add(provider, trimmedId, supportsTools);
     setModelId("");
     setCustomLabel("");
     setCustomBadge("");
     setSupportsTools(true);
-    loadModels();
     toast.success("Model added");
-    window.dispatchEvent(new Event(EVENT_NAME));
   };
 
-  const handleRemove = (model: CustomModel) => {
-    customModelsManager.remove(model.id);
-    modelLabelOverridesManager.remove(model.provider, model.modelId);
-    loadModels();
+  const handleRemove = async (provider: string, modelId: string) => {
+    modelLabelOverridesManager.remove(provider, modelId);
+    await remove(provider, modelId);
     toast.success("Model removed");
-    window.dispatchEvent(new Event(EVENT_NAME));
   };
 
   const providerLabel = (key: string) =>
@@ -96,8 +79,8 @@ export function CustomModelsContent() {
       <div>
         <h3 className="text-lg font-semibold">Custom Models</h3>
         <p className="text-sm text-muted-foreground mt-1">
-          Add custom model IDs to any provider. These appear alongside the
-          built-in models in the model selector.
+          Add custom model IDs to any provider. These sync across all your
+          devices and sessions.
         </p>
       </div>
 
@@ -187,7 +170,11 @@ export function CustomModelsContent() {
       </div>
 
       {/* Model list grouped by provider */}
-      {grouped.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12 text-muted-foreground">
+          <Loader className="size-5 animate-spin" />
+        </div>
+      ) : grouped.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <Boxes className="size-10 mb-3 opacity-40" />
           <p className="text-sm">No custom models yet.</p>
@@ -209,7 +196,7 @@ export function CustomModelsContent() {
                   );
                   return (
                     <div
-                      key={model.id}
+                      key={`${model.provider}-${model.modelId}`}
                       className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors group"
                     >
                       <div className="flex-1 min-w-0">
@@ -235,7 +222,9 @@ export function CustomModelsContent() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleRemove(model)}
+                        onClick={() =>
+                          handleRemove(model.provider, model.modelId)
+                        }
                         className="ml-2 shrink-0 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
                       >
                         <Trash2 className="size-3.5" />

@@ -4,11 +4,18 @@ import { passwordSchema } from "lib/validations/password";
 import { UserEntity } from "lib/db/pg/schema.pg";
 import { getSession } from "auth/server";
 
+export type CustomModelEntry = {
+  provider: string;
+  modelId: string;
+  supportsTools: boolean;
+};
+
 export type UserPreferences = {
   displayName?: string;
   profession?: string; // User's job or profession
   responseStyleExample?: string; // Example of preferred response style
   botName?: string; // Name of the bot
+  customModels?: CustomModelEntry[];
 };
 
 // user without password
@@ -81,9 +88,16 @@ export const UserZodSchema = z.object({
   password: passwordSchema,
 });
 
+export const CustomModelEntryZodSchema = z.object({
+  provider: z.string().min(1),
+  modelId: z.string().min(1),
+  supportsTools: z.boolean(),
+});
+
 export const UserPreferencesZodSchema = z.object({
   displayName: z.string().optional(),
   profession: z.string().optional(),
   responseStyleExample: z.string().optional(),
   botName: z.string().optional(),
+  customModels: z.array(CustomModelEntryZodSchema).optional(),
 });

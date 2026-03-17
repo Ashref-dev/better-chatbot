@@ -5,9 +5,11 @@ import { getStorageManager } from "lib/browser-stroage";
 export type EffectPreferences = Record<string, boolean>;
 
 const STORAGE_KEY = "BACKGROUND_EFFECT_PREFS_V1";
+const MASTER_DISABLED_KEY = "BACKGROUND_EFFECTS_DISABLED";
 export const EFFECT_PREFS_CHANGED_EVENT = "background-effect-prefs-changed";
 
 const storage = getStorageManager<EffectPreferences>(STORAGE_KEY);
+const masterDisabledStorage = getStorageManager<boolean>(MASTER_DISABLED_KEY);
 
 const emitChange = () => {
   if (typeof window === "undefined") return;
@@ -40,6 +42,16 @@ export const effectPreferencesManager = {
 
   reset: () => {
     storage.remove();
+    emitChange();
+  },
+
+  // Master disable - completely turns off all effects for performance
+  isMasterDisabled: (): boolean => {
+    return masterDisabledStorage.get(false);
+  },
+
+  setMasterDisabled: (disabled: boolean) => {
+    masterDisabledStorage.set(() => disabled);
     emitChange();
   },
 

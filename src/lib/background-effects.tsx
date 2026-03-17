@@ -79,6 +79,9 @@ const effects: BackgroundEffect[] = [
 import { effectPreferencesManager } from "@/lib/background-effect-preferences";
 
 export function pickRandomEffect(): BackgroundEffect | null {
+  // Master disable check - completely skip rendering
+  if (effectPreferencesManager.isMasterDisabled()) return null;
+
   const enabled = effects.filter((e) =>
     effectPreferencesManager.isEnabled(e.name),
   );

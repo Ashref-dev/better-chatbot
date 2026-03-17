@@ -203,82 +203,99 @@ function MobileTabScroller({
   tab: number;
   setTab: (i: number) => void;
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<number | null>(null);
 
-  const checkScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 2);
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
-  }, []);
+  const goNext = useCallback(() => {
+    if (tab < tabs.length - 1) setTab(tab + 1);
+  }, [tab, tabs.length, setTab]);
 
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    checkScroll();
-    el.addEventListener("scroll", checkScroll, { passive: true });
-    const ro = new ResizeObserver(checkScroll);
-    ro.observe(el);
-    return () => {
-      el.removeEventListener("scroll", checkScroll);
-      ro.disconnect();
-    };
-  }, [checkScroll]);
+  const goPrev = useCallback(() => {
+    if (tab > 0) setTab(tab - 1);
+  }, [tab, setTab]);
 
-  const scroll = (dir: "left" | "right") => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir === "left" ? -120 : 120, behavior: "smooth" });
+  // Handle touch swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = e.touches[0].clientX;
   };
 
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartRef.current === null) return;
+    const diff = touchStartRef.current - e.changedTouches[0].clientX;
+    const threshold = 50;
+    if (diff > threshold) goNext();
+    else if (diff < -threshold) goPrev();
+    touchStartRef.current = null;
+  };
+
+  const canGoPrev = tab > 0;
+  const canGoNext = tab < tabs.length - 1;
+
   return (
-    <div className="md:hidden flex items-center gap-1 pb-2">
+    <div className="md:hidden flex items-center gap-2 pb-3">
       <button
-        onClick={() => scroll("left")}
-        disabled={!canScrollLeft}
-        className={`shrink-0 size-8 flex items-center justify-center rounded-md transition-all ${
-          canScrollLeft
+        onClick={goPrev}
+        disabled={!canGoPrev}
+        className={`shrink-0 size-9 flex items-center justify-center rounded-full transition-all ${
+          canGoPrev
             ? "text-muted-foreground hover:text-foreground hover:bg-muted"
             : "text-muted-foreground/20 cursor-default"
         }`}
-        aria-label="Scroll left"
+        aria-label="Previous tab"
       >
-        <ChevronLeft className="size-4" />
+        <ChevronLeft className="size-5" />
       </button>
 
       <div
-        ref={scrollRef}
-        className="flex-1 flex gap-2 overflow-x-auto scrollbar-none"
+        ref={containerRef}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="flex-1 overflow-hidden relative"
       >
-        {tabs.map((tabItem, index) => (
-          <button
-            key={index}
-            onClick={() => setTab(index)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-              tab === index
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted/50 text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {tabItem.icon}
-            <span>{tabItem.label}</span>
-          </button>
-        ))}
+        <div
+          className="flex gap-4 px-4"
+          style={{
+            transform: `translateX(calc(50% - ${tab * 160 + 80}px))`,
+            transition: "transform 300ms ease-out",
+          }}
+        >
+          {tabs.map((tabItem, index) => (
+            <div
+              key={index}
+              onClick={() => setTab(index)}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium cursor-pointer shrink-0 ${
+                tab === index
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted/50 text-muted-foreground hover:opacity-60"
+              }`}
+              style={{
+                width: "144px",
+                transform: tab === index ? "scale(1)" : "scale(0.9)",
+                opacity: tab === index ? 1 : 0.4,
+                transition:
+                  "transform 300ms ease-out, opacity 300ms ease-out, background-color 300ms ease-out",
+              }}
+            >
+              {tabItem.icon}
+              <span className="text-sm whitespace-nowrap truncate">
+                {tabItem.label}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <button
-        onClick={() => scroll("right")}
-        disabled={!canScrollRight}
-        className={`shrink-0 size-8 flex items-center justify-center rounded-md transition-all ${
-          canScrollRight
+        onClick={goNext}
+        disabled={!canGoNext}
+        className={`shrink-0 size-9 flex items-center justify-center rounded-full transition-all ${
+          canGoNext
             ? "text-muted-foreground hover:text-foreground hover:bg-muted"
             : "text-muted-foreground/20 cursor-default"
         }`}
-        aria-label="Scroll right"
+        aria-label="Next tab"
       >
-        <ChevronRight className="size-4" />
+        <ChevronRight className="size-5" />
       </button>
     </div>
   );

@@ -33,9 +33,8 @@ import equal from "lib/equal";
 import { MCPIcon } from "ui/mcp-icon";
 import { DefaultToolName } from "lib/ai/tools";
 import { DefaultToolIcon } from "./default-tool-icon";
+import { ModelProviderIcon } from "ui/model-provider-icon";
 import { OpenAIIcon } from "ui/openai-icon";
-import { GrokIcon } from "ui/grok-icon";
-import { ClaudeIcon } from "ui/claude-icon";
 import { GeminiIcon } from "ui/gemini-icon";
 import {
   DropdownMenu,
@@ -623,15 +622,10 @@ export default function PromptInput({
                   >
                     {chatModel?.model ? (
                       <>
-                        {chatModel.provider === "openai" ? (
-                          <OpenAIIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
-                        ) : chatModel.provider === "xai" ? (
-                          <GrokIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
-                        ) : chatModel.provider === "anthropic" ? (
-                          <ClaudeIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
-                        ) : chatModel.provider === "google" ? (
-                          <GeminiIcon className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100" />
-                        ) : null}
+                        <ModelProviderIcon
+                          provider={chatModel.provider}
+                          className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100"
+                        />
                         <span
                           className="inline-flex items-center gap-[0.1rem] text-foreground group-data-[state=open]:text-foreground"
                           data-testid="selected-model-name"

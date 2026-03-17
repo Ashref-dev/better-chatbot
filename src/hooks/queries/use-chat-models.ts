@@ -2,33 +2,33 @@ import { appStore } from "@/app/store";
 import { fetcher } from "lib/utils";
 import useSWR, { SWRConfiguration } from "swr";
 import { useEffect, useState } from "react";
-import { customModelsManager } from "@/lib/ai/custom-models";
 import { getStorageManager } from "@/lib/browser-stroage";
+import { CustomModelEntry } from "app-types/user";
 
 const hiddenModelsStorage = getStorageManager<string[]>("hidden-models");
 
 export const useChatModels = (options?: SWRConfiguration) => {
-  const [customModels, setCustomModels] = useState(
-    customModelsManager.getAll(),
+  // Fetch custom models from DB API
+  const { data: customModelsData } = useSWR<CustomModelEntry[]>(
+    "/api/user/custom-models",
+    fetcher,
+    { dedupingInterval: 60_000, revalidateOnFocus: false, fallbackData: [] },
   );
+  const customModels = customModelsData ?? [];
+
   const [hiddenModels, setHiddenModels] = useState<string[]>(
     hiddenModelsStorage.get() ?? [],
   );
 
   useEffect(() => {
-    const handleChange = () => {
-      setCustomModels(customModelsManager.getAll());
-    };
     const handleHiddenChange = () => {
       setHiddenModels(hiddenModelsStorage.get() ?? []);
     };
 
-    window.addEventListener("custom-models-changed", handleChange);
-    window.addEventListener("openrouter-models-changed", handleChange);
+    window.addEventListener("custom-models-changed", handleHiddenChange);
     window.addEventListener("hidden-models-changed", handleHiddenChange);
     return () => {
-      window.removeEventListener("custom-models-changed", handleChange);
-      window.removeEventListener("openrouter-models-changed", handleChange);
+      window.removeEventListener("custom-models-changed", handleHiddenChange);
       window.removeEventListener("hidden-models-changed", handleHiddenChange);
     };
   }, []);

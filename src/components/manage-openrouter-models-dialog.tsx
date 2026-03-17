@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,10 +12,10 @@ import { Button } from "ui/button";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { Switch } from "ui/switch";
-import { customModelsManager, CustomModel } from "@/lib/ai/custom-models";
+import { useCustomModels } from "@/hooks/use-custom-models";
 import { modelLabelOverridesManager } from "@/lib/ai/model-label-overrides";
 import { resolveModelDisplay } from "@/lib/ai/model-labels";
-import { Trash2, Plus, Loader, Settings2, ArrowRight } from "lucide-react";
+import { Trash2, Plus, Loader, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { appStore } from "@/app/store";
 
@@ -28,37 +28,27 @@ export function ManageOpenRouterModelsDialog({
   open,
   onOpenChange,
 }: ManageOpenRouterModelsDialogProps) {
-  const [models, setModels] = useState<CustomModel[]>([]);
+  const { models, add, remove, exists } = useCustomModels();
   const [modelId, setModelId] = useState("");
   const [customLabel, setCustomLabel] = useState("");
   const [customBadge, setCustomBadge] = useState("");
   const [supportsTools, setSupportsTools] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      loadModels();
-    }
-  }, [open]);
-
-  const loadModels = () => {
-    setModels(customModelsManager.getByProvider("openRouter"));
-  };
-
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!modelId.trim()) {
       toast.error("Please provide a model ID");
       return;
     }
 
-    if (customModelsManager.exists("openRouter", modelId)) {
+    if (exists("openRouter", modelId)) {
       toast.error("This model ID already exists");
       return;
     }
 
     setIsAdding(true);
     try {
-      customModelsManager.add("openRouter", modelId.trim(), supportsTools);
+      await add("openRouter", modelId.trim(), supportsTools);
 
       if (customLabel.trim() || customBadge.trim()) {
         modelLabelOverridesManager.set("openRouter", modelId.trim(), {
@@ -71,9 +61,7 @@ export function ManageOpenRouterModelsDialog({
       setCustomLabel("");
       setCustomBadge("");
       setSupportsTools(true);
-      loadModels();
       toast.success("Model added successfully");
-      window.dispatchEvent(new Event("custom-models-changed"));
     } catch (_error) {
       toast.error("Failed to add model");
     } finally {
@@ -81,15 +69,10 @@ export function ManageOpenRouterModelsDialog({
     }
   };
 
-  const handleRemove = (id: string) => {
-    const model = models.find((m) => m.id === id);
-    customModelsManager.remove(id);
-    if (model) {
-      modelLabelOverridesManager.remove(model.provider, model.modelId);
-    }
-    loadModels();
+  const handleRemove = async (provider: string, modelIdToRemove: string) => {
+    modelLabelOverridesManager.remove(provider, modelIdToRemove);
+    await remove(provider, modelIdToRemove);
     toast.success("Model removed");
-    window.dispatchEvent(new Event("custom-models-changed"));
   };
 
   const openFullSettings = () => {
@@ -101,24 +84,13 @@ export function ManageOpenRouterModelsDialog({
     });
   };
 
-  // Group by provider for display
-  const grouped = [
-    { key: "openRouter", label: "OpenRouter" },
-    { key: "nvidia", label: "NVIDIA" },
-    { key: "groq", label: "Groq" },
-    { key: "openai", label: "OpenAI" },
-    { key: "google", label: "Google" },
-    { key: "anthropic", label: "Anthropic" },
-    { key: "xai", label: "xAI" },
-    { key: "ollama", label: "Ollama" },
-    { key: "uncloseai", label: "UncloseAI" },
-    { key: "hermesai", label: "HermesAI" },
-  ]
-    .map((p) => ({
-      ...p,
-      models: models.filter((m) => m.provider === p.key),
-    }))
-    .filter((g) => g.models.length > 0);
+  // Group by provider for display — only OpenRouter models for this dialog
+  const grouped = useMemo(() => {
+    const orModels = models.filter((m) => m.provider === "openRouter");
+    return orModels.length > 0
+      ? [{ key: "openRouter", label: "OpenRouter", models: orModels }]
+      : [];
+  }, [models]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -205,25 +177,22 @@ export function ManageOpenRouterModelsDialog({
           </Button>
         </div>
 
-        {/* Scrollable model list — all custom models */}
+        {/* Scrollable model list — OpenRouter models only */}
         <div className="flex-1 overflow-hidden flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-2">
             <Label className="text-xs text-muted-foreground">
-              Custom Models ({models.length})
+              OpenRouter Models ({grouped[0]?.models.length ?? 0})
             </Label>
           </div>
 
           {grouped.length === 0 ? (
             <div className="text-xs text-muted-foreground text-center py-6">
-              No custom models yet.
+              No custom OpenRouter models yet.
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
               {grouped.map((group) => (
                 <div key={group.key}>
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                    {group.label}
-                  </p>
                   <div className="space-y-1">
                     {group.models.map((model) => {
                       const display = resolveModelDisplay(
@@ -232,7 +201,7 @@ export function ManageOpenRouterModelsDialog({
                       );
                       return (
                         <div
-                          key={model.id}
+                          key={`${model.provider}:${model.modelId}`}
                           className="flex items-center justify-between p-2 border rounded-md hover:bg-muted/50 transition-colors group/item"
                         >
                           <div className="flex-1 min-w-0">
@@ -258,7 +227,9 @@ export function ManageOpenRouterModelsDialog({
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleRemove(model.id)}
+                            onClick={() =>
+                              handleRemove(model.provider, model.modelId)
+                            }
                             className="ml-1 size-7 shrink-0 opacity-0 group-hover/item:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
                           >
                             <Trash2 className="size-3" />
@@ -274,16 +245,17 @@ export function ManageOpenRouterModelsDialog({
         </div>
 
         {/* Full settings link */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={openFullSettings}
-          className="w-full text-xs"
-        >
-          <Settings2 className="size-3.5 mr-2" />
-          Full Settings
-          <ArrowRight className="size-3 ml-auto" />
-        </Button>
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={openFullSettings}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            Model Settings
+            <ArrowRight className="size-3 ml-1" />
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

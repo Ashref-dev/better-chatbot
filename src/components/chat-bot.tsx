@@ -20,7 +20,8 @@ import {
 } from "ai";
 
 import { safe } from "ts-safe";
-import { mutate } from "swr";
+import useSWR, { mutate } from "swr";
+import { fetcher } from "lib/utils";
 import {
   ChatApiSchemaRequestBody,
   ChatAttachment,
@@ -48,7 +49,7 @@ import { getStorageManager } from "lib/browser-stroage";
 import { AnimatePresence, motion } from "framer-motion";
 import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
 import { useFileDragOverlay } from "@/hooks/use-file-drag-overlay";
-import { customModelsManager } from "@/lib/ai/custom-models";
+import { CustomModelEntry } from "app-types/user";
 import {
   effects,
   pickRandomEffect,
@@ -73,6 +74,16 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const { uploadFiles } = useThreadFileUploader(threadId);
+
+  // Fetch custom models from DB for the exists check
+  const { data: customModelsData } = useSWR<CustomModelEntry[]>(
+    "/api/user/custom-models",
+    fetcher,
+    { dedupingInterval: 60_000, revalidateOnFocus: false, fallbackData: [] },
+  );
+  const customModelsRef = useRef<CustomModelEntry[]>([]);
+  customModelsRef.current = customModelsData ?? [];
+
   const handleFileDrop = useCallback(
     async (files: File[]) => {
       if (!files.length) return;
@@ -206,9 +217,10 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
         // Check if this is a custom model (any provider)
         let customModelId: string | undefined;
         if (currentChatModel) {
-          const isCustom = customModelsManager.exists(
-            currentChatModel.provider,
-            currentChatModel.model,
+          const isCustom = customModelsRef.current.some(
+            (m) =>
+              m.provider === currentChatModel.provider &&
+              m.modelId === currentChatModel.model,
           );
           if (isCustom) {
             customModelId = currentChatModel.model;

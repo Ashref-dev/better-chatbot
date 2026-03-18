@@ -52,6 +52,8 @@ type Props = PropsWithChildren<{
   onDeleted?: () => void;
   side?: "top" | "bottom" | "left" | "right";
   align?: "start" | "end" | "center";
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
 }>;
 
 export function ThreadDropdown({
@@ -61,6 +63,8 @@ export function ThreadDropdown({
   onDeleted,
   side,
   align,
+  externalOpen,
+  onExternalOpenChange,
 }: Props) {
   const router = useRouter();
   const t = useTranslations();
@@ -70,7 +74,11 @@ export function ThreadDropdown({
     useShallow((state) => [state.currentThreadId, state.archiveList]),
   );
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Use external control if provided, otherwise internal
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = onExternalOpenChange ?? setInternalOpen;
 
   const [isDeleting, setIsDeleting] = useState(false);
 

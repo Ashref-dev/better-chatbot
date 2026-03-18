@@ -31,7 +31,7 @@ import { useShallow } from "zustand/shallow";
 import { useRouter } from "next/navigation";
 import useSWR, { mutate } from "swr";
 import { handleErrorWithToast } from "ui/shared-toast";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 
 import { useTranslations } from "next-intl";
 import { TextShimmer } from "ui/text-shimmer";
@@ -245,54 +245,12 @@ export function AppSidebarThreads() {
                   </SidebarGroupLabel>
 
                   {group.threads.map((thread) => (
-                    <SidebarMenuSub
+                    <ThreadItemWithLongPress
                       key={thread.id}
-                      className={"group/thread mr-0"}
-                    >
-                      <SidebarMenuSubItem>
-                        <ThreadDropdown
-                          side="right"
-                          threadId={thread.id}
-                          beforeTitle={thread.title}
-                        >
-                          <div className="flex items-center data-[state=open]:bg-input! group-hover/thread:bg-input! rounded-lg">
-                            <Tooltip delayDuration={1000}>
-                              <TooltipTrigger asChild>
-                                <SidebarMenuButton
-                                  asChild
-                                  className="group-hover/thread:bg-transparent!"
-                                  isActive={currentThreadId === thread.id}
-                                >
-                                  <Link
-                                    href={`/chat/${thread.id}`}
-                                    className="flex items-center"
-                                  >
-                                    {generatingTitleThreadIds.includes(
-                                      thread.id,
-                                    ) ? (
-                                      <TextShimmer className="truncate min-w-0">
-                                        {thread.title || "New Chat"}
-                                      </TextShimmer>
-                                    ) : (
-                                      <p className="truncate min-w-0">
-                                        {thread.title || "New Chat"}
-                                      </p>
-                                    )}
-                                  </Link>
-                                </SidebarMenuButton>
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-[200px] p-4 break-all overflow-y-auto max-h-[200px]">
-                                {thread.title || "New Chat"}
-                              </TooltipContent>
-                            </Tooltip>
-
-                            <SidebarMenuAction className="data-[state=open]:bg-input data-[state=open]:opacity-100 opacity-0 group-hover/thread:opacity-100">
-                              <MoreHorizontal />
-                            </SidebarMenuAction>
-                          </div>
-                        </ThreadDropdown>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
+                      thread={thread}
+                      currentThreadId={currentThreadId}
+                      generatingTitleThreadIds={generatingTitleThreadIds}
+                    />
                   ))}
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -321,5 +279,111 @@ export function AppSidebarThreads() {
         </SidebarMenu>
       )}
     </>
+  );
+}
+
+// Long-press handler hook for mobile
+function useLongPress(
+  callback: () => void,
+  { threshold = 500 }: { threshold?: number } = {},
+) {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLongPress = useRef(false);
+
+  const start = useCallback(() => {
+    isLongPress.current = false;
+    timeoutRef.current = setTimeout(() => {
+      isLongPress.current = true;
+      callback();
+    }, threshold);
+  }, [callback, threshold]);
+
+  const clear = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  return {
+    onTouchStart: start,
+    onTouchEnd: clear,
+    onTouchMove: clear,
+    // Prevent click if it was a long press
+    onClick: useCallback((e: React.MouseEvent) => {
+      if (isLongPress.current) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }, []),
+  };
+}
+
+// Thread item with long-press support for mobile
+function ThreadItemWithLongPress({
+  thread,
+  currentThreadId,
+  generatingTitleThreadIds,
+}: {
+  thread: ChatThread;
+  currentThreadId: string | null;
+  generatingTitleThreadIds: string[];
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const longPressHandlers = useLongPress(() => {
+    setMenuOpen(true);
+  });
+
+  return (
+    <SidebarMenuSub className="group/thread mr-0">
+      <SidebarMenuSubItem>
+        <ThreadDropdown
+          side="bottom"
+          align="start"
+          threadId={thread.id}
+          beforeTitle={thread.title}
+          externalOpen={menuOpen}
+          onExternalOpenChange={setMenuOpen}
+        >
+          <div
+            className="flex items-center data-[state=open]:bg-input! group-hover/thread:bg-input! rounded-lg"
+            {...longPressHandlers}
+          >
+            <Tooltip delayDuration={1000}>
+              <TooltipTrigger asChild>
+                <SidebarMenuButton
+                  asChild
+                  className="group-hover/thread:bg-transparent!"
+                  isActive={currentThreadId === thread.id}
+                >
+                  <Link
+                    href={`/chat/${thread.id}`}
+                    className="flex items-center"
+                  >
+                    {generatingTitleThreadIds.includes(thread.id) ? (
+                      <TextShimmer className="truncate min-w-0">
+                        {thread.title || "New Chat"}
+                      </TextShimmer>
+                    ) : (
+                      <p className="truncate min-w-0">
+                        {thread.title || "New Chat"}
+                      </p>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[200px] p-4 break-all overflow-y-auto max-h-[200px]">
+                {thread.title || "New Chat"}
+              </TooltipContent>
+            </Tooltip>
+
+            <SidebarMenuAction className="data-[state=open]:bg-input data-[state=open]:opacity-100 opacity-0 group-hover/thread:opacity-100">
+              <MoreHorizontal />
+            </SidebarMenuAction>
+          </div>
+        </ThreadDropdown>
+      </SidebarMenuSubItem>
+    </SidebarMenuSub>
   );
 }

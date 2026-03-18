@@ -3,13 +3,15 @@
 import { getStorageManager } from "lib/browser-stroage";
 
 export type EffectPreferences = Record<string, boolean>;
+export type EffectQualityMode = "normal" | "performance" | "disabled";
 
 const STORAGE_KEY = "BACKGROUND_EFFECT_PREFS_V1";
-const MASTER_DISABLED_KEY = "BACKGROUND_EFFECTS_DISABLED";
+const QUALITY_MODE_KEY = "BACKGROUND_EFFECTS_QUALITY_MODE";
 export const EFFECT_PREFS_CHANGED_EVENT = "background-effect-prefs-changed";
 
 const storage = getStorageManager<EffectPreferences>(STORAGE_KEY);
-const masterDisabledStorage = getStorageManager<boolean>(MASTER_DISABLED_KEY);
+const qualityModeStorage =
+  getStorageManager<EffectQualityMode>(QUALITY_MODE_KEY);
 
 const emitChange = () => {
   if (typeof window === "undefined") return;
@@ -45,13 +47,13 @@ export const effectPreferencesManager = {
     emitChange();
   },
 
-  // Master disable - completely turns off all effects for performance
-  isMasterDisabled: (): boolean => {
-    return masterDisabledStorage.get(false);
+  // Quality mode: normal (high quality), performance (low quality), disabled (off)
+  getQualityMode: (): EffectQualityMode => {
+    return qualityModeStorage.get("normal");
   },
 
-  setMasterDisabled: (disabled: boolean) => {
-    masterDisabledStorage.set(() => disabled);
+  setQualityMode: (mode: EffectQualityMode) => {
+    qualityModeStorage.set(() => mode);
     emitChange();
   },
 

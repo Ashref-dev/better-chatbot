@@ -37,6 +37,8 @@ uniform float uScale;
 uniform float uOpacity;
 uniform vec2 uMouse;
 uniform float uMouseInteractive;
+uniform float uIterations;
+uniform float uDivisor;
 out vec4 fragColor;
 
 void mainImage(out vec4 o, vec2 C) {
@@ -49,7 +51,7 @@ void mainImage(out vec4 o, vec2 C) {
   float i, d, z, T = iTime * uSpeed * uDirection;
   vec3 O, p, S;
 
-  for (vec2 r = iResolution.xy, Q; ++i < 20.; O += o.w/d*o.xyz) {
+  for (vec2 r = iResolution.xy, Q; ++i < uIterations; O += o.w/d*o.xyz) {
     p = z*normalize(vec3(C-.5*r,r.y));
     p.z -= 4.;
     S = p;
@@ -61,7 +63,7 @@ void mainImage(out vec4 o, vec2 C) {
     o = 1.+sin(S.y+p.z*.5+S.z-length(S-p)+vec4(2,1,0,8));
   }
 
-  o.xyz = tanh(O/3e3);
+  o.xyz = tanh(O/uDivisor);
 }
 
 bool finite1(float x){ return !(isnan(x) || isinf(x)); }
@@ -94,6 +96,7 @@ interface PlasmaProps {
   opacity?: number;
   mouseInteractive?: boolean;
   className?: string;
+  performance?: boolean;
 }
 
 export const Plasma = ({
@@ -104,6 +107,7 @@ export const Plasma = ({
   opacity = 1,
   mouseInteractive = true,
   className,
+  performance: performanceMode = false,
 }: PlasmaProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mousePos = useRef({ x: 0, y: 0 });
@@ -116,11 +120,14 @@ export const Plasma = ({
     const customColorRgb = color ? hexToRgb(color) : [1, 1, 1];
     const directionMultiplier = direction === "reverse" ? -1.0 : 1.0;
 
+    // Performance mode: keep resolution, reduce shader complexity only
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
     const renderer = new Renderer({
       webgl: 2,
       alpha: true,
       antialias: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 1.5),
+      dpr,
     });
     const gl = renderer.gl;
     const canvas = gl.canvas as HTMLCanvasElement;
@@ -131,6 +138,11 @@ export const Plasma = ({
 
     const geometry = new Triangle(gl);
 
+    // Performance mode: keep it aggressive but stable
+    const iterations = performanceMode ? 6.0 : 20.0; // 70% reduction for real performance gains
+    const divisor = performanceMode ? 900 : 3e3; // Matched reduction for brightness
+    const animSpeed = performanceMode ? speed * 0.35 : speed * 0.4; // Slightly less aggressive speed
+
     const program = new Program(gl, {
       vertex,
       fragment,
@@ -139,12 +151,14 @@ export const Plasma = ({
         iResolution: { value: new Float32Array([1, 1]) },
         uCustomColor: { value: new Float32Array(customColorRgb) },
         uUseCustomColor: { value: useCustomColor },
-        uSpeed: { value: speed * 0.4 },
+        uSpeed: { value: animSpeed },
         uDirection: { value: directionMultiplier },
         uScale: { value: scale },
         uOpacity: { value: opacity },
         uMouse: { value: new Float32Array([0, 0]) },
         uMouseInteractive: { value: mouseInteractive ? 1.0 : 0.0 },
+        uIterations: { value: iterations },
+        uDivisor: { value: divisor },
       },
     });
 

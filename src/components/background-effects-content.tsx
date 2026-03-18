@@ -1,12 +1,17 @@
 "use client";
 
 import { effects } from "@/lib/background-effects";
-import { effectPreferencesManager } from "@/lib/background-effect-preferences";
+import {
+  effectPreferencesManager,
+  type EffectQualityMode,
+} from "@/lib/background-effect-preferences";
 import { useEffectPreferences } from "@/hooks/use-effect-preferences";
 import { Switch } from "ui/switch";
-import { RotateCcw, Zap } from "lucide-react";
+import { RotateCcw, Gauge } from "lucide-react";
 import { Button } from "ui/button";
 import { toast } from "sonner";
+import { Label } from "ui/label";
+import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 
 const EFFECT_DESCRIPTIONS: Record<string, string> = {
   "light-rays": "WebGL god rays with floating particles",
@@ -22,7 +27,7 @@ export function BackgroundEffectsContent() {
   // Subscribe to preference changes for reactivity
   useEffectPreferences();
 
-  const masterDisabled = effectPreferencesManager.isMasterDisabled();
+  const qualityMode = effectPreferencesManager.getQualityMode();
   const enabledCount = effects.filter((e) =>
     effectPreferencesManager.isEnabled(e.name),
   ).length;
@@ -37,34 +42,71 @@ export function BackgroundEffectsContent() {
         </p>
       </div>
 
-      {/* Master disable toggle - prominent at top */}
-      <div className="flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
+      {/* Quality Mode Selection */}
+      <div className="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-4">
         <div className="flex items-center gap-3">
-          <Zap className="size-5 text-amber-500" />
-          <div className="space-y-0.5">
-            <div className="text-sm font-medium">Performance Mode</div>
+          <Gauge className="size-5 text-amber-500" />
+          <div className="space-y-0.5 flex-1">
+            <div className="text-sm font-medium">Quality Mode</div>
             <div className="text-xs text-muted-foreground">
-              Disable all effects for smoother experience on low-end devices
+              Control performance vs visual quality
             </div>
           </div>
         </div>
-        <Switch
-          checked={masterDisabled}
-          onCheckedChange={(checked) =>
-            effectPreferencesManager.setMasterDisabled(checked)
+
+        <RadioGroup
+          value={qualityMode}
+          onValueChange={(value) =>
+            effectPreferencesManager.setQualityMode(value as EffectQualityMode)
           }
-        />
+          className="space-y-2"
+        >
+          <div className="flex items-center space-x-3 rounded-md border bg-background/50 px-3 py-2.5">
+            <RadioGroupItem value="normal" id="quality-normal" />
+            <Label htmlFor="quality-normal" className="flex-1 cursor-pointer">
+              <div className="text-sm font-medium">Normal</div>
+              <div className="text-xs text-muted-foreground">
+                High quality shaders (recommended)
+              </div>
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-3 rounded-md border bg-background/50 px-3 py-2.5">
+            <RadioGroupItem value="performance" id="quality-performance" />
+            <Label
+              htmlFor="quality-performance"
+              className="flex-1 cursor-pointer"
+            >
+              <div className="text-sm font-medium">Performance</div>
+              <div className="text-xs text-muted-foreground">
+                Low fidelity, reduced sampling (faster)
+              </div>
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-3 rounded-md border bg-background/50 px-3 py-2.5">
+            <RadioGroupItem value="disabled" id="quality-disabled" />
+            <Label htmlFor="quality-disabled" className="flex-1 cursor-pointer">
+              <div className="text-sm font-medium">Disabled</div>
+              <div className="text-xs text-muted-foreground">
+                Turn off all effects (saves CPU/memory)
+              </div>
+            </Label>
+          </div>
+        </RadioGroup>
       </div>
 
-      {masterDisabled ? (
+      {qualityMode === "disabled" ? (
         <div className="text-center py-8 text-muted-foreground text-sm">
-          Background effects are disabled. Toggle off Performance Mode above to
-          customize effects.
+          Background effects are disabled. Select Normal or Performance mode
+          above to customize effects.
         </div>
       ) : (
         <>
           <div className="text-xs text-muted-foreground">
-            {enabledCount} of {effects.length} effects enabled
+            {enabledCount} of {effects.length} effects enabled •{" "}
+            {qualityMode === "performance" ? "Performance" : "High Quality"}{" "}
+            mode
           </div>
 
           <div className="space-y-3">

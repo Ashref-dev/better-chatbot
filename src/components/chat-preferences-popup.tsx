@@ -255,7 +255,7 @@ function MobileTabScroller({
         <div
           className="flex gap-4 px-4"
           style={{
-            transform: `translateX(calc(50% - ${tab * 160 + 80}px))`,
+            transform: `translateX(calc(50% - ${tab * 216 + 108}px))`,
             transition: "transform 300ms ease-out",
           }}
         >
@@ -263,13 +263,13 @@ function MobileTabScroller({
             <div
               key={index}
               onClick={() => setTab(index)}
-              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium cursor-pointer shrink-0 ${
+              className={`flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl font-medium cursor-pointer shrink-0 ${
                 tab === index
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted/50 text-muted-foreground hover:opacity-60"
               }`}
               style={{
-                width: "144px",
+                width: "200px",
                 transform: tab === index ? "scale(1)" : "scale(0.9)",
                 opacity: tab === index ? 1 : 0.4,
                 transition:
@@ -277,9 +277,7 @@ function MobileTabScroller({
               }}
             >
               {tabItem.icon}
-              <span className="text-sm whitespace-nowrap truncate">
-                {tabItem.label}
-              </span>
+              <span className="text-sm whitespace-nowrap">{tabItem.label}</span>
             </div>
           ))}
         </div>

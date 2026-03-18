@@ -96,10 +96,14 @@ function ApiKeysSection() {
   const [keyInput, setKeyInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [loadingKey, setLoadingKey] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [hadKeyWhenEditing, setHadKeyWhenEditing] = useState(false);
 
   const handleEdit = async (provider: string) => {
     setLoadingKey(true);
     setEditingProvider(provider);
+    const hasKey = !!apiKeys[provider]?.hasUserKey;
+    setHadKeyWhenEditing(hasKey);
     try {
       const key = await getKey(provider);
       setKeyInput(key);
@@ -125,12 +129,16 @@ function ApiKeysSection() {
   };
 
   const handleRemove = async (provider: string) => {
+    setDeleting(true);
     try {
       await removeKey(provider);
+      setEditingProvider(null);
+      setKeyInput("");
       toast.success(`API key removed for ${provider}`);
     } catch {
       toast.error("Failed to remove API key");
     }
+    setDeleting(false);
   };
 
   if (isLoading) {
@@ -164,7 +172,9 @@ function ApiKeysSection() {
                 <div className="absolute inset-0 flex items-center gap-2 px-3 bg-background/95 backdrop-blur-sm rounded-lg z-10">
                   <Input
                     type="text"
-                    placeholder="Paste your API key..."
+                    placeholder={
+                      loadingKey ? "Loading..." : "Paste your API key..."
+                    }
                     value={keyInput}
                     onChange={(e) => setKeyInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -176,13 +186,14 @@ function ApiKeysSection() {
                     }}
                     className="h-8 text-xs flex-1 font-mono"
                     autoFocus
+                    disabled={loadingKey}
                   />
                   <Button
                     size="icon"
                     variant="ghost"
                     className="shrink-0 size-8 hover:bg-emerald-500/10 hover:text-emerald-500"
                     onClick={() => handleSave(p.key)}
-                    disabled={saving}
+                    disabled={saving || loadingKey}
                   >
                     <Check className="size-3.5" />
                   </Button>
@@ -194,17 +205,23 @@ function ApiKeysSection() {
                       setEditingProvider(null);
                       setKeyInput("");
                     }}
+                    disabled={loadingKey}
                   >
                     <X className="size-3.5" />
                   </Button>
-                  {info?.hasUserKey && (
+                  {(hadKeyWhenEditing || deleting) && (
                     <Button
                       size="icon"
                       variant="ghost"
                       className="shrink-0 size-8 hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => handleRemove(p.key)}
+                      disabled={loadingKey || deleting}
                     >
-                      <Trash2 className="size-3.5" />
+                      {deleting ? (
+                        <Loader className="size-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="size-3.5" />
+                      )}
                     </Button>
                   )}
                 </div>

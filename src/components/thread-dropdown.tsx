@@ -180,9 +180,9 @@ export function ThreadDropdown({
                     </div>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    side="right"
+                    side="bottom"
                     align="start"
-                    className="w-56"
+                    className="w-48 max-w-[80vw]"
                   >
                     {archiveList.length === 0 ? (
                       <DropdownMenuItem
@@ -198,10 +198,12 @@ export function ThreadDropdown({
                           onClick={() => handleAddToArchive(archive.id)}
                           className="cursor-pointer"
                         >
-                          <Archive className="mr-2 h-4 w-4" />
-                          <span className="truncate">{archive.name}</span>
+                          <Archive className="mr-2 h-4 w-4 shrink-0" />
+                          <span className="truncate flex-1 min-w-0">
+                            {archive.name}
+                          </span>
                           {archive.itemCount > 0 && (
-                            <span className="ml-auto text-xs text-muted-foreground">
+                            <span className="ml-2 text-xs text-muted-foreground shrink-0">
                               {archive.itemCount}
                             </span>
                           )}

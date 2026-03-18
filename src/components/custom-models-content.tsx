@@ -24,7 +24,15 @@ import {
   RotateCcw,
   Check,
   X,
+  Info,
+  Pencil,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "ui/tooltip";
 import { toast } from "sonner";
 
 const PROVIDERS = [
@@ -83,10 +91,24 @@ export function CustomModelsContent() {
 }
 
 function ApiKeysSection() {
-  const { apiKeys, isLoading, saveKey, removeKey } = useApiKeys();
+  const { apiKeys, isLoading, saveKey, removeKey, getKey } = useApiKeys();
   const [editingProvider, setEditingProvider] = useState<string | null>(null);
   const [keyInput, setKeyInput] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loadingKey, setLoadingKey] = useState(false);
+
+  const handleEdit = async (provider: string) => {
+    setLoadingKey(true);
+    setEditingProvider(provider);
+    try {
+      const key = await getKey(provider);
+      setKeyInput(key);
+    } catch {
+      toast.error("Failed to load API key");
+      setKeyInput("");
+    }
+    setLoadingKey(false);
+  };
 
   const handleSave = async (provider: string) => {
     if (!keyInput.trim()) return;
@@ -136,20 +158,12 @@ function ApiKeysSection() {
           return (
             <div
               key={p.key}
-              className="flex items-center gap-3 p-3 border rounded-lg group"
+              className="relative flex items-center gap-3 p-3 border rounded-lg group"
             >
-              <div className="w-28 shrink-0 flex items-center gap-2">
-                <ModelProviderIcon
-                  provider={p.key}
-                  className="size-4 shrink-0 opacity-60"
-                />
-                <span className="text-sm font-medium truncate">{p.label}</span>
-              </div>
-
               {isEditing ? (
-                <div className="flex-1 flex items-center gap-2">
+                <div className="absolute inset-0 flex items-center gap-2 px-3 bg-background/95 backdrop-blur-sm rounded-lg z-10">
                   <Input
-                    type="password"
+                    type="text"
                     placeholder="Paste your API key..."
                     value={keyInput}
                     onChange={(e) => setKeyInput(e.target.value)}
@@ -160,7 +174,7 @@ function ApiKeysSection() {
                         setKeyInput("");
                       }
                     }}
-                    className="h-8 text-xs"
+                    className="h-8 text-xs flex-1 font-mono"
                     autoFocus
                   />
                   <Button
@@ -183,50 +197,93 @@ function ApiKeysSection() {
                   >
                     <X className="size-3.5" />
                   </Button>
+                  {info?.hasUserKey && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="shrink-0 size-8 hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => handleRemove(p.key)}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  )}
                 </div>
-              ) : info?.hasKey ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground font-mono flex-1 truncate">
-                    {info.preview}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                      setEditingProvider(p.key);
-                      setKeyInput("");
-                    }}
-                  >
-                    Change
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="shrink-0 size-7 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => handleRemove(p.key)}
-                  >
-                    <Trash2 className="size-3" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground/50 flex-1">
-                    No key set
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                      setEditingProvider(p.key);
-                      setKeyInput("");
-                    }}
-                  >
-                    <Plus className="size-3 mr-1" />
-                    Add
-                  </Button>
-                </div>
+              ) : null}
+
+              <div className="w-28 shrink-0 flex items-center gap-2">
+                <ModelProviderIcon
+                  provider={p.key}
+                  className="size-4 shrink-0 opacity-60"
+                />
+                <span className="text-sm font-medium truncate">{p.label}</span>
+              </div>
+
+              {!isEditing && (
+                <>
+                  {info?.hasUserKey ? (
+                    <div className="flex-1 flex items-center gap-2 min-w-0">
+                      <span className="text-xs text-muted-foreground font-mono flex-1 truncate min-w-0">
+                        {info.preview}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs shrink-0"
+                        onClick={() => handleEdit(p.key)}
+                        disabled={loadingKey}
+                      >
+                        <Pencil className="size-3 mr-1" />
+                        Edit
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex items-center gap-2 min-w-0">
+                      <span className="text-xs text-muted-foreground/50 flex-1 truncate min-w-0">
+                        {info?.hasEnvKey
+                          ? "Using environment key"
+                          : "No key set"}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs shrink-0"
+                        onClick={() => {
+                          setEditingProvider(p.key);
+                          setKeyInput("");
+                        }}
+                      >
+                        <Plus className="size-3 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Floating info badge at top-right corner - clickable on mobile */}
+              {info?.hasEnvKey && !isEditing && (
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="absolute -top-1.5 -right-1.5 size-4 flex items-center justify-center rounded-full bg-background border shrink-0 shadow-sm md:pointer-events-none"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
+                        <Info
+                          className={`size-2.5 ${info?.hasUserKey ? "text-amber-500" : "text-emerald-500"}`}
+                        />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="text-xs">
+                      {info?.hasUserKey
+                        ? "Custom key overriding environment"
+                        : "Environment fallback active"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
           );

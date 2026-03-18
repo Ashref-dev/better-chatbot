@@ -1,7 +1,10 @@
 import useSWR from "swr";
 import { useCallback } from "react";
 
-type ApiKeyInfo = Record<string, { hasKey: boolean; preview: string }>;
+type ApiKeyInfo = Record<
+  string,
+  { hasUserKey: boolean; hasEnvKey: boolean; preview: string }
+>;
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -25,8 +28,15 @@ export function useApiKeys() {
 
   const removeKey = useCallback(
     async (provider: string) => {
+      // Optimistically update: keep hasEnvKey, remove hasUserKey and preview
       const updated = { ...data };
-      delete updated[provider];
+      if (updated[provider]) {
+        updated[provider] = {
+          hasUserKey: false,
+          hasEnvKey: updated[provider].hasEnvKey,
+          preview: "",
+        };
+      }
       await mutate(updated, false);
       await fetch("/api/user/api-keys", {
         method: "DELETE",
@@ -38,5 +48,15 @@ export function useApiKeys() {
     [data, mutate],
   );
 
-  return { apiKeys: data ?? {}, isLoading, error, saveKey, removeKey };
+  const getKey = useCallback(async (provider: string): Promise<string> => {
+    const response = await fetch("/api/user/api-keys", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider }),
+    });
+    const result = await response.json();
+    return result.apiKey || "";
+  }, []);
+
+  return { apiKeys: data ?? {}, isLoading, error, saveKey, removeKey, getKey };
 }

@@ -277,14 +277,14 @@ function ApiKeysSection() {
                 </>
               )}
 
-              {/* Floating info badge at top-right corner - clickable on mobile */}
+              {/* Floating info badge at top-right corner - clickable on mobile, hover on desktop */}
               {info?.hasEnvKey && !isEditing && (
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        className="absolute -top-1.5 -right-1.5 size-4 flex items-center justify-center rounded-full bg-background border shrink-0 shadow-sm md:pointer-events-none"
+                        className="absolute -top-1.5 -right-1.5 size-4 flex items-center justify-center rounded-full bg-background border shrink-0 shadow-sm cursor-help"
                         onClick={(e) => {
                           e.stopPropagation();
                         }}
@@ -294,7 +294,10 @@ function ApiKeysSection() {
                         />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="left" className="text-xs">
+                    <TooltipContent
+                      side="left"
+                      className="text-xs max-w-[200px]"
+                    >
                       {info?.hasUserKey
                         ? "Custom key overriding environment"
                         : "Environment fallback active"}

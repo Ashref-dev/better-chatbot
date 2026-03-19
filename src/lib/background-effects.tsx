@@ -148,14 +148,56 @@ const MagicRaysEffect: BackgroundEffect = {
   component: dynamic(() => import("ui/magic-rays"), { ssr: false }),
 };
 
+const DarkVeilEffect: BackgroundEffect = {
+  name: "dark-veil",
+  component: dynamic(
+    () =>
+      import("ui/dark-veil").then((mod) => ({
+        default: () => (
+          <mod.default
+            hueShift={0}
+            noiseIntensity={0.01}
+            scanlineIntensity={0}
+            speed={0.8}
+            scanlineFrequency={0}
+            warpAmount={Math.random() * 5}
+          />
+        ),
+      })),
+    { ssr: false },
+  ),
+};
+
+const PlasmaV2Effect: BackgroundEffect = {
+  name: "plasma-v2",
+  component: dynamic(
+    () =>
+      import("ui/plasma-v2").then((mod) => ({
+        default: () => (
+          <mod.default
+            color="#b19eef"
+            speed={0.6}
+            direction="forward"
+            scale={1.0}
+            opacity={0.6}
+            mouseInteractive={true}
+          />
+        ),
+      })),
+    { ssr: false },
+  ),
+};
+
 const effects: BackgroundEffect[] = [
   LightRaysEffect,
   PlasmaEffect,
+  PlasmaV2Effect,
   DottedSurfaceEffect,
   IsometricWaveEffect,
   DitheringWaveEffect,
   MagicRaysEffect,
   GalaxyEffect,
+  DarkVeilEffect,
 ];
 
 export function pickRandomEffect(): BackgroundEffect | null {

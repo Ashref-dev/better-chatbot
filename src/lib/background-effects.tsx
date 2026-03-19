@@ -19,38 +19,9 @@ const LightRaysEffect: BackgroundEffect = {
   component: dynamic(() => import("ui/light-rays"), { ssr: false }),
   overlay: dynamic(
     () =>
-      import("ui/particles").then((mod) => {
-        const ParticlesWrapper = () => {
-          const [performance, setPerformance] = React.useState(false);
-
-          React.useEffect(() => {
-            const updateMode = () => {
-              const mode = effectPreferencesManager.getQualityMode();
-              setPerformance(mode === "performance");
-            };
-            updateMode();
-
-            window.addEventListener(EFFECT_PREFS_CHANGED_EVENT, updateMode);
-            return () =>
-              window.removeEventListener(
-                EFFECT_PREFS_CHANGED_EVENT,
-                updateMode,
-              );
-          }, []);
-
-          // Keep same particle count, reduce other settings for performance
-          return (
-            <mod.default
-              particleCount={400}
-              particleBaseSize={1}
-              speed={performance ? 0.5 : 1}
-              sizeRandomness={performance ? 0.2 : 0.3}
-              cameraDistance={performance ? 8 : 5}
-            />
-          );
-        };
-        return { default: ParticlesWrapper };
-      }),
+      import("ui/particles").then((mod) => ({
+        default: () => <mod.default particleCount={400} particleBaseSize={1} />,
+      })),
     { ssr: false },
   ),
 };

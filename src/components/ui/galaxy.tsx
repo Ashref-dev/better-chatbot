@@ -152,9 +152,13 @@ void main() {
 
 interface GalaxyProps {
   className?: string;
+  performance?: boolean;
 }
 
-export default function Galaxy({ className }: GalaxyProps) {
+export default function Galaxy({
+  className,
+  performance = false,
+}: GalaxyProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -164,7 +168,7 @@ export default function Galaxy({ className }: GalaxyProps) {
     const renderer = new Renderer({
       alpha: true,
       premultipliedAlpha: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 1.5),
+      dpr: performance ? 1 : Math.min(window.devicePixelRatio || 1, 1.5),
     });
     const gl = renderer.gl;
     gl.enable(gl.BLEND);
@@ -198,15 +202,15 @@ export default function Galaxy({ className }: GalaxyProps) {
         uFocal: { value: new Float32Array([0.5, 0.5]) },
         uRotation: { value: new Float32Array([1.0, 0.0]) },
         uStarSpeed: { value: 0.5 },
-        uDensity: { value: 1 },
+        uDensity: { value: performance ? 0.5 : 1 },
         uHueShift: { value: 140 },
-        uSpeed: { value: 1.0 },
+        uSpeed: { value: performance ? 0.5 : 1.0 },
         uMouse: { value: new Float32Array([0.5, 0.5]) },
-        uGlowIntensity: { value: 0.3 },
+        uGlowIntensity: { value: performance ? 0.2 : 0.3 },
         uSaturation: { value: 0 },
         uMouseRepulsion: { value: false },
-        uTwinkleIntensity: { value: 0.3 },
-        uRotationSpeed: { value: 0.1 },
+        uTwinkleIntensity: { value: performance ? 0.15 : 0.3 },
+        uRotationSpeed: { value: performance ? 0.05 : 0.1 },
         uRepulsionStrength: { value: 0 },
         uMouseActiveFactor: { value: 0.0 },
         uAutoCenterRepulsion: { value: 0 },
@@ -237,7 +241,7 @@ export default function Galaxy({ className }: GalaxyProps) {
       }
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
-  }, []);
+  }, [performance]);
 
   return (
     <div

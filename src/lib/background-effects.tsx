@@ -102,12 +102,12 @@ const DottedSurfaceEffect: BackgroundEffect = {
     () =>
       import("ui/dotted-surface").then((mod) => {
         const DottedWrapper = () => {
-          const [performance, setPerformance] = React.useState(false);
+          const [performanceMode, setPerformanceMode] = React.useState(false);
 
           React.useEffect(() => {
             const updateMode = () => {
               const mode = effectPreferencesManager.getQualityMode();
-              setPerformance(mode === "performance");
+              setPerformanceMode(mode === "performance");
             };
             updateMode();
 
@@ -119,8 +119,9 @@ const DottedSurfaceEffect: BackgroundEffect = {
               );
           }, []);
 
-          // For dotted surface, we can pass performance as a prop if the component supports it
-          return React.createElement(mod.default, { performance });
+          return React.createElement(mod.default, {
+            performance: performanceMode,
+          });
         };
         return { default: DottedWrapper };
       }),
@@ -134,12 +135,12 @@ const GalaxyEffect: BackgroundEffect = {
     () =>
       import("ui/galaxy").then((mod) => {
         const GalaxyWrapper = () => {
-          const [performance, setPerformance] = React.useState(false);
+          const [performanceMode, setPerformanceMode] = React.useState(false);
 
           React.useEffect(() => {
             const updateMode = () => {
               const mode = effectPreferencesManager.getQualityMode();
-              setPerformance(mode === "performance");
+              setPerformanceMode(mode === "performance");
             };
             updateMode();
 
@@ -151,8 +152,9 @@ const GalaxyEffect: BackgroundEffect = {
               );
           }, []);
 
-          // For galaxy, we can pass performance as a prop if the component supports it
-          return React.createElement(mod.default, { performance });
+          return React.createElement(mod.default, {
+            performance: performanceMode,
+          });
         };
         return { default: GalaxyWrapper };
       }),

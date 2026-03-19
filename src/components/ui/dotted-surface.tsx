@@ -6,9 +6,13 @@ import * as THREE from "three";
 
 interface DottedSurfaceProps {
   className?: string;
+  performance?: boolean;
 }
 
-export function DottedSurface({ className }: DottedSurfaceProps) {
+export function DottedSurface({
+  className,
+  performance = false,
+}: DottedSurfaceProps) {
   const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -17,8 +21,8 @@ export function DottedSurface({ className }: DottedSurfaceProps) {
     const container = containerRef.current;
 
     const SEPARATION = 150;
-    const AMOUNTX = 40;
-    const AMOUNTY = 60;
+    const AMOUNTX = performance ? 25 : 40;
+    const AMOUNTY = performance ? 35 : 60;
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0xffffff, 2000, 10000);
@@ -63,10 +67,10 @@ export function DottedSurface({ className }: DottedSurfaceProps) {
     geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
     const material = new THREE.PointsMaterial({
-      size: 8,
+      size: performance ? 6 : 8,
       vertexColors: true,
       transparent: true,
-      opacity: 0.8,
+      opacity: performance ? 0.6 : 0.8,
       sizeAttenuation: true,
     });
 
@@ -91,7 +95,7 @@ export function DottedSurface({ className }: DottedSurfaceProps) {
       }
       geometry.attributes.position.needsUpdate = true;
       renderer.render(scene, camera);
-      count += 0.1;
+      count += performance ? 0.05 : 0.1;
     };
 
     const handleResize = () => {
@@ -122,7 +126,7 @@ export function DottedSurface({ className }: DottedSurfaceProps) {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [theme]);
+  }, [theme, performance]);
 
   return (
     <div ref={containerRef} className={`w-full h-full ${className ?? ""}`} />

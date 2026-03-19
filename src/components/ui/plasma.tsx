@@ -120,8 +120,8 @@ export const Plasma = ({
     const customColorRgb = color ? hexToRgb(color) : [1, 1, 1];
     const directionMultiplier = direction === "reverse" ? -1.0 : 1.0;
 
-    // Performance mode: keep resolution, reduce shader complexity only
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    // Performance mode: lower DPR for less pixels
+    const dpr = performanceMode ? 1 : Math.min(window.devicePixelRatio || 1, 2);
 
     const renderer = new Renderer({
       webgl: 2,

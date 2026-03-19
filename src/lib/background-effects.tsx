@@ -38,14 +38,14 @@ const LightRaysEffect: BackgroundEffect = {
               );
           }, []);
 
-          // Keep same particle count, reduce other settings
+          // Keep same particle count, reduce other settings for performance
           return (
             <mod.default
               particleCount={400}
               particleBaseSize={1}
-              speed={performance ? 0.3 : 1}
-              sizeRandomness={performance ? 0.1 : 0.3}
-              cameraDistance={performance ? 10 : 5}
+              speed={performance ? 0.5 : 1}
+              sizeRandomness={performance ? 0.2 : 0.3}
+              cameraDistance={performance ? 8 : 5}
             />
           );
         };

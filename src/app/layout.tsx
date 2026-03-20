@@ -22,6 +22,29 @@ export const metadata: Metadata = {
   title: "Ashref Chat",
   description:
     "Ashref Chat is a chatbot that uses the Tools to answer questions.",
+  icons: {
+    icon: [
+      {
+        url: "/logo-dark.svg",
+        media: "(prefers-color-scheme: dark)",
+      },
+      {
+        url: "/logo-light.svg",
+        media: "(prefers-color-scheme: light)",
+      },
+    ],
+    shortcut: [
+      {
+        url: "/logo-dark.svg",
+        media: "(prefers-color-scheme: dark)",
+      },
+      {
+        url: "/logo-light.svg",
+        media: "(prefers-color-scheme: light)",
+      },
+    ],
+    apple: "/logo-dark.svg",
+  },
 };
 
 export default async function RootLayout({
@@ -33,6 +56,18 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
+      <head>
+        <meta
+          name="theme-color"
+          content="#000000"
+          media="(prefers-color-scheme: dark)"
+        />
+        <meta
+          name="theme-color"
+          content="#ffffff"
+          media="(prefers-color-scheme: light)"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

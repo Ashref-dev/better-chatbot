@@ -1,4 +1,3 @@
-import { BlendIcon } from "lucide-react";
 import { ClaudeIcon } from "./claude-icon";
 import { GeminiIcon } from "./gemini-icon";
 import { GrokIcon } from "./grok-icon";
@@ -7,6 +6,7 @@ import { NvidiaIcon } from "./nvidia-icon";
 import { OpenAIIcon } from "./openai-icon";
 import { OllamaIcon } from "./ollama-icon";
 import { OpenRouterIcon } from "./open-router-icon";
+import { LogoIcon } from "./logo-icon";
 
 export function ModelProviderIcon({
   provider,
@@ -29,6 +29,6 @@ export function ModelProviderIcon({
   ) : provider === "nvidia" ? (
     <NvidiaIcon className={className} />
   ) : (
-    <BlendIcon className={className} />
+    <LogoIcon className={className} />
   );
 }

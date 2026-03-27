@@ -14,6 +14,7 @@ import { Label } from "ui/label";
 import { Switch } from "ui/switch";
 import { useCustomModels } from "@/hooks/use-custom-models";
 import { modelLabelOverridesManager } from "@/lib/ai/model-label-overrides";
+import { useModelLabelOverrides } from "@/hooks/use-model-label-overrides";
 import { resolveModelDisplay } from "@/lib/ai/model-labels";
 import { Trash2, Plus, Loader, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ export function ManageOpenRouterModelsDialog({
   onOpenChange,
 }: ManageOpenRouterModelsDialogProps) {
   const { models, add, remove, exists } = useCustomModels();
+  const overrides = useModelLabelOverrides();
   const [modelId, setModelId] = useState("");
   const [customLabel, setCustomLabel] = useState("");
   const [customBadge, setCustomBadge] = useState("");
@@ -198,6 +200,7 @@ export function ManageOpenRouterModelsDialog({
                       const display = resolveModelDisplay(
                         model.provider,
                         model.modelId,
+                        overrides,
                       );
                       return (
                         <div

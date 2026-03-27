@@ -3,6 +3,17 @@ import { useTheme } from "next-themes";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { Renderer, Program, Mesh, Triangle, Vec2 } from "ogl";
 
+const hexToRgb = (hex: string): [number, number, number] => {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return m
+    ? [
+        parseInt(m[1], 16) / 255,
+        parseInt(m[2], 16) / 255,
+        parseInt(m[3], 16) / 255,
+      ]
+    : [0, 0, 0];
+};
+
 const vertex = `
 attribute vec2 position;
 void main(){gl_Position=vec4(position,0.0,1.0);}
@@ -19,6 +30,7 @@ uniform float uNoise;
 uniform float uScan;
 uniform float uScanFreq;
 uniform float uWarp;
+uniform vec3 uBgColor;
 #define iTime uTime
 #define iResolution uResolution
 
@@ -71,6 +83,13 @@ void main(){
     float scanline_val=sin(gl_FragCoord.y*uScanFreq)*0.5+0.5;
     col.rgb*=1.-(scanline_val*scanline_val)*uScan;
     col.rgb+=(rand(gl_FragCoord.xy+uTime)-0.5)*uNoise;
+    
+    // Calculate luminance of the effect
+    float lum = dot(col.rgb, vec3(0.299, 0.587, 0.114));
+    // Use luminance as alpha - dark areas become transparent, bright areas stay
+    // Blend effect over theme background based on brightness
+    col.rgb = mix(uBgColor, col.rgb + uBgColor * 0.3, lum);
+    
     gl_FragColor=vec4(clamp(col.rgb,0.0,1.0),1.0);
 }
 `;
@@ -110,6 +129,8 @@ export default function DarkVeil({
     const gl = renderer.gl;
     const geometry = new Triangle(gl);
 
+    const bgRgb = hexToRgb(background);
+
     const program = new Program(gl, {
       vertex,
       fragment,
@@ -121,6 +142,7 @@ export default function DarkVeil({
         uScan: { value: scanlineIntensity },
         uScanFreq: { value: scanlineFrequency },
         uWarp: { value: warpAmount },
+        uBgColor: { value: bgRgb },
       },
     });
 
@@ -147,6 +169,7 @@ export default function DarkVeil({
       program.uniforms.uScan.value = scanlineIntensity;
       program.uniforms.uScanFreq.value = scanlineFrequency;
       program.uniforms.uWarp.value = warpAmount;
+      program.uniforms.uBgColor.value = hexToRgb(background);
       renderer.render({ scene: mesh });
       frame = requestAnimationFrame(loop);
     };
@@ -159,6 +182,7 @@ export default function DarkVeil({
     };
   }, [
     theme,
+    background,
     hueShift,
     noiseIntensity,
     scanlineIntensity,

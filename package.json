@@ -6,9 +6,9 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack -p 3456",
+    "dev": "next dev --turbopack -p 3000",
     "dev:turbopack": "next dev --turbopack -p 3456",
-    "dev:neon": "dotenv -e .env.neon-testing -- next dev --turbopack -p 3456",
+    "dev:neon": "dotenv -e .env.neon-testing -- next dev --turbopack -p 3000",
     "dev:https": "next dev --experimental-https",
     "build": "next build",
     "start": "next start",

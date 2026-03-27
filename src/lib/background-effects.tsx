@@ -150,22 +150,7 @@ const MagicRaysEffect: BackgroundEffect = {
 
 const DarkVeilEffect: BackgroundEffect = {
   name: "dark-veil",
-  component: dynamic(
-    () =>
-      import("ui/dark-veil").then((mod) => ({
-        default: () => (
-          <mod.default
-            hueShift={0}
-            noiseIntensity={0.01}
-            scanlineIntensity={0}
-            speed={0.8}
-            scanlineFrequency={0}
-            warpAmount={Math.random() * 5}
-          />
-        ),
-      })),
-    { ssr: false },
-  ),
+  component: dynamic(() => import("ui/dark-veil"), { ssr: false }),
 };
 
 const PlasmaV2Effect: BackgroundEffect = {

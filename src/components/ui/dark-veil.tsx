@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useTheme } from "next-themes";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 import { Renderer, Program, Mesh, Triangle, Vec2 } from "ogl";
 
 const vertex = `
@@ -95,6 +96,7 @@ export default function DarkVeil({
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const { theme } = useTheme();
+  const { background } = useThemeColors();
 
   useEffect(() => {
     const canvas = ref.current as HTMLCanvasElement;
@@ -166,8 +168,11 @@ export default function DarkVeil({
     resolutionScale,
   ]);
 
-  // Get theme background color
-  const bgColor = theme === "dark" ? "bg-background" : "bg-background";
-
-  return <canvas ref={ref} className={`w-full h-full block ${bgColor}`} />;
+  return (
+    <canvas
+      ref={ref}
+      className="w-full h-full block"
+      style={{ backgroundColor: background }}
+    />
+  );
 }

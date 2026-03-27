@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 const declarePI = `
 #define TWO_PI 6.28318530718
@@ -177,8 +178,9 @@ export function DitheringShader({
   const startTimeRef = useRef<number>(Date.now());
   const sizeRef = useRef({ w: 1, h: 1 });
   const { theme } = useTheme();
+  const { background } = useThemeColors();
 
-  const bg = colorBack ?? (theme === "dark" ? "#151618" : "#ffffff");
+  const bg = colorBack ?? background;
   const fg = colorFront ?? (theme === "dark" ? "#2a2a4a" : "#d0d0dc");
 
   useEffect(() => {

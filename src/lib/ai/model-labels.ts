@@ -64,23 +64,31 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   "trinity-mini": { label: "Trinity", badge: "mini" },
   "trinity-large": { label: "Trinity", badge: "large" },
 
-  // NVIDIA
-  "deepseek-v3.1": { label: "DeepSeek", badge: "v3.1" },
-  "deepseek-v3.2": { label: "DeepSeek", badge: "v3.2" },
-  "kimi-k2-thinking": { label: "Kimi K2", badge: "thinking" },
-  "qwen3-next-80b-thinking": { label: "Qwen 3", badge: "next" },
-  "qwen3-coder-480b": { label: "Qwen 3", badge: "coder" },
-  "seed-oss-36b": { label: "Seed OSS", badge: "36b" },
-  "devstral-2-123b": { label: "Devstral 2", badge: "123b" },
-  "mistral-large-3-675b": { label: "Mistral 3", badge: "large" },
-  "nemotron-3-super-120b": { label: "Nemotron 3", badge: "super" },
-  "nemotron-nano-12b-v2-vl": { label: "Nemotron", badge: "nano" },
-  "mistral-small-4-119b": { label: "Mistral 4", badge: "small" },
-  "qwen3.5-122b": { label: "Qwen 3.5", badge: "122b" },
-  "qwen3.5-397b": { label: "Qwen 3.5" },
-  "step-3.5-flash": { label: "Step 3.5", badge: "flash" },
-  "glm4.7": { label: "GLM 4.7" },
-  glm5: { label: "GLM 5" },
+  // NVIDIA (using full model IDs as keys)
+  "deepseek-ai/deepseek-v3.1": { label: "DeepSeek", badge: "v3.1" },
+  "deepseek-ai/deepseek-v3.2": { label: "DeepSeek", badge: "v3.2" },
+  "moonshotai/kimi-k2-instruct-0905": { label: "Kimi K2", badge: "instruct" },
+  "moonshotai/kimi-k2-thinking": { label: "Kimi K2", badge: "thinking" },
+  "qwen/qwen3-next-80b-a3b-thinking": { label: "Qwen 3", badge: "next" },
+  "qwen/qwen3-coder-480b-a35b-instruct": { label: "Qwen 3", badge: "coder" },
+  "openai/gpt-oss-120b": { label: "GPT OSS", badge: "120b" },
+  "bytedance/seed-oss-36b-instruct": { label: "Seed OSS", badge: "36b" },
+  "mistralai/devstral-2-123b-instruct-2512": {
+    label: "Devstral 2",
+    badge: "123b",
+  },
+  "mistralai/mistral-large-3-675b-instruct-2512": {
+    label: "Mistral 3",
+    badge: "large",
+  },
+  "nvidia/nemotron-3-super-120b-a12b": { label: "Nemotron 3", badge: "super" },
+  "nvidia/nemotron-nano-12b-v2-vl": { label: "Nemotron", badge: "nano" },
+  "mistralai/mistral-small-4-119b-2603": { label: "Mistral 4", badge: "small" },
+  "qwen/qwen3.5-122b-a10b": { label: "Qwen 3.5", badge: "122b" },
+  "qwen/qwen3.5-397b-a17b": { label: "Qwen 3.5", badge: "397b" },
+  "stepfun-ai/step-3.5-flash": { label: "Step 3.5", badge: "flash" },
+  "z-ai/glm4.7": { label: "GLM 4.7" },
+  "z-ai/glm5": { label: "GLM 5" },
 
   // UncloseAI
   "qwen3-coder-30b": { label: "Qwen 3", badge: "30b" },
@@ -130,8 +138,54 @@ export const resolveModelDisplay = (
     };
   }
 
+  // Auto-beautify: extract model name from "org/model-name" format
+  const beautified = beautifyModelId(rawModel);
   return {
-    label: rawModel,
+    label: beautified.label,
+    badge: beautified.badge,
     source: "fallback",
   };
 };
+
+// Extract a readable label from model IDs like "openai/gpt-5" or "deepseek-ai/deepseek-v3.1"
+function beautifyModelId(modelId: string): { label: string; badge?: string } {
+  // Remove org prefix if present (e.g., "openai/gpt-5" -> "gpt-5")
+  const withoutOrg = modelId.includes("/")
+    ? modelId.split("/").slice(1).join("/")
+    : modelId;
+
+  // Split by common delimiters to find version/variant
+  const parts = withoutOrg.split(/[-_]/);
+
+  // Try to find version patterns like "v3.1", "3.5", "120b", etc.
+  const versionPatterns =
+    /^(v?\d+\.?\d*[a-z]?|[0-9]+[bkmgt]b?|alpha|beta|preview|instruct|chat|mini|nano|flash|pro|ultra|lite|fast|turbo|latest|free)$/i;
+
+  let labelParts: string[] = [];
+  let badgeParts: string[] = [];
+  let foundVersion = false;
+
+  for (const part of parts) {
+    if (!foundVersion && versionPatterns.test(part)) {
+      foundVersion = true;
+    }
+    if (foundVersion) {
+      badgeParts.push(part);
+    } else {
+      labelParts.push(part);
+    }
+  }
+
+  // If no version found, use the whole thing as label
+  if (labelParts.length === 0) {
+    labelParts = parts;
+    badgeParts = [];
+  }
+
+  // Capitalize first letter of each word
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const label = labelParts.map(capitalize).join(" ");
+  const badge = badgeParts.length > 0 ? badgeParts.join(" ") : undefined;
+
+  return { label, badge };
+}

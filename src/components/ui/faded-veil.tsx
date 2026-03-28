@@ -31,7 +31,6 @@ uniform float uScan;
 uniform float uScanFreq;
 uniform float uWarp;
 uniform vec3 uBgColor;
-uniform float uIntensity;
 #define iTime uTime
 #define iResolution uResolution
 
@@ -85,18 +84,11 @@ void main(){
     col.rgb*=1.-(scanline_val*scanline_val)*uScan;
     col.rgb+=(rand(gl_FragCoord.xy+uTime)-0.5)*uNoise;
     
-    // STRONGER blend: boost the effect colors, tint with theme bg
-    // Increase contrast and saturation
-    col.rgb = pow(col.rgb, vec3(0.85)); // gamma boost for brightness
-    col.rgb *= 1.3; // intensity boost
-    
-    // Subtle theme tint - add bg color influence without washing out the effect
-    float bgInfluence = 0.15;
-    col.rgb = col.rgb * (1.0 - bgInfluence) + uBgColor * bgInfluence;
-    
-    // Ensure dark areas get theme bg color (not pure black)
+    // Calculate luminance of the effect
     float lum = dot(col.rgb, vec3(0.299, 0.587, 0.114));
-    col.rgb = mix(uBgColor, col.rgb, smoothstep(0.0, 0.25, lum));
+    // Use luminance as alpha - dark areas become transparent, bright areas stay
+    // Blend effect over theme background based on brightness
+    col.rgb = mix(uBgColor, col.rgb + uBgColor * 0.3, lum);
     
     gl_FragColor=vec4(clamp(col.rgb,0.0,1.0),1.0);
 }
@@ -110,10 +102,9 @@ type Props = {
   scanlineFrequency?: number;
   warpAmount?: number;
   resolutionScale?: number;
-  intensity?: number;
 };
 
-export default function DarkVeil({
+export default function FadedVeil({
   hueShift = 0,
   noiseIntensity = 0,
   scanlineIntensity = 0,
@@ -121,7 +112,6 @@ export default function DarkVeil({
   scanlineFrequency = 0,
   warpAmount = 0,
   resolutionScale = 1,
-  intensity = 1.0,
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const { theme } = useTheme();
@@ -153,7 +143,6 @@ export default function DarkVeil({
         uScanFreq: { value: scanlineFrequency },
         uWarp: { value: warpAmount },
         uBgColor: { value: bgRgb },
-        uIntensity: { value: intensity },
       },
     });
 
@@ -181,7 +170,6 @@ export default function DarkVeil({
       program.uniforms.uScanFreq.value = scanlineFrequency;
       program.uniforms.uWarp.value = warpAmount;
       program.uniforms.uBgColor.value = hexToRgb(background);
-      program.uniforms.uIntensity.value = intensity;
       renderer.render({ scene: mesh });
       frame = requestAnimationFrame(loop);
     };
@@ -202,7 +190,6 @@ export default function DarkVeil({
     scanlineFrequency,
     warpAmount,
     resolutionScale,
-    intensity,
   ]);
 
   return (

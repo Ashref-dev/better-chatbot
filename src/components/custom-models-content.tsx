@@ -314,13 +314,22 @@ function ApiKeysSection() {
 }
 
 function CustomModelsSection() {
-  const { models, isLoading, add, remove, exists } = useCustomModels();
+  const { models, isLoading, add, remove, exists, mutate } = useCustomModels();
   const [provider, setProvider] = useState<string>(PROVIDERS[0].key);
   const [modelId, setModelId] = useState("");
   const [customLabel, setCustomLabel] = useState("");
   const [customBadge, setCustomBadge] = useState("");
   const [supportsTools, setSupportsTools] = useState(true);
   const overrides = useModelLabelOverrides();
+
+  // Edit mode state
+  const [editingModel, setEditingModel] = useState<{
+    provider: string;
+    modelId: string;
+  } | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editBadge, setEditBadge] = useState("");
+  const [editSupportsTools, setEditSupportsTools] = useState(true);
 
   const handleAdd = async () => {
     const trimmedId = modelId.trim();
@@ -352,6 +361,78 @@ function CustomModelsSection() {
     modelLabelOverridesManager.remove(prov, mid);
     await remove(prov, mid);
     toast.success("Model removed");
+  };
+
+  const startEdit = (prov: string, mid: string) => {
+    const model = models.find((m) => m.provider === prov && m.modelId === mid);
+    if (!model) return;
+
+    const currentOverride =
+      overrides[`${prov.toLowerCase()}::${mid.toLowerCase()}`];
+    setEditingModel({ provider: prov, modelId: mid });
+    setEditLabel(currentOverride?.label || "");
+    setEditBadge(currentOverride?.badge || "");
+    setEditSupportsTools(model.supportsTools);
+  };
+
+  const cancelEdit = () => {
+    setEditingModel(null);
+    setEditLabel("");
+    setEditBadge("");
+    setEditSupportsTools(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editingModel) return;
+
+    // Update label overrides
+    if (editLabel.trim() || editBadge.trim()) {
+      modelLabelOverridesManager.set(
+        editingModel.provider,
+        editingModel.modelId,
+        {
+          label: editLabel.trim() || undefined,
+          badge: editBadge.trim() || undefined,
+        },
+      );
+    } else {
+      // Clear overrides if both empty
+      modelLabelOverridesManager.remove(
+        editingModel.provider,
+        editingModel.modelId,
+      );
+    }
+
+    // Update supportsTools if changed - update in place without remove/add
+    const model = models.find(
+      (m) =>
+        m.provider === editingModel.provider &&
+        m.modelId === editingModel.modelId,
+    );
+    if (model && model.supportsTools !== editSupportsTools) {
+      // Update model in place by updating the full list
+      const updatedModels = models.map((m) =>
+        m.provider === editingModel.provider &&
+        m.modelId === editingModel.modelId
+          ? { ...m, supportsTools: editSupportsTools }
+          : m,
+      );
+      // Use SWR mutate for optimistic update + API sync
+      await mutate(
+        async () => {
+          await fetch("/api/user/custom-models", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedModels),
+          });
+          return updatedModels;
+        },
+        { optimisticData: updatedModels, rollbackOnError: true },
+      );
+    }
+
+    cancelEdit();
+    toast.success("Model updated");
   };
 
   const providerLabel = (key: string) =>
@@ -514,6 +595,70 @@ function CustomModelsSection() {
                     model.modelId,
                     overrides,
                   );
+                  const isEditing =
+                    editingModel?.provider === model.provider &&
+                    editingModel?.modelId === model.modelId;
+
+                  if (isEditing) {
+                    return (
+                      <div
+                        key={`${model.provider}-${model.modelId}`}
+                        className="p-3 border rounded-lg bg-muted/30 space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-muted-foreground truncate">
+                            {model.modelId}
+                          </p>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={saveEdit}
+                              className="size-7 text-green-600 hover:text-green-700 hover:bg-green-100"
+                            >
+                              <Check className="size-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={cancelEdit}
+                              className="size-7 hover:bg-muted"
+                            >
+                              <X className="size-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Label</Label>
+                            <Input
+                              value={editLabel}
+                              onChange={(e) => setEditLabel(e.target.value)}
+                              placeholder="Display name"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Subtitle</Label>
+                            <Input
+                              value={editBadge}
+                              onChange={(e) => setEditBadge(e.target.value)}
+                              placeholder="Badge text"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">Supports tool calls</Label>
+                          <Switch
+                            checked={editSupportsTools}
+                            onCheckedChange={setEditSupportsTools}
+                          />
+                        </div>
+                      </div>
+                    );
+                  }
+
                   return (
                     <div
                       key={`${model.provider}-${model.modelId}`}
@@ -539,16 +684,28 @@ function CustomModelsSection() {
                           {model.modelId}
                         </p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          handleRemove(model.provider, model.modelId)
-                        }
-                        className="ml-2 shrink-0 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
+                      <div className="flex gap-1 ml-2 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            startEdit(model.provider, model.modelId)
+                          }
+                          className="opacity-0 group-hover:opacity-100 hover:bg-muted transition-all"
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            handleRemove(model.provider, model.modelId)
+                          }
+                          className="opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}

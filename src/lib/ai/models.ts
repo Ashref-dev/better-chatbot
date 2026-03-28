@@ -102,26 +102,40 @@ const staticModels = {
     "trinity-large": openrouter("arcee-ai/trinity-large-preview:free"),
   },
   nvidia: {
-    "deepseek-v3.1": nvidia("deepseek-ai/deepseek-v3.1"),
-    "deepseek-v3.2": nvidia("deepseek-ai/deepseek-v3.2"),
-    "kimi-k2-instruct": nvidia("moonshotai/kimi-k2-instruct-0905"),
-    "kimi-k2-thinking": nvidia("moonshotai/kimi-k2-thinking"),
-    "qwen3-next-80b-thinking": nvidia("qwen/qwen3-next-80b-a3b-thinking"),
-    "qwen3-coder-480b": nvidia("qwen/qwen3-coder-480b-a35b-instruct"),
-    "gpt-oss-120b": nvidia("openai/gpt-oss-120b"),
-    "seed-oss-36b": nvidia("bytedance/seed-oss-36b-instruct"),
-    "devstral-2-123b": nvidia("mistralai/devstral-2-123b-instruct-2512"),
-    "mistral-large-3-675b": nvidia(
+    "deepseek-ai/deepseek-v3.1": nvidia("deepseek-ai/deepseek-v3.1"),
+    "deepseek-ai/deepseek-v3.2": nvidia("deepseek-ai/deepseek-v3.2"),
+    "moonshotai/kimi-k2-instruct-0905": nvidia(
+      "moonshotai/kimi-k2-instruct-0905",
+    ),
+    "moonshotai/kimi-k2-thinking": nvidia("moonshotai/kimi-k2-thinking"),
+    "qwen/qwen3-next-80b-a3b-thinking": nvidia(
+      "qwen/qwen3-next-80b-a3b-thinking",
+    ),
+    "qwen/qwen3-coder-480b-a35b-instruct": nvidia(
+      "qwen/qwen3-coder-480b-a35b-instruct",
+    ),
+    "openai/gpt-oss-120b": nvidia("openai/gpt-oss-120b"),
+    "bytedance/seed-oss-36b-instruct": nvidia(
+      "bytedance/seed-oss-36b-instruct",
+    ),
+    "mistralai/devstral-2-123b-instruct-2512": nvidia(
+      "mistralai/devstral-2-123b-instruct-2512",
+    ),
+    "mistralai/mistral-large-3-675b-instruct-2512": nvidia(
       "mistralai/mistral-large-3-675b-instruct-2512",
     ),
-    "nemotron-3-super-120b": nvidia("nvidia/nemotron-3-super-120b-a12b"),
-    "nemotron-nano-12b-v2-vl": nvidia("nvidia/nemotron-nano-12b-v2-vl"),
-    "mistral-small-4-119b": nvidia("mistralai/mistral-small-4-119b-2603"),
-    "qwen3.5-122b": nvidia("qwen/qwen3.5-122b-a10b"),
-    "qwen3.5-397b": nvidia("qwen/qwen3.5-397b-a17b"),
-    "step-3.5-flash": nvidia("stepfun-ai/step-3.5-flash"),
-    "glm4.7": nvidia("z-ai/glm4.7"),
-    glm5: nvidia("z-ai/glm5"),
+    "nvidia/nemotron-3-super-120b-a12b": nvidia(
+      "nvidia/nemotron-3-super-120b-a12b",
+    ),
+    "nvidia/nemotron-nano-12b-v2-vl": nvidia("nvidia/nemotron-nano-12b-v2-vl"),
+    "mistralai/mistral-small-4-119b-2603": nvidia(
+      "mistralai/mistral-small-4-119b-2603",
+    ),
+    "qwen/qwen3.5-122b-a10b": nvidia("qwen/qwen3.5-122b-a10b"),
+    "qwen/qwen3.5-397b-a17b": nvidia("qwen/qwen3.5-397b-a17b"),
+    "stepfun-ai/step-3.5-flash": nvidia("stepfun-ai/step-3.5-flash"),
+    "z-ai/glm4.7": nvidia("z-ai/glm4.7"),
+    "z-ai/glm5": nvidia("z-ai/glm5"),
   },
   uncloseai: {
     "qwen3-coder-30b": uncloseai(

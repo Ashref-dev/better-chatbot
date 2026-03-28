@@ -153,6 +153,11 @@ const DarkVeilEffect: BackgroundEffect = {
   component: dynamic(() => import("ui/dark-veil"), { ssr: false }),
 };
 
+const FadedVeilEffect: BackgroundEffect = {
+  name: "faded-veil",
+  component: dynamic(() => import("ui/faded-veil"), { ssr: false }),
+};
+
 const PlasmaV2Effect: BackgroundEffect = {
   name: "plasma-v2",
   component: dynamic(
@@ -183,6 +188,7 @@ const effects: BackgroundEffect[] = [
   MagicRaysEffect,
   GalaxyEffect,
   DarkVeilEffect,
+  FadedVeilEffect,
 ];
 
 export function pickRandomEffect(): BackgroundEffect | null {

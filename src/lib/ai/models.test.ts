@@ -46,7 +46,7 @@ describe("customModelProvider file support metadata", () => {
     );
   });
 
-  it("marks NVIDIA Qwen 3.5 models as tool-call unsupported", () => {
+  it("keeps NVIDIA Qwen 3.5 models tool-call supported", () => {
     const { customModelProvider, isToolCallUnsupportedModel } = modelsModule;
 
     const nvidiaProvider = customModelProvider.modelsInfo.find(
@@ -62,8 +62,8 @@ describe("customModelProvider file support metadata", () => {
       (item) => item.name === "qwen/qwen3.5-397b-a17b",
     );
 
-    expect(qwen122b?.isToolCallUnsupported).toBe(true);
-    expect(qwen397b?.isToolCallUnsupported).toBe(true);
+    expect(qwen122b?.isToolCallUnsupported).toBe(false);
+    expect(qwen397b?.isToolCallUnsupported).toBe(false);
 
     const qwen122bModel = customModelProvider.getModel({
       provider: "nvidia",
@@ -74,7 +74,7 @@ describe("customModelProvider file support metadata", () => {
       model: "qwen/qwen3.5-397b-a17b",
     });
 
-    expect(isToolCallUnsupportedModel(qwen122bModel)).toBe(true);
-    expect(isToolCallUnsupportedModel(qwen397bModel)).toBe(true);
+    expect(isToolCallUnsupportedModel(qwen122bModel)).toBe(false);
+    expect(isToolCallUnsupportedModel(qwen397bModel)).toBe(false);
   });
 });

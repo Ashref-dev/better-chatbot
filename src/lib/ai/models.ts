@@ -149,10 +149,6 @@ const staticUnsupportedModels = new Set([
   staticModels.ollama["gemma3:1b"],
   staticModels.ollama["gemma3:4b"],
   staticModels.ollama["gemma3:12b"],
-  // NVIDIA Qwen 3.5 models currently return 403 Forbidden when tool calls are
-  // attached, so we treat them as tool-call unsupported.
-  staticModels.nvidia["qwen/qwen3.5-122b-a10b"],
-  staticModels.nvidia["qwen/qwen3.5-397b-a17b"],
   // deepseek-v3.1:free removed from OpenRouter (no longer available)
 ]);
 

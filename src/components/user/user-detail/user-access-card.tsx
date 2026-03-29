@@ -13,6 +13,8 @@ import { UpdateUserPasswordDialog } from "./user-update-password-dialog";
 import { UserDeleteDialog } from "./user-delete-dialog";
 import { useProfileTranslations } from "@/hooks/use-profile-translations";
 
+const APP_VERSION = "1.2.0";
+
 interface UserAccessCardProps {
   user: BasicUserWithLastLogin;
   currentUserId: string;
@@ -50,6 +52,10 @@ export function UserAccessCard({
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             {t("accessCardDescription")}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            App version:{" "}
+            <span className="font-medium text-foreground">{APP_VERSION}</span>
           </p>
         </CardHeader>
 

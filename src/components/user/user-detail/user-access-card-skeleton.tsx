@@ -9,6 +9,7 @@ export function UserAccessCardSkeleton() {
           <Skeleton className="h-5 w-5" />
           <Skeleton className="h-6 w-32" />
         </CardTitle>
+        <Skeleton className="h-4 w-48 mt-2" />
       </CardHeader>
 
       <CardContent className="space-y-6">

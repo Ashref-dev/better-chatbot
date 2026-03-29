@@ -39,6 +39,24 @@ interface SelectModelProps {
 
 export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
   const [open, setOpen] = useState(false);
+
+  // Prevent body scroll on iOS when popover is open
+  useEffect(() => {
+    if (open) {
+      // iOS Safari specific: lock body scroll
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        document.body.style.overflow = "hidden";
+        document.body.style.position = "fixed";
+        document.body.style.width = "100%";
+      }
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+    };
+  }, [open]);
   const [openRouterDialogOpen, setOpenRouterDialogOpen] = useState(false);
   const { data: providers } = useChatModels();
   const modelLabelOverrides = useModelLabelOverrides();
@@ -103,7 +121,7 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
               placeholder="search model..."
               data-testid="model-search-input"
             />
-            <CommandList className="p-2">
+            <CommandList className="p-2 touch-pan-y">
               <CommandEmpty>No results found.</CommandEmpty>
               {providers?.map((provider, i) => (
                 <Fragment key={provider.provider}>

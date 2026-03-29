@@ -57,6 +57,31 @@ function CommandInput({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [isTouchDevice, setIsTouchDevice] = React.useState(false);
+
+  React.useEffect(() => {
+    // Detect touch device
+    const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(isTouch);
+
+    // Only auto-focus on desktop
+    if (!isTouch && inputRef.current) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // On mobile, make input readonly to prevent keyboard, but allow clicking to enable
+  const handleClick = React.useCallback(() => {
+    if (isTouchDevice && inputRef.current) {
+      inputRef.current.readOnly = false;
+      inputRef.current.focus();
+    }
+  }, [isTouchDevice]);
+
   return (
     <div
       data-slot="command-input-wrapper"
@@ -64,7 +89,10 @@ function CommandInput({
     >
       <SearchIcon className="size-4 shrink-0 opacity-50" />
       <CommandPrimitive.Input
+        ref={inputRef}
         data-slot="command-input"
+        readOnly={isTouchDevice}
+        onClick={handleClick}
         className={cn(
           "placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
           className,
@@ -83,7 +111,7 @@ function CommandList({
     <CommandPrimitive.List
       data-slot="command-list"
       className={cn(
-        "max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto",
+        "max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto overscroll-contain touch-pan-y",
         className,
       )}
       {...props}

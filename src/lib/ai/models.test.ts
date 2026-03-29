@@ -13,11 +13,11 @@ beforeAll(async () => {
 });
 
 describe("customModelProvider file support metadata", () => {
-  it("includes default file support for OpenAI gpt-4.1", () => {
+  it("includes default file support for OpenAI gpt-5.2-chat", () => {
     const { customModelProvider, getFilePartSupportedMimeTypes } = modelsModule;
     const model = customModelProvider.getModel({
       provider: "openai",
-      model: "gpt-4.1",
+      model: "gpt-5.2-chat",
     });
     expect(getFilePartSupportedMimeTypes(model)).toEqual(
       Array.from(OPENAI_FILE_MIME_TYPES),
@@ -27,7 +27,7 @@ describe("customModelProvider file support metadata", () => {
       (item) => item.provider === "openai",
     );
     const metadata = openaiProvider?.models.find(
-      (item) => item.name === "gpt-4.1",
+      (item) => item.name === "gpt-5.2-chat",
     );
 
     expect(metadata?.supportedFileMimeTypes).toEqual(
@@ -44,5 +44,37 @@ describe("customModelProvider file support metadata", () => {
     expect(getFilePartSupportedMimeTypes(model)).toEqual(
       Array.from(ANTHROPIC_FILE_MIME_TYPES),
     );
+  });
+
+  it("marks NVIDIA Qwen 3.5 models as tool-call unsupported", () => {
+    const { customModelProvider, isToolCallUnsupportedModel } = modelsModule;
+
+    const nvidiaProvider = customModelProvider.modelsInfo.find(
+      (item) => item.provider === "nvidia",
+    );
+
+    expect(nvidiaProvider).toBeDefined();
+
+    const qwen122b = nvidiaProvider?.models.find(
+      (item) => item.name === "qwen/qwen3.5-122b-a10b",
+    );
+    const qwen397b = nvidiaProvider?.models.find(
+      (item) => item.name === "qwen/qwen3.5-397b-a17b",
+    );
+
+    expect(qwen122b?.isToolCallUnsupported).toBe(true);
+    expect(qwen397b?.isToolCallUnsupported).toBe(true);
+
+    const qwen122bModel = customModelProvider.getModel({
+      provider: "nvidia",
+      model: "qwen/qwen3.5-122b-a10b",
+    });
+    const qwen397bModel = customModelProvider.getModel({
+      provider: "nvidia",
+      model: "qwen/qwen3.5-397b-a17b",
+    });
+
+    expect(isToolCallUnsupportedModel(qwen122bModel)).toBe(true);
+    expect(isToolCallUnsupportedModel(qwen397bModel)).toBe(true);
   });
 });

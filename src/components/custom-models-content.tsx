@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useCustomModels } from "@/hooks/use-custom-models";
 import { useApiKeys } from "@/hooks/use-api-keys";
 import { useHiddenModels } from "@/hooks/use-hidden-models";
@@ -57,6 +57,27 @@ type Section = "keys" | "models" | "visibility";
 
 export function CustomModelsContent() {
   const [section, setSection] = useState<Section>("keys");
+  const sectionMeta = useMemo(
+    () =>
+      ({
+        keys: {
+          title: "API Keys",
+          description:
+            "Manage provider keys used by your account (synced across devices).",
+        },
+        models: {
+          title: "Custom Models",
+          description:
+            "Add/edit provider model IDs and tool-call support (synced across devices).",
+        },
+        visibility: {
+          title: "Model Visibility",
+          description:
+            "Choose which models appear in your picker. This is synced across devices.",
+        },
+      }) satisfies Record<Section, { title: string; description: string }>,
+    [],
+  );
 
   return (
     <div className="space-y-4">
@@ -81,6 +102,13 @@ export function CustomModelsContent() {
             {label}
           </button>
         ))}
+      </div>
+
+      <div className="rounded-lg border bg-muted/20 p-3">
+        <p className="text-sm font-medium">{sectionMeta[section].title}</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {sectionMeta[section].description}
+        </p>
       </div>
 
       {section === "keys" && <ApiKeysSection />}

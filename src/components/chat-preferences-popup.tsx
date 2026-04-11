@@ -61,7 +61,7 @@ export function ChatPreferencesPopup() {
         icon: <Share2 className="w-4 h-4" />,
       },
       {
-        label: "Custom Models",
+        label: "Model Catalog",
         icon: <Boxes className="w-4 h-4" />,
       },
       {

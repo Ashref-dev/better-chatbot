@@ -1,7 +1,7 @@
 "use client";
 
 import { appStore } from "@/app/store";
-import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
+import { AllowedMCPServer } from "app-types/mcp";
 import { cn, objectFlow } from "lib/utils";
 import {
   ArrowUpRightIcon,
@@ -42,13 +42,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { Input } from "ui/input";
@@ -66,6 +61,11 @@ import { WorkflowGreeting } from "./workflow/workflow-greeting";
 import { AppDefaultToolkit } from "lib/ai/tools";
 import { ChatMention } from "app-types/chat";
 import { CountAnimation } from "ui/count-animation";
+import {
+  MobileAwareSubmenu,
+  MobileSubmenuProvider,
+  MobileCompatibleMenuItem,
+} from "ui/mobile-aware-submenu";
 
 import { Separator } from "ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
@@ -94,13 +94,14 @@ interface ToolSelectDropdownProps {
 }
 
 const calculateToolCount = (
-  allowedMcpServers: Record<string, AllowedMCPServer>,
-  mcpList: (MCPServerInfo & { id: string })[],
+  allowedMcpServers: Record<string, AllowedMCPServer> = {},
+  allowedAppDefaultToolkit: AppDefaultToolkit[] = [],
 ) => {
-  return mcpList.reduce((acc, server) => {
-    const count = allowedMcpServers[server.id]?.tools?.length;
-    return acc + count;
-  }, 0);
+  const mcpToolCount = Object.values(allowedMcpServers).reduce(
+    (acc, server) => acc + (server?.tools?.length ?? 0),
+    0,
+  );
+  return mcpToolCount + allowedAppDefaultToolkit.length;
 };
 
 export function ToolSelectDropdown({
@@ -113,6 +114,7 @@ export function ToolSelectDropdown({
   className,
 }: ToolSelectDropdownProps) {
   const [open, setOpen] = useState(false);
+  const [hasOpenMobileSubmenu, setHasOpenMobileSubmenu] = useState(false);
   const [toolChoice, allowedAppDefaultToolkit, allowedMcpServers, mcpList] =
     appStore(
       useShallow((state) => [
@@ -227,7 +229,15 @@ export function ToolSelectDropdown({
   }, [bindingTools.length > 128]);
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && hasOpenMobileSubmenu) {
+          return;
+        }
+        setOpen(nextOpen);
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <div>
           <Tooltip>
@@ -246,53 +256,55 @@ export function ToolSelectDropdown({
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="md:w-72" align={align} side={side}>
-        <WorkflowToolSelector onSelectWorkflow={onSelectWorkflow} />
-        <div className="py-1">
-          <DropdownMenuSeparator />
-        </div>
-        <AgentSelector onSelectAgent={onSelectAgent} />
-        <div className="py-1">
-          <DropdownMenuSeparator />
-        </div>
-        <ImageGeneratorSelector
-          onGenerateImage={onGenerateImage}
-          modelInfo={modelInfo}
-        />
-        <div className="py-1">
-          <DropdownMenuSeparator />
-        </div>
-        <div className="py-2">
-          <ToolPresets />
+        <MobileSubmenuProvider
+          onOpenSubmenuChange={setHasOpenMobileSubmenu}
+          requestCloseParent={() => {
+            setHasOpenMobileSubmenu(false);
+            setOpen(false);
+          }}
+        >
+          <WorkflowToolSelector onSelectWorkflow={onSelectWorkflow} />
           <div className="py-1">
             <DropdownMenuSeparator />
           </div>
-          <AppDefaultToolKitSelector />
+          <AgentSelector onSelectAgent={onSelectAgent} />
           <div className="py-1">
             <DropdownMenuSeparator />
           </div>
-          <McpServerSelector />
-        </div>
+          <ImageGeneratorSelector
+            onGenerateImage={onGenerateImage}
+            modelInfo={modelInfo}
+          />
+          <div className="py-1">
+            <DropdownMenuSeparator />
+          </div>
+          <div className="py-2">
+            <ToolPresets />
+            <div className="py-1">
+              <DropdownMenuSeparator />
+            </div>
+            <AppDefaultToolKitSelector />
+            <div className="py-1">
+              <DropdownMenuSeparator />
+            </div>
+            <McpServerSelector />
+          </div>
+        </MobileSubmenuProvider>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
 function ToolPresets() {
-  const [
-    appStoreMutate,
-    presets,
-    allowedMcpServers,
-    allowedAppDefaultToolkit,
-    mcpList,
-  ] = appStore(
-    useShallow((state) => [
-      state.mutate,
-      state.toolPresets,
-      state.allowedMcpServers,
-      state.allowedAppDefaultToolkit,
-      state.mcpList,
-    ]),
-  );
+  const [appStoreMutate, presets, allowedMcpServers, allowedAppDefaultToolkit] =
+    appStore(
+      useShallow((state) => [
+        state.mutate,
+        state.toolPresets,
+        state.allowedMcpServers,
+        state.allowedAppDefaultToolkit,
+      ]),
+    );
   const [open, setOpen] = useState(false);
   const [presetName, setPresetName] = useState("");
   const t = useTranslations();
@@ -300,9 +312,12 @@ function ToolPresets() {
   const presetWithToolCount = useMemo(() => {
     return presets.map((preset) => ({
       ...preset,
-      toolCount: calculateToolCount(preset.allowedMcpServers ?? {}, mcpList),
+      toolCount: calculateToolCount(
+        preset.allowedMcpServers ?? {},
+        preset.allowedAppDefaultToolkit ?? [],
+      ),
     }));
-  }, [presets, mcpList]);
+  }, [presets]);
 
   const addPreset = useCallback(
     (name: string) => {
@@ -342,105 +357,110 @@ function ToolPresets() {
       allowedMcpServers: preset.allowedMcpServers,
       allowedAppDefaultToolkit: preset.allowedAppDefaultToolkit,
     });
+    toast.success(`Preset "${preset.name}" applied`);
   }, []);
 
   return (
     <DropdownMenuGroup className="cursor-pointer">
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger className="text-xs flex items-center gap-2 font-semibold cursor-pointer">
-          <Package className="size-3.5" />
-          {t("Chat.Tool.preset")}
-        </DropdownMenuSubTrigger>
-        <DropdownMenuPortal>
-          <DropdownMenuSubContent className="md:w-80 md:max-h-96 overflow-y-auto">
-            <DropdownMenuLabel className="flex items-center text-muted-foreground gap-2 text-xs">
-              {t("Chat.Tool.toolPresets")}
-              <div className="flex-1" />
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                  <Button variant={"secondary"} size={"sm"} className="text-xs">
-                    {t("Chat.Tool.saveAsPreset")}
-                    <Plus className="size-3.5" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{t("Chat.Tool.saveAsPreset")}</DialogTitle>
-                  </DialogHeader>
-                  <DialogDescription>
-                    {t("Chat.Tool.saveAsPresetDescription")}
-                  </DialogDescription>
-                  <Input
-                    placeholder="Preset Name"
-                    value={presetName}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-                        addPreset(presetName);
-                      }
-                    }}
-                    onChange={(e) => setPresetName(e.target.value)}
-                  />
-                  <Button
-                    variant={"secondary"}
-                    size={"sm"}
-                    className="border"
-                    onClick={() => {
+      <MobileAwareSubmenu
+        trigger={
+          <>
+            <Package className="size-3.5" />
+            <span className="text-xs font-semibold">
+              {t("Chat.Tool.preset")}
+            </span>
+          </>
+        }
+        triggerClassName="text-xs flex items-center gap-2 font-semibold cursor-pointer"
+        contentClassName="md:w-80 md:max-h-96 overflow-y-auto"
+        title="Tool Presets"
+      >
+        <div className="w-full">
+          <DropdownMenuLabel className="flex items-center text-muted-foreground gap-2 text-xs">
+            {t("Chat.Tool.toolPresets")}
+            <div className="flex-1" />
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button variant={"secondary"} size={"sm"} className="text-xs">
+                  {t("Chat.Tool.saveAsPreset")}
+                  <Plus className="size-3.5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="z-[11000]">
+                <DialogHeader>
+                  <DialogTitle>{t("Chat.Tool.saveAsPreset")}</DialogTitle>
+                </DialogHeader>
+                <DialogDescription>
+                  {t("Chat.Tool.saveAsPresetDescription")}
+                </DialogDescription>
+                <Input
+                  placeholder="Preset Name"
+                  value={presetName}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                       addPreset(presetName);
-                    }}
+                    }
+                  }}
+                  onChange={(e) => setPresetName(e.target.value)}
+                />
+                <Button
+                  variant={"secondary"}
+                  size={"sm"}
+                  className="border"
+                  onClick={() => {
+                    addPreset(presetName);
+                  }}
+                >
+                  {t("Common.save")}
+                </Button>
+              </DialogContent>
+            </Dialog>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {presets.length === 0 ? (
+            <div className="text-sm text-muted-foreground w-full h-full flex flex-col items-center justify-center gap-2 py-6">
+              <p>{t("Chat.Tool.noPresetsAvailableYet")}</p>
+              <p className="text-xs px-4">
+                {t("Chat.Tool.clickSaveAsPresetToGetStarted")}
+              </p>
+            </div>
+          ) : (
+            presetWithToolCount.map((preset, index) => {
+              return (
+                <MobileCompatibleMenuItem
+                  onClick={() => {
+                    applyPreset(preset);
+                  }}
+                  key={preset.name}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <Badge
+                    variant={"secondary"}
+                    className="rounded-full border-input"
                   >
-                    {t("Common.save")}
-                  </Button>
-                </DialogContent>
-              </Dialog>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {presets.length === 0 ? (
-              <div className="text-sm text-muted-foreground w-full h-full flex flex-col items-center justify-center gap-2 py-6">
-                <p>{t("Chat.Tool.noPresetsAvailableYet")}</p>
-                <p className="text-xs px-4">
-                  {t("Chat.Tool.clickSaveAsPresetToGetStarted")}
-                </p>
-              </div>
-            ) : (
-              presetWithToolCount.map((preset, index) => {
-                return (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      applyPreset(preset);
-                    }}
-                    key={preset.name}
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
-                    <Badge
-                      variant={"secondary"}
-                      className="rounded-full border-input"
-                    >
-                      <Wrench className="size-3.5" />
-                      <span className="min-w-6 text-center">
-                        {preset.toolCount}
-                      </span>
-                    </Badge>
-                    <span className="font-semibold truncate">
-                      {preset.name}
+                    <Wrench className="size-3.5" />
+                    <span className="min-w-6 text-center">
+                      {preset.toolCount}
                     </span>
+                  </Badge>
+                  <span className="font-semibold truncate">{preset.name}</span>
 
-                    <div className="flex-1" />
-                    <div
-                      className="p-1 hover:bg-input rounded-full cursor-pointer"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        deletePreset(index);
-                      }}
-                    >
-                      <X className="size-3.5" />
-                    </div>
-                  </DropdownMenuItem>
-                );
-              })
-            )}
-          </DropdownMenuSubContent>
-        </DropdownMenuPortal>
-      </DropdownMenuSub>
+                  <div className="flex-1" />
+                  <div
+                    className="p-1 hover:bg-input rounded-full cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      deletePreset(index);
+                    }}
+                  >
+                    <X className="size-3.5" />
+                  </div>
+                </MobileCompatibleMenuItem>
+              );
+            })
+          )}
+        </div>
+      </MobileAwareSubmenu>
     </DropdownMenuGroup>
   );
 }
@@ -464,118 +484,120 @@ function WorkflowToolSelector({
   );
   return (
     <DropdownMenuGroup>
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger className="text-xs flex items-center gap-2 font-semibold cursor-pointer">
-          <Waypoints className="size-3.5" />
-          {t("Workflow.title")}
-        </DropdownMenuSubTrigger>
-        <DropdownMenuPortal>
-          <DropdownMenuSubContent className="w-80 relative">
-            {myWorkflows.length === 0 && sharedWorkflows.length === 0 ? (
-              <div className="text-sm text-muted-foreground flex flex-col py-6 px-6 gap-4 items-center">
-                <InfoIcon className="size-4" />
-                <p className="whitespace-pre-wrap">{t("Workflow.noTools")}</p>
+      <MobileAwareSubmenu
+        trigger={
+          <>
+            <Waypoints className="size-3.5" />
+            <span className="text-xs font-semibold">{t("Workflow.title")}</span>
+          </>
+        }
+        triggerClassName="text-xs flex items-center gap-2 font-semibold cursor-pointer"
+        contentClassName="w-80 relative"
+        title="Workflows"
+      >
+        <div className="w-full">
+          {myWorkflows.length === 0 && sharedWorkflows.length === 0 ? (
+            <div className="text-sm text-muted-foreground flex flex-col py-6 px-6 gap-4 items-center">
+              <InfoIcon className="size-4" />
+              <p className="whitespace-pre-wrap">{t("Workflow.noTools")}</p>
 
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant={"ghost"} className="relative group">
-                      {t("Workflow.whatIsWorkflow")}
-                      <div className="absolute left-0 -top-1.5 opacity-100 group-hover:opacity-0 transition-opacity duration-300">
-                        <MousePointer2 className="rotate-180 text-blue-500 fill-blue-500 size-3 wiggle" />
-                      </div>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="md:max-w-3xl!">
-                    <DialogTitle className="sr-only">
-                      workflow greeting
-                    </DialogTitle>
-                    <WorkflowGreeting />
-                  </DialogContent>
-                </Dialog>
-              </div>
-            ) : (
-              <>
-                {/* My Workflows */}
-                {myWorkflows.map((workflow) => (
-                  <DropdownMenuItem
-                    key={workflow.id}
-                    className="cursor-pointer"
-                    onClick={() => onSelectWorkflow?.(workflow)}
-                  >
-                    {workflow.icon && workflow.icon.type === "emoji" ? (
-                      <div
-                        style={{
-                          backgroundColor:
-                            workflow.icon?.style?.backgroundColor,
-                        }}
-                        className="p-1 rounded flex items-center justify-center ring ring-background border"
-                      >
-                        <Avatar className="size-3">
-                          <AvatarImage src={workflow.icon?.value} />
-                          <AvatarFallback>
-                            {workflow.name.slice(0, 1)}
-                          </AvatarFallback>
-                        </Avatar>
-                      </div>
-                    ) : null}
-                    <span className="truncate min-w-0">{workflow.name}</span>
-                  </DropdownMenuItem>
-                ))}
-
-                {myWorkflows.length > 0 && sharedWorkflows.length > 0 && (
-                  <DropdownMenuSeparator />
-                )}
-
-                {/* Shared Workflows */}
-                {sharedWorkflows.map((workflow) => (
-                  <DropdownMenuItem
-                    key={workflow.id}
-                    className="cursor-pointer"
-                    onClick={() => onSelectWorkflow?.(workflow)}
-                  >
-                    {workflow.icon && workflow.icon.type === "emoji" ? (
-                      <div
-                        style={{
-                          backgroundColor:
-                            workflow.icon?.style?.backgroundColor,
-                        }}
-                        className="p-1 rounded flex items-center justify-center ring ring-background border"
-                      >
-                        <Avatar className="size-3">
-                          <AvatarImage src={workflow.icon?.value} />
-                          <AvatarFallback>
-                            {workflow.name.slice(0, 1)}
-                          </AvatarFallback>
-                        </Avatar>
-                      </div>
-                    ) : null}
-                    <div className="flex items-center justify-between flex-1 min-w-0">
-                      <span className="truncate min-w-0">{workflow.name}</span>
-                      {workflow.userName && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Avatar className="size-4 ml-2 shrink-0">
-                              <AvatarImage src={workflow.userAvatar} />
-                              <AvatarFallback className="text-xs text-muted-foreground font-medium">
-                                {workflow.userName[0]?.toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {t("Common.sharedBy", {
-                              userName: workflow.userName,
-                            })}
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant={"ghost"} className="relative group">
+                    {t("Workflow.whatIsWorkflow")}
+                    <div className="absolute left-0 -top-1.5 opacity-100 group-hover:opacity-0 transition-opacity duration-300">
+                      <MousePointer2 className="rotate-180 text-blue-500 fill-blue-500 size-3 wiggle" />
                     </div>
-                  </DropdownMenuItem>
-                ))}
-              </>
-            )}
-          </DropdownMenuSubContent>
-        </DropdownMenuPortal>
-      </DropdownMenuSub>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="md:max-w-3xl!">
+                  <DialogTitle className="sr-only">
+                    workflow greeting
+                  </DialogTitle>
+                  <WorkflowGreeting />
+                </DialogContent>
+              </Dialog>
+            </div>
+          ) : (
+            <>
+              {/* My Workflows */}
+              {myWorkflows.map((workflow) => (
+                <MobileCompatibleMenuItem
+                  key={workflow.id}
+                  className="cursor-pointer"
+                  onClick={() => onSelectWorkflow?.(workflow)}
+                >
+                  {workflow.icon && workflow.icon.type === "emoji" ? (
+                    <div
+                      style={{
+                        backgroundColor: workflow.icon?.style?.backgroundColor,
+                      }}
+                      className="p-1 rounded flex items-center justify-center ring ring-background border"
+                    >
+                      <Avatar className="size-3">
+                        <AvatarImage src={workflow.icon?.value} />
+                        <AvatarFallback>
+                          {workflow.name.slice(0, 1)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  ) : null}
+                  <span className="truncate min-w-0">{workflow.name}</span>
+                </MobileCompatibleMenuItem>
+              ))}
+
+              {myWorkflows.length > 0 && sharedWorkflows.length > 0 && (
+                <DropdownMenuSeparator />
+              )}
+
+              {/* Shared Workflows */}
+              {sharedWorkflows.map((workflow) => (
+                <MobileCompatibleMenuItem
+                  key={workflow.id}
+                  className="cursor-pointer"
+                  onClick={() => onSelectWorkflow?.(workflow)}
+                >
+                  {workflow.icon && workflow.icon.type === "emoji" ? (
+                    <div
+                      style={{
+                        backgroundColor: workflow.icon?.style?.backgroundColor,
+                      }}
+                      className="p-1 rounded flex items-center justify-center ring ring-background border"
+                    >
+                      <Avatar className="size-3">
+                        <AvatarImage src={workflow.icon?.value} />
+                        <AvatarFallback>
+                          {workflow.name.slice(0, 1)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  ) : null}
+                  <div className="flex items-center justify-between flex-1 min-w-0">
+                    <span className="truncate min-w-0">{workflow.name}</span>
+                    {workflow.userName && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Avatar className="size-4 ml-2 shrink-0">
+                            <AvatarImage src={workflow.userAvatar} />
+                            <AvatarFallback className="text-xs text-muted-foreground font-medium">
+                              {workflow.userName[0]?.toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {t("Common.sharedBy", {
+                            userName: workflow.userName,
+                          })}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                </MobileCompatibleMenuItem>
+              ))}
+            </>
+          )}
+        </div>
+      </MobileAwareSubmenu>
     </DropdownMenuGroup>
   );
 }
@@ -648,79 +670,71 @@ function McpServerSelector() {
         </div>
       ) : (
         selectedMcpServerList.map((server) => (
-          <DropdownMenuSub key={server.id}>
-            <DropdownMenuSubTrigger
-              className="flex items-center gap-2 font-semibold cursor-pointer"
-              icon={
-                <div className="flex items-center gap-2 ml-auto">
-                  {server.status === "authorizing" ? (
-                    <div className="flex items-center gap-1">
-                      <ShieldAlertIcon className="size-3 text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <>
-                      {server.tools.filter((t) => t.checked).length > 0 ? (
-                        <span className="w-5 h-5 items-center justify-center flex text-[8px] text-muted-foreground font-semibold ">
-                          {server.tools.filter((t) => t.checked).length}
-                        </span>
-                      ) : null}
-                      <ChevronRight className="size-4 text-muted-foreground" />
-                    </>
-                  )}
+          <MobileAwareSubmenu
+            key={server.id}
+            trigger={
+              <>
+                <div className="flex items-center justify-center p-1 rounded bg-input/40 border">
+                  <MCPIcon className="fill-foreground size-2.5" />
                 </div>
-              }
-              onClick={(e) => {
-                e.preventDefault();
+                <span
+                  className={cn("truncate", !server.checked && "opacity-30")}
+                >
+                  {server.serverName}
+                </span>
+                {Boolean(server.error) ? (
+                  <span
+                    className={cn("text-xs text-destructive ml-1 p-1 rounded")}
+                  >
+                    error
+                  </span>
+                ) : null}
+              </>
+            }
+            triggerClassName="flex items-center gap-2 font-semibold cursor-pointer"
+            contentClassName="w-80 relative"
+            icon={
+              server.status === "authorizing" ? (
+                <ShieldAlertIcon className="size-3 text-muted-foreground" />
+              ) : server.tools.filter((t) => t.checked).length > 0 ? (
+                <span className="w-5 h-5 items-center justify-center flex text-[8px] text-muted-foreground font-semibold">
+                  {server.tools.filter((t) => t.checked).length}
+                </span>
+              ) : null
+            }
+            onTriggerClick={(e) => {
+              e.preventDefault();
+              setMcpServerTool(
+                server.id,
+                server.checked ? [] : server.tools.map((t) => t.name),
+              );
+            }}
+          >
+            <McpServerToolSelector
+              tools={server.tools}
+              isAuthorizing={server.status === "authorizing"}
+              checked={server.checked}
+              serverId={server.id}
+              onClickAllChecked={(checked) => {
                 setMcpServerTool(
                   server.id,
-                  server.checked ? [] : server.tools.map((t) => t.name),
+                  checked ? server.tools.map((t) => t.name) : [],
                 );
               }}
-            >
-              <div className="flex items-center justify-center p-1 rounded bg-input/40 border">
-                <MCPIcon className="fill-foreground size-2.5" />
-              </div>
+              onToolClick={(toolName, checked) => {
+                const currentTools = server.tools
+                  .filter((v) => v.checked)
+                  .map((v) => v.name);
 
-              <span className={cn("truncate", !server.checked && "opacity-30")}>
-                {server.serverName}
-              </span>
-              {Boolean(server.error) ? (
-                <span
-                  className={cn("text-xs text-destructive ml-1 p-1 rounded")}
-                >
-                  error
-                </span>
-              ) : null}
-            </DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent className="w-80 relative">
-                <McpServerToolSelector
-                  tools={server.tools}
-                  isAuthorizing={server.status === "authorizing"}
-                  checked={server.checked}
-                  serverId={server.id}
-                  onClickAllChecked={(checked) => {
-                    setMcpServerTool(
-                      server.id,
-                      checked ? server.tools.map((t) => t.name) : [],
-                    );
-                  }}
-                  onToolClick={(toolName, checked) => {
-                    const currentTools = server.tools
-                      .filter((v) => v.checked)
-                      .map((v) => v.name);
-
-                    setMcpServerTool(
-                      server.id,
-                      checked
-                        ? currentTools.concat(toolName)
-                        : currentTools.filter((v) => v !== toolName),
-                    );
-                  }}
-                />
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
+                setMcpServerTool(
+                  server.id,
+                  checked
+                    ? currentTools.concat(toolName)
+                    : currentTools.filter((v) => v !== toolName),
+                );
+              }}
+            />
+          </MobileAwareSubmenu>
         ))
       )}
     </DropdownMenuGroup>
@@ -823,7 +837,7 @@ function McpServerToolSelector({
           </div>
         ) : (
           filteredTools.map((tool) => (
-            <DropdownMenuItem
+            <MobileCompatibleMenuItem
               key={tool.name}
               className="flex items-center gap-2 cursor-pointer mb-1"
               onClick={(e) => {
@@ -838,7 +852,7 @@ function McpServerToolSelector({
                 </p>
               </div>
               <Checkbox checked={tool.checked} className="ml-auto" />
-            </DropdownMenuItem>
+            </MobileCompatibleMenuItem>
           ))
         )}
       </div>
@@ -900,7 +914,7 @@ function AppDefaultToolKitSelector() {
     <DropdownMenuGroup>
       {defaultToolInfo.map((tool) => {
         return (
-          <DropdownMenuItem
+          <MobileCompatibleMenuItem
             key={tool.id}
             className={cn(
               "cursor-pointer font-semibold text-xs text-muted-foreground",
@@ -923,7 +937,7 @@ function AppDefaultToolKitSelector() {
               className="ml-auto"
               checked={allowedAppDefaultToolkit?.includes(tool.id)}
             />
-          </DropdownMenuItem>
+          </MobileCompatibleMenuItem>
         );
       })}
     </DropdownMenuGroup>
@@ -964,85 +978,89 @@ function AgentSelector({
 
   return (
     <DropdownMenuGroup>
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger className="text-xs flex items-center gap-2 font-semibold cursor-pointer">
-          <MessageCircle className="size-3.5" />
-          {t("Agent.title")}
-        </DropdownMenuSubTrigger>
-        <DropdownMenuPortal>
-          <DropdownMenuSubContent className="w-80 relative">
-            {emptyAgent}
+      <MobileAwareSubmenu
+        trigger={
+          <>
+            <MessageCircle className="size-3.5" />
+            <span className="text-xs font-semibold">{t("Agent.title")}</span>
+          </>
+        }
+        triggerClassName="text-xs flex items-center gap-2 font-semibold cursor-pointer"
+        contentClassName="w-80 relative"
+        title="Agents"
+      >
+        <div className="w-full">
+          {emptyAgent}
 
-            {/* My Agents */}
-            {myAgents.map((agent) => (
-              <DropdownMenuItem
-                key={agent.id}
-                className="cursor-pointer"
-                onClick={() => onSelectAgent?.(agent)}
-              >
-                {agent.icon && agent.icon.type === "emoji" ? (
-                  <div
-                    style={{
-                      backgroundColor: agent.icon?.style?.backgroundColor,
-                    }}
-                    className="p-1 rounded flex items-center justify-center ring ring-background border"
-                  >
-                    <Avatar className="size-3">
-                      <AvatarImage src={agent.icon?.value} />
-                      <AvatarFallback>{agent.name.slice(0, 1)}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                ) : null}
-                <span className="truncate min-w-0">{agent.name}</span>
-              </DropdownMenuItem>
-            ))}
-
-            {myAgents.length > 0 && bookmarkedAgents.length > 0 && (
-              <DropdownMenuSeparator />
-            )}
-
-            {bookmarkedAgents.map((agent) => (
-              <DropdownMenuItem
-                key={agent.id}
-                className="cursor-pointer"
-                onClick={() => onSelectAgent?.(agent)}
-              >
-                {agent.icon && agent.icon.type === "emoji" ? (
-                  <div
-                    style={{
-                      backgroundColor: agent.icon?.style?.backgroundColor,
-                    }}
-                    className="p-1 rounded flex items-center justify-center ring ring-background border"
-                  >
-                    <Avatar className="size-3">
-                      <AvatarImage src={agent.icon?.value} />
-                      <AvatarFallback>{agent.name.slice(0, 1)}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                ) : null}
-                <div className="flex items-center justify-between flex-1 min-w-0">
-                  <span className="truncate min-w-0">{agent.name}</span>
-                  {agent.userName && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Avatar className="size-4 ml-2 shrink-0">
-                          <AvatarImage src={agent.userAvatar} />
-                          <AvatarFallback className="text-xs text-muted-foreground font-medium">
-                            {agent.userName[0]?.toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t("Common.sharedBy", { userName: agent.userName })}
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
+          {/* My Agents */}
+          {myAgents.map((agent) => (
+            <MobileCompatibleMenuItem
+              key={agent.id}
+              className="cursor-pointer"
+              onClick={() => onSelectAgent?.(agent)}
+            >
+              {agent.icon && agent.icon.type === "emoji" ? (
+                <div
+                  style={{
+                    backgroundColor: agent.icon?.style?.backgroundColor,
+                  }}
+                  className="p-1 rounded flex items-center justify-center ring ring-background border"
+                >
+                  <Avatar className="size-3">
+                    <AvatarImage src={agent.icon?.value} />
+                    <AvatarFallback>{agent.name.slice(0, 1)}</AvatarFallback>
+                  </Avatar>
                 </div>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuPortal>
-      </DropdownMenuSub>
+              ) : null}
+              <span className="truncate min-w-0">{agent.name}</span>
+            </MobileCompatibleMenuItem>
+          ))}
+
+          {myAgents.length > 0 && bookmarkedAgents.length > 0 && (
+            <DropdownMenuSeparator />
+          )}
+
+          {bookmarkedAgents.map((agent) => (
+            <MobileCompatibleMenuItem
+              key={agent.id}
+              className="cursor-pointer"
+              onClick={() => onSelectAgent?.(agent)}
+            >
+              {agent.icon && agent.icon.type === "emoji" ? (
+                <div
+                  style={{
+                    backgroundColor: agent.icon?.style?.backgroundColor,
+                  }}
+                  className="p-1 rounded flex items-center justify-center ring ring-background border"
+                >
+                  <Avatar className="size-3">
+                    <AvatarImage src={agent.icon?.value} />
+                    <AvatarFallback>{agent.name.slice(0, 1)}</AvatarFallback>
+                  </Avatar>
+                </div>
+              ) : null}
+              <div className="flex items-center justify-between flex-1 min-w-0">
+                <span className="truncate min-w-0">{agent.name}</span>
+                {agent.userName && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Avatar className="size-4 ml-2 shrink-0">
+                        <AvatarImage src={agent.userAvatar} />
+                        <AvatarFallback className="text-xs text-muted-foreground font-medium">
+                          {agent.userName[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t("Common.sharedBy", { userName: agent.userName })}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            </MobileCompatibleMenuItem>
+          ))}
+        </div>
+      </MobileAwareSubmenu>
     </DropdownMenuGroup>
   );
 }
@@ -1058,32 +1076,33 @@ function ImageGeneratorSelector({
 
   return (
     <DropdownMenuGroup>
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger className="text-xs flex items-center gap-2 font-semibold cursor-pointer">
-          <ImagesIcon className="size-3.5" />
-          {t("generateImage")}
-        </DropdownMenuSubTrigger>
-        <DropdownMenuPortal>
-          <DropdownMenuSubContent>
-            <DropdownMenuItem
-              disabled={modelInfo?.isToolCallUnsupported}
-              onClick={() => onGenerateImage?.("google")}
-              className="cursor-pointer"
-            >
-              <GeminiIcon className="mr-2 size-4" />
-              Gemini (Nano Banana)
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={modelInfo?.isToolCallUnsupported}
-              onClick={() => onGenerateImage?.("openai")}
-              className="cursor-pointer"
-            >
-              <OpenAIIcon className="mr-2 size-4" />
-              OpenAI
-            </DropdownMenuItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuPortal>
-      </DropdownMenuSub>
+      <MobileAwareSubmenu
+        trigger={
+          <>
+            <ImagesIcon className="size-3.5" />
+            {t("generateImage")}
+          </>
+        }
+        triggerClassName="text-xs flex items-center gap-2 font-semibold cursor-pointer"
+        title="Generate Image"
+      >
+        <MobileCompatibleMenuItem
+          disabled={modelInfo?.isToolCallUnsupported}
+          onClick={() => onGenerateImage?.("google")}
+          className="cursor-pointer"
+        >
+          <GeminiIcon className="mr-2 size-4" />
+          Gemini (Nano Banana)
+        </MobileCompatibleMenuItem>
+        <MobileCompatibleMenuItem
+          disabled={modelInfo?.isToolCallUnsupported}
+          onClick={() => onGenerateImage?.("openai")}
+          className="cursor-pointer"
+        >
+          <OpenAIIcon className="mr-2 size-4" />
+          OpenAI
+        </MobileCompatibleMenuItem>
+      </MobileAwareSubmenu>
     </DropdownMenuGroup>
   );
 }

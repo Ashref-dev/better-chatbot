@@ -87,6 +87,7 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   "qwen/qwen3.5-122b-a10b": { label: "Qwen 3.5", badge: "122b" },
   "qwen/qwen3.5-397b-a17b": { label: "Qwen 3.5", badge: "397b" },
   "stepfun-ai/step-3.5-flash": { label: "Step 3.5", badge: "flash" },
+  "google/gemma-4-31b-it": { label: "Gemma 4", badge: "31b it" },
   "z-ai/glm4.7": { label: "GLM 4.7" },
   "z-ai/glm5": { label: "GLM 5" },
 

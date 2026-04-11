@@ -116,8 +116,8 @@ export function ModelLabelsContent() {
       <h3 className="text-xl font-semibold">Model Labels</h3>
       <p className="text-sm text-muted-foreground py-2 pb-6">
         Set cleaner model names and optional variant badges. If not set, the app
-        falls back to its default model name. These preferences are saved only
-        in your browser (local storage), not in the database.
+        falls back to its default model name. These preferences are synced to
+        your account across devices.
       </p>
 
       <div className="flex flex-col gap-4 w-full">

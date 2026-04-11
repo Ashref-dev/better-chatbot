@@ -134,6 +134,7 @@ const staticModels = {
     "qwen/qwen3.5-122b-a10b": nvidia("qwen/qwen3.5-122b-a10b"),
     "qwen/qwen3.5-397b-a17b": nvidia("qwen/qwen3.5-397b-a17b"),
     "stepfun-ai/step-3.5-flash": nvidia("stepfun-ai/step-3.5-flash"),
+    "google/gemma-4-31b-it": nvidia("google/gemma-4-31b-it"),
     "z-ai/glm4.7": nvidia("z-ai/glm4.7"),
     "z-ai/glm5": nvidia("z-ai/glm5"),
   },

@@ -1,6 +1,6 @@
 "use client";
 
-import type * as React from "react";
+import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 
@@ -34,13 +34,58 @@ function DropdownMenuTrigger({
 function DropdownMenuContent({
   className,
   sideOffset = 4,
+  onPointerDownOutside,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
+  type PointerDownOutsideEvent = Parameters<
+    NonNullable<
+      React.ComponentProps<
+        typeof DropdownMenuPrimitive.Content
+      >["onPointerDownOutside"]
+    >
+  >[0];
+  type InteractOutsideEvent = Parameters<
+    NonNullable<
+      React.ComponentProps<
+        typeof DropdownMenuPrimitive.Content
+      >["onInteractOutside"]
+    >
+  >[0];
+
+  // Do not prevent default here, otherwise outside targets may never receive click events on mobile.
+  const handlePointerDownOutside = React.useCallback(
+    (e: PointerDownOutsideEvent) => {
+      onPointerDownOutside?.(e);
+    },
+    [onPointerDownOutside],
+  );
+
+  const handleInteractOutside = React.useCallback(
+    (e: InteractOutsideEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target?.closest?.("[data-mobile-submenu-overlay]") ||
+        target?.closest?.("[data-mobile-submenu-panel]") ||
+        target?.getAttribute?.("data-mobile-submenu-overlay") ||
+        target?.getAttribute?.("data-mobile-submenu-panel") ||
+        target?.getAttribute?.("data-mobile-submenu-backdrop")
+      ) {
+        e.preventDefault();
+        return;
+      }
+      onInteractOutside?.(e);
+    },
+    [onInteractOutside],
+  );
+
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
+        onPointerDownOutside={handlePointerDownOutside}
+        onInteractOutside={handleInteractOutside}
         className={cn(
           "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md",
           className,

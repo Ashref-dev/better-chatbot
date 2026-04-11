@@ -6,6 +6,7 @@ import {
   ThemeProvider,
   ThemeStyleProvider,
 } from "@/components/layouts/theme-provider";
+import { PWARegister } from "@/components/pwa-register";
 import { Toaster } from "ui/sonner";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
@@ -22,6 +23,13 @@ export const metadata: Metadata = {
   title: "Ashref Chat",
   description:
     "Ashref Chat is a chatbot that uses the Tools to answer questions.",
+  manifest: "/manifest.webmanifest",
+  applicationName: "Ashref Chat",
+  appleWebApp: {
+    capable: true,
+    title: "Ashref Chat",
+    statusBarStyle: "default",
+  },
   icons: {
     icon: [
       {
@@ -43,7 +51,7 @@ export const metadata: Metadata = {
         media: "(prefers-color-scheme: light)",
       },
     ],
-    apple: "/logo-dark.svg",
+    apple: "/icons/icon-192.png",
   },
 };
 
@@ -81,6 +89,7 @@ export default async function RootLayout({
           <ThemeStyleProvider>
             <NextIntlClientProvider>
               <div id="root">
+                <PWARegister />
                 {children}
                 <Toaster richColors />
               </div>

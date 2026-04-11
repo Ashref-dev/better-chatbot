@@ -15,10 +15,25 @@ export const MODEL_LABEL_OVERRIDES_CHANGED_EVENT =
   "model-label-overrides-changed";
 
 const storage = getStorageManager<ModelLabelOverridesMap>(STORAGE_KEY);
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
 
 const emitChange = () => {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event(MODEL_LABEL_OVERRIDES_CHANGED_EVENT));
+};
+
+const scheduleServerSync = (overrides: ModelLabelOverridesMap) => {
+  if (typeof window === "undefined") return;
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    fetch("/api/user/model-label-overrides", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(overrides),
+    }).catch(() => {
+      // Keep local overrides even if sync fails.
+    });
+  }, 350);
 };
 
 export const getModelLabelOverrideKey = (provider: string, model: string) => {
@@ -49,6 +64,7 @@ export const modelLabelOverridesManager = {
 
       if (!nextLabel && !nextBadge) {
         delete next[key];
+        scheduleServerSync(next);
         return next;
       }
 
@@ -57,6 +73,7 @@ export const modelLabelOverridesManager = {
         badge: nextBadge,
         updatedAt: Date.now(),
       };
+      scheduleServerSync(next);
       return next;
     });
 
@@ -68,6 +85,7 @@ export const modelLabelOverridesManager = {
     storage.set((prev) => {
       const next = { ...(prev || {}) };
       delete next[key];
+      scheduleServerSync(next);
       return next;
     });
     emitChange();
@@ -75,6 +93,21 @@ export const modelLabelOverridesManager = {
 
   clear: () => {
     storage.remove();
+    scheduleServerSync({});
     emitChange();
+  },
+
+  replaceAll: (
+    overrides: ModelLabelOverridesMap,
+    options?: { emit?: boolean; sync?: boolean },
+  ) => {
+    const next = { ...(overrides || {}) };
+    storage.set(next);
+    if (options?.sync) {
+      scheduleServerSync(next);
+    }
+    if (options?.emit !== false) {
+      emitChange();
+    }
   },
 };

@@ -18,6 +18,10 @@ export type UserPreferences = {
   customModels?: CustomModelEntry[];
   apiKeys?: Record<string, string>; // provider -> encrypted API key
   hiddenModels?: string[]; // ["provider:modelId", ...]
+  modelLabelOverrides?: Record<
+    string,
+    { label?: string; badge?: string; updatedAt: number }
+  >;
 };
 
 // user without password
@@ -104,4 +108,14 @@ export const UserPreferencesZodSchema = z.object({
   customModels: z.array(CustomModelEntryZodSchema).optional(),
   apiKeys: z.record(z.string(), z.string()).optional(),
   hiddenModels: z.array(z.string()).optional(),
+  modelLabelOverrides: z
+    .record(
+      z.string(),
+      z.object({
+        label: z.string().optional(),
+        badge: z.string().optional(),
+        updatedAt: z.number(),
+      }),
+    )
+    .optional(),
 });

@@ -69,7 +69,8 @@ const staticModels = {
   google: {
     "gemini-2.5-flash-lite": google("gemini-2.5-flash-lite"),
     "gemini-2.5-flash": google("gemini-2.5-flash"),
-    "gemini-3-pro": google("gemini-3-pro-preview"),
+    "gemini-3.1-pro": google("gemini-3.1-pro"),
+    "gemini-3.1-flash-lite": google("gemini-3.1-flash-lite"),
     "gemini-2.5-pro": google("gemini-2.5-pro"),
   },
   anthropic: {
@@ -98,16 +99,21 @@ const staticModels = {
     "gpt-oss-120b": openrouter("openai/gpt-oss-120b:free"),
     "glm-4.5-air": openrouter("z-ai/glm-4.5-air:free"),
     "minimax-m2.5": openrouter("minimax/minimax-m2.5:free"),
-    "trinity-mini": openrouter("arcee-ai/trinity-mini:free"),
-    "trinity-large": openrouter("arcee-ai/trinity-large-preview:free"),
   },
   nvidia: {
-    "deepseek-ai/deepseek-v3.1": nvidia("deepseek-ai/deepseek-v3.1"),
+    "deepseek-ai/deepseek-v3.1-terminus": nvidia(
+      "deepseek-ai/deepseek-v3.1-terminus",
+    ),
     "deepseek-ai/deepseek-v3.2": nvidia("deepseek-ai/deepseek-v3.2"),
+    "deepseek-ai/deepseek-v4-flash": nvidia("deepseek-ai/deepseek-v4-flash"),
+    "deepseek-ai/deepseek-v4-pro": nvidia("deepseek-ai/deepseek-v4-pro"),
     "moonshotai/kimi-k2-instruct-0905": nvidia(
       "moonshotai/kimi-k2-instruct-0905",
     ),
     "moonshotai/kimi-k2-thinking": nvidia("moonshotai/kimi-k2-thinking"),
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": nvidia(
+      "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+    ),
     "qwen/qwen3-next-80b-a3b-thinking": nvidia(
       "qwen/qwen3-next-80b-a3b-thinking",
     ),
@@ -118,6 +124,7 @@ const staticModels = {
     "bytedance/seed-oss-36b-instruct": nvidia(
       "bytedance/seed-oss-36b-instruct",
     ),
+    "minimaxai/minimax-m2.7": nvidia("minimaxai/minimax-m2.7"),
     "mistralai/devstral-2-123b-instruct-2512": nvidia(
       "mistralai/devstral-2-123b-instruct-2512",
     ),
@@ -137,6 +144,7 @@ const staticModels = {
     "google/gemma-4-31b-it": nvidia("google/gemma-4-31b-it"),
     "z-ai/glm4.7": nvidia("z-ai/glm4.7"),
     "z-ai/glm5": nvidia("z-ai/glm5"),
+    "z-ai/glm-5.1": nvidia("z-ai/glm-5.1"),
   },
   uncloseai: {
     "qwen3-coder-30b": uncloseai(
@@ -199,7 +207,15 @@ registerFileSupport(
   GEMINI_FILE_MIME_TYPES,
 );
 registerFileSupport(
+  staticModels.google["gemini-3.1-flash-lite"],
+  GEMINI_FILE_MIME_TYPES,
+);
+registerFileSupport(
   staticModels.google["gemini-2.5-pro"],
+  GEMINI_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.google["gemini-3.1-pro"],
   GEMINI_FILE_MIME_TYPES,
 );
 
@@ -208,13 +224,12 @@ registerFileSupport(
   ANTHROPIC_FILE_MIME_TYPES,
 );
 registerFileSupport(
-  staticModels.anthropic["opus-4.1"],
+  staticModels.anthropic["opus-4.5"],
   ANTHROPIC_FILE_MIME_TYPES,
 );
 
-registerFileSupport(staticModels.xai["grok-4-fast"], XAI_FILE_MIME_TYPES);
-registerFileSupport(staticModels.xai["grok-4"], XAI_FILE_MIME_TYPES);
-registerFileSupport(staticModels.xai["grok-3"], XAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.xai["grok-4-1-fast"], XAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.xai["grok-4-1"], XAI_FILE_MIME_TYPES);
 registerFileSupport(staticModels.xai["grok-3-mini"], XAI_FILE_MIME_TYPES);
 
 const openaiCompatibleProviders = openaiCompatibleModelsSafeParse(

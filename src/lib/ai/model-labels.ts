@@ -33,7 +33,11 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   // Google
   "gemini-2.5-flash-lite": { label: "Gemini 2.5", badge: "flash lite" },
   "gemini-2.5-flash": { label: "Gemini 2.5", badge: "flash" },
-  "gemini-3-pro": { label: "Gemini 3", badge: "pro" },
+  "gemini-3.1-pro": { label: "Gemini 3.1", badge: "pro" },
+  "gemini-3.1-flash-lite": {
+    label: "Gemini 3.1",
+    badge: "flash lite",
+  },
   "gemini-2.5-pro": { label: "Gemini 2.5", badge: "pro" },
 
   // Anthropic
@@ -61,18 +65,26 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   // OpenRouter
   "glm-4.5-air": { label: "GLM 4.5", badge: "air" },
   "minimax-m2.5": { label: "MiniMax M2.5" },
-  "trinity-mini": { label: "Trinity", badge: "mini" },
-  "trinity-large": { label: "Trinity", badge: "large" },
 
   // NVIDIA (using full model IDs as keys)
-  "deepseek-ai/deepseek-v3.1": { label: "DeepSeek", badge: "v3.1" },
+  "deepseek-ai/deepseek-v3.1-terminus": {
+    label: "DeepSeek",
+    badge: "v3.1 terminus",
+  },
   "deepseek-ai/deepseek-v3.2": { label: "DeepSeek", badge: "v3.2" },
+  "deepseek-ai/deepseek-v4-flash": { label: "DeepSeek", badge: "v4 flash" },
+  "deepseek-ai/deepseek-v4-pro": { label: "DeepSeek", badge: "v4 pro" },
   "moonshotai/kimi-k2-instruct-0905": { label: "Kimi K2", badge: "instruct" },
   "moonshotai/kimi-k2-thinking": { label: "Kimi K2", badge: "thinking" },
+  "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {
+    label: "Nemotron 3",
+    badge: "nano omni",
+  },
   "qwen/qwen3-next-80b-a3b-thinking": { label: "Qwen 3", badge: "next" },
   "qwen/qwen3-coder-480b-a35b-instruct": { label: "Qwen 3", badge: "coder" },
   "openai/gpt-oss-120b": { label: "GPT OSS", badge: "120b" },
   "bytedance/seed-oss-36b-instruct": { label: "Seed OSS", badge: "36b" },
+  "minimaxai/minimax-m2.7": { label: "MiniMax M2.7" },
   "mistralai/devstral-2-123b-instruct-2512": {
     label: "Devstral 2",
     badge: "123b",
@@ -90,6 +102,7 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   "google/gemma-4-31b-it": { label: "Gemma 4", badge: "31b it" },
   "z-ai/glm4.7": { label: "GLM 4.7" },
   "z-ai/glm5": { label: "GLM 5" },
+  "z-ai/glm-5.1": { label: "GLM 5.1" },
 
   // UncloseAI
   "qwen3-coder-30b": { label: "Qwen 3", badge: "30b" },
@@ -148,7 +161,7 @@ export const resolveModelDisplay = (
   };
 };
 
-// Extract a readable label from model IDs like "openai/gpt-5" or "deepseek-ai/deepseek-v3.1"
+// Extract a readable label from model IDs like "openai/gpt-5" or "deepseek-ai/deepseek-v3.1-terminus"
 function beautifyModelId(modelId: string): { label: string; badge?: string } {
   // Remove org prefix if present (e.g., "openai/gpt-5" -> "gpt-5")
   const withoutOrg = modelId.includes("/")

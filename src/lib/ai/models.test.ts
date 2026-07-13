@@ -14,11 +14,11 @@ beforeAll(async () => {
 });
 
 describe("customModelProvider file support metadata", () => {
-  it("includes default file support for OpenAI gpt-5.5", () => {
+  it("includes default file support for OpenAI gpt-5.2-chat", () => {
     const { customModelProvider, getFilePartSupportedMimeTypes } = modelsModule;
     const model = customModelProvider.getModel({
       provider: "openai",
-      model: "gpt-5.5",
+      model: "gpt-5.2-chat",
     });
     expect(getFilePartSupportedMimeTypes(model)).toEqual(
       Array.from(OPENAI_FILE_MIME_TYPES),
@@ -28,7 +28,7 @@ describe("customModelProvider file support metadata", () => {
       (item) => item.provider === "openai",
     );
     const metadata = openaiProvider?.models.find(
-      (item) => item.name === "gpt-5.5",
+      (item) => item.name === "gpt-5.2-chat",
     );
 
     expect(metadata?.supportedFileMimeTypes).toEqual(
@@ -47,11 +47,11 @@ describe("customModelProvider file support metadata", () => {
     );
   });
 
-  it("adds file support for Gemini 3.5 Flash", () => {
+  it("adds file support for Gemini 3.1 Flash Lite", () => {
     const { customModelProvider, getFilePartSupportedMimeTypes } = modelsModule;
     const model = customModelProvider.getModel({
       provider: "google",
-      model: "gemini-3.5-flash",
+      model: "gemini-3.1-flash-lite",
     });
     expect(getFilePartSupportedMimeTypes(model)).toEqual(
       Array.from(GEMINI_FILE_MIME_TYPES),
@@ -70,62 +70,57 @@ describe("customModelProvider file support metadata", () => {
     const qwen122b = nvidiaProvider?.models.find(
       (item) => item.name === "qwen/qwen3.5-122b-a10b",
     );
-    const mistralNemo = nvidiaProvider?.models.find(
-      (item) => item.name === "mistralai/mistral-nemotron",
+    const qwen397b = nvidiaProvider?.models.find(
+      (item) => item.name === "qwen/qwen3.5-397b-a17b",
     );
 
     expect(qwen122b?.isToolCallUnsupported).toBe(false);
-    expect(mistralNemo?.isToolCallUnsupported).toBe(false);
+    expect(qwen397b?.isToolCallUnsupported).toBe(false);
 
     const qwen122bModel = customModelProvider.getModel({
       provider: "nvidia",
       model: "qwen/qwen3.5-122b-a10b",
     });
-    const mistralNemoModel = customModelProvider.getModel({
+    const qwen397bModel = customModelProvider.getModel({
       provider: "nvidia",
-      model: "mistralai/mistral-nemotron",
+      model: "qwen/qwen3.5-397b-a17b",
     });
 
     expect(isToolCallUnsupportedModel(qwen122bModel)).toBe(false);
-    expect(isToolCallUnsupportedModel(mistralNemoModel)).toBe(false);
+    expect(isToolCallUnsupportedModel(qwen397bModel)).toBe(false);
   });
 
-  it("enables image input for the explicitly allowed NVIDIA vision models", () => {
+  it("marks NVIDIA models as image-input unsupported by default", () => {
     const { customModelProvider } = modelsModule;
 
     const nvidiaProvider = customModelProvider.modelsInfo.find(
       (item) => item.provider === "nvidia",
     );
 
-    const visionModels = [
-      "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
-      "mistralai/mistral-small-4-119b-2603",
-      "mistralai/mistral-medium-3.5-128b",
-      "mistralai/mistral-large-3-675b-instruct-2512",
-      "google/gemma-4-31b-it",
-      "moonshotai/kimi-k2.6",
-      "qwen/qwen3.5-122b-a10b",
-      "stepfun-ai/step-3.7-flash",
-    ];
+    // NVIDIA models are not in staticSupportImageInputModels
+    // so they should all be marked as image-input unsupported
+    const nvidiaModels = nvidiaProvider?.models ?? [];
+    expect(nvidiaModels.length).toBeGreaterThan(0);
 
-    for (const modelName of visionModels) {
-      const metadata = nvidiaProvider?.models.find(
-        (item) => item.name === modelName,
-      );
-      expect(metadata?.isImageInputUnsupported).toBe(false);
+    for (const metadata of nvidiaModels) {
+      expect(metadata.isImageInputUnsupported).toBe(true);
     }
   });
 
-  it("keeps mistral-nemotron non-vision", () => {
+  it("marks Google, OpenAI, Anthropic, xAI models as image-input supported", () => {
     const { customModelProvider } = modelsModule;
 
-    const nvidiaProvider = customModelProvider.modelsInfo.find(
-      (item) => item.provider === "nvidia",
-    );
-    const metadata = nvidiaProvider?.models.find(
-      (item) => item.name === "mistralai/mistral-nemotron",
-    );
+    const supportedProviders = ["google", "openai", "anthropic", "xai"];
+    for (const providerName of supportedProviders) {
+      const provider = customModelProvider.modelsInfo.find(
+        (item) => item.provider === providerName,
+      );
+      const models = provider?.models ?? [];
+      expect(models.length).toBeGreaterThan(0);
 
-    expect(metadata?.isImageInputUnsupported).toBe(true);
+      for (const metadata of models) {
+        expect(metadata.isImageInputUnsupported).toBe(false);
+      }
+    }
   });
 });

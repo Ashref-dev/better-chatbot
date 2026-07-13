@@ -34,7 +34,8 @@ import { like, eq } from "drizzle-orm";
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL!,
 });
-const db = drizzle(pool);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = drizzle(pool as any);
 
 // Helper function to get user by email
 async function getUserByEmail(email: string) {

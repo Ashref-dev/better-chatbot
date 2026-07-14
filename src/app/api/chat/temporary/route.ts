@@ -6,6 +6,7 @@ import {
   streamText,
 } from "ai";
 import { customModelProvider } from "lib/ai/models";
+import { smoothStreamWithThinking } from "lib/ai/smooth-stream-thinking";
 import globalLogger from "logger";
 import { buildUserSystemPrompt } from "lib/ai/prompts";
 import { getUserPreferences } from "lib/user/server";
@@ -44,7 +45,11 @@ export async function POST(request: Request) {
         instructions ? `\n\n${instructions}` : ""
       }`.trim(),
       messages: convertToModelMessages(messages),
-      experimental_transform: smoothStream({ chunking: "word" }),
+      experimental_transform:
+        chatModel?.provider === "hermesai" &&
+        chatModel.model === "Lorbus/Qwen3.6-27B-int4-AutoRound"
+          ? smoothStreamWithThinking({ chunking: "word" })
+          : smoothStream({ chunking: "word" }),
     }).toUIMessageStreamResponse();
   } catch (error: any) {
     logger.error(error);

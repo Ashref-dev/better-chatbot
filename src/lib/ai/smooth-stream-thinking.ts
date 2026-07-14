@@ -22,13 +22,21 @@ export const smoothStreamWithThinking =
 
         partId = part.id;
         providerMetadata = part.providerMetadata;
-        buffer += firstTextDelta
-          ? part.text.replace(/^<think>/, "")
-          : part.text;
+        const delta = part.text;
+        if (!delta) return;
+
+        buffer += firstTextDelta ? delta.replace(/^<think>/, "") : delta;
         firstTextDelta = false;
 
         if (reasoningFinished) {
-          controller.enqueue({ ...part, text: buffer });
+          const repeatedEnd = delta.indexOf("</think>");
+          const answer = (
+            repeatedEnd === -1 ? delta : delta.slice(0, repeatedEnd)
+          )
+            .replaceAll("<think>", "")
+            .replaceAll("</think>", "");
+          if (answer) controller.enqueue({ ...part, text: answer });
+          if (repeatedEnd !== -1) _stopStream();
           buffer = "";
           return;
         }
@@ -60,7 +68,7 @@ export const smoothStreamWithThinking =
               providerMetadata,
             } as TextStreamPart<TOOLS>);
           }
-          buffer = buffer.slice(-keep);
+          buffer = keep ? buffer.slice(-keep) : "";
           return;
         }
 

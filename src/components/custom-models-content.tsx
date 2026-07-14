@@ -44,12 +44,12 @@ const PROVIDERS = [
   { key: "anthropic", label: "Anthropic" },
   { key: "xai", label: "xAI" },
   { key: "ollama", label: "Ollama" },
-  { key: "gputn", label: "GPUtn" },
+  { key: "hermesai", label: "HermesAI" },
 ] as const;
 
 // Providers that accept user API keys
 const KEY_PROVIDERS = PROVIDERS.filter(
-  (p) => !["gputn", "ollama"].includes(p.key),
+  (p) => !["hermesai", "ollama"].includes(p.key),
 );
 
 type Section = "keys" | "models" | "visibility";

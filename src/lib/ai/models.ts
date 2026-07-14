@@ -38,15 +38,15 @@ const nvidia = createOpenAICompatible({
   baseURL: "https://integrate.api.nvidia.com/v1",
   apiKey: process.env.NVIDIA_API_KEY,
 });
-const gputn = createOpenAICompatible({
-  name: "gputn",
+const hermesai = createOpenAICompatible({
+  name: "hermesai",
   baseURL: "https://hermes.ai.unturf.com/v1",
   apiKey: "dummy-api-key",
 });
 
 const staticModels = {
-  gputn: {
-    "Lorbus/Qwen3.6-27B-int4-AutoRound": gputn(
+  hermesai: {
+    "Lorbus/Qwen3.6-27B-int4-AutoRound": hermesai(
       "Lorbus/Qwen3.6-27B-int4-AutoRound",
     ),
   },
@@ -300,7 +300,7 @@ function createProviderModel(
     anthropic: (id) => anthropic(id) as LanguageModel,
     xai: (id) => xai(id) as LanguageModel,
     ollama: (id) => ollama(id) as LanguageModel,
-    gputn: (id) => gputn(id) as LanguageModel,
+    hermesai: (id) => hermesai(id) as LanguageModel,
   };
   const factory = defaultMap[provider];
   return factory ? factory(modelId) : fallbackModel;

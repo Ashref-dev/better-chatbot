@@ -94,7 +94,7 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   },
   "z-ai/glm-5.2": { label: "GLM 5.2" },
 
-  // GPUtn
+  // HermesAI
   "Lorbus/Qwen3.6-27B-int4-AutoRound": { label: "Qwen 3.6", badge: "27B" },
 };
 

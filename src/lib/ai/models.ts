@@ -38,84 +38,66 @@ const nvidia = createOpenAICompatible({
   baseURL: "https://integrate.api.nvidia.com/v1",
   apiKey: process.env.NVIDIA_API_KEY,
 });
-const uncloseai = createOpenAICompatible({
-  name: "uncloseai",
-  baseURL: "https://qwen.ai.unturf.com/v1",
-  apiKey: "dummy-api-key",
-});
-const hermesai = createOpenAICompatible({
-  name: "hermesai",
+const gputn = createOpenAICompatible({
+  name: "gputn",
   baseURL: "https://hermes.ai.unturf.com/v1",
   apiKey: "dummy-api-key",
 });
 
 const staticModels = {
+  gputn: {
+    "Lorbus/Qwen3.6-27B-int4-AutoRound": gputn(
+      "Lorbus/Qwen3.6-27B-int4-AutoRound",
+    ),
+  },
   openai: {
-    "gpt-5.2-chat": openai("gpt-5.2-chat"),
-    "gpt-5.2": openai("gpt-5.2"),
-    "gpt-5.1-chat": openai("gpt-5.1-chat"),
-    "gpt-5.1-codex": openai("gpt-5.1-codex"),
-    "gpt-5": openai("gpt-5"),
-    "gpt-5-mini": openai("gpt-5-mini"),
-    "gpt-5-nano": openai("gpt-5-nano"),
-
+    "gpt-5.6-sol": openai("gpt-5.6-sol"),
+    "gpt-5.6-terra": openai("gpt-5.6-terra"),
+    "gpt-5.6-luna": openai("gpt-5.6-luna"),
+    "gpt-5.5": openai("gpt-5.5"),
+    "gpt-5.4-mini": openai("gpt-5.4-mini"),
+    "gpt-5.4-nano": openai("gpt-5.4-nano"),
     "gpt-4.1": openai("gpt-4.1"),
-    "gpt-4.1-mini": openai("gpt-4.1-mini"),
-    "o4-mini": openai("o4-mini"),
-    o3: openai("o3"),
-    "gpt-5.1": openai("gpt-5.1"),
-    "gpt-5.1-codex-mini": openai("gpt-5.1-codex-mini"),
   },
   google: {
-    "gemini-2.5-flash-lite": google("gemini-2.5-flash-lite"),
+    "gemini-3.5-flash": google("gemini-3.5-flash"),
     "gemini-2.5-flash": google("gemini-2.5-flash"),
     "gemini-3.1-pro": google("gemini-3.1-pro"),
-    "gemini-3.1-flash-lite": google("gemini-3.1-flash-lite"),
     "gemini-2.5-pro": google("gemini-2.5-pro"),
+    "gemini-3.1-flash-lite": google("gemini-3.1-flash-lite"),
   },
   anthropic: {
-    "sonnet-4.5": anthropic("claude-sonnet-4-5"),
-    "haiku-4.5": anthropic("claude-haiku-4-5"),
-    "opus-4.5": anthropic("claude-opus-4-5"),
+    "claude-sonnet-5": anthropic("claude-sonnet-5"),
+    "claude-haiku-4-5": anthropic("claude-haiku-4-5"),
+    "claude-opus-4-8": anthropic("claude-opus-4-8"),
   },
   xai: {
-    "grok-4-1-fast": xai("grok-4-1-fast-non-reasoning"),
-    "grok-4-1": xai("grok-4-1"),
-    "grok-3-mini": xai("grok-3-mini"),
+    "grok-4.5": xai("grok-4.5"),
   },
   ollama: {
-    "gemma3:1b": ollama("gemma3:1b"),
+    "olmo-3:7b": ollama("olmo-3:7b"),
     "gemma3:4b": ollama("gemma3:4b"),
-    "gemma3:12b": ollama("gemma3:12b"),
+    "lfm2.5-thinking:1.2b": ollama("lfm2.5-thinking:1.2b"),
   },
   groq: {
-    "kimi-k2-instruct": groq("moonshotai/kimi-k2-instruct"),
+    "llama-3.3-70b-versatile": groq("llama-3.3-70b-versatile"),
     "llama-4-scout-17b": groq("meta-llama/llama-4-scout-17b-16e-instruct"),
-    "gpt-oss-20b": groq("openai/gpt-oss-20b"),
     "gpt-oss-120b": groq("openai/gpt-oss-120b"),
-    "qwen3-32b": groq("qwen/qwen3-32b"),
+    "groq/compound": groq("groq/compound"),
   },
   openRouter: {
-    "gpt-oss-120b": openrouter("openai/gpt-oss-120b:free"),
-    "glm-4.5-air": openrouter("z-ai/glm-4.5-air:free"),
-    "minimax-m2.5": openrouter("minimax/minimax-m2.5:free"),
+    "gpt-oss-20B": openrouter("openai/gpt-oss-20b:free"),
+    "poolside/laguna-xs-2.1": openrouter("poolside/laguna-xs-2.1:free"),
+    "google/gemma-4-26b-a4b-it": openrouter("google/gemma-4-26b-a4b-it:free"),
   },
   nvidia: {
-    "deepseek-ai/deepseek-v3.1-terminus": nvidia(
-      "deepseek-ai/deepseek-v3.1-terminus",
-    ),
-    "deepseek-ai/deepseek-v3.2": nvidia("deepseek-ai/deepseek-v3.2"),
     "deepseek-ai/deepseek-v4-flash": nvidia("deepseek-ai/deepseek-v4-flash"),
     "deepseek-ai/deepseek-v4-pro": nvidia("deepseek-ai/deepseek-v4-pro"),
-    "moonshotai/kimi-k2-instruct-0905": nvidia(
-      "moonshotai/kimi-k2-instruct-0905",
-    ),
-    "moonshotai/kimi-k2-thinking": nvidia("moonshotai/kimi-k2-thinking"),
     "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": nvidia(
       "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
     ),
-    "qwen/qwen3-next-80b-a3b-thinking": nvidia(
-      "qwen/qwen3-next-80b-a3b-thinking",
+    "qwen/qwen3-next-80b-a3b-instruct": nvidia(
+      "qwen/qwen3-next-80b-a3b-instruct",
     ),
     "qwen/qwen3-coder-480b-a35b-instruct": nvidia(
       "qwen/qwen3-coder-480b-a35b-instruct",
@@ -124,7 +106,7 @@ const staticModels = {
     "bytedance/seed-oss-36b-instruct": nvidia(
       "bytedance/seed-oss-36b-instruct",
     ),
-    "minimaxai/minimax-m2.7": nvidia("minimaxai/minimax-m2.7"),
+    "minimaxai/minimax-m3": nvidia("minimaxai/minimax-m3"),
     "mistralai/devstral-2-123b-instruct-2512": nvidia(
       "mistralai/devstral-2-123b-instruct-2512",
     ),
@@ -134,30 +116,34 @@ const staticModels = {
     "nvidia/nemotron-3-super-120b-a12b": nvidia(
       "nvidia/nemotron-3-super-120b-a12b",
     ),
+    "nvidia/nemotron-3-ultra-550b-a55b": nvidia(
+      "nvidia/nemotron-3-ultra-550b-a55b",
+    ),
     "nvidia/nemotron-nano-12b-v2-vl": nvidia("nvidia/nemotron-nano-12b-v2-vl"),
+    "mistralai/mistral-nemotron": nvidia("mistralai/mistral-nemotron"),
     "mistralai/mistral-small-4-119b-2603": nvidia(
       "mistralai/mistral-small-4-119b-2603",
     ),
-    "qwen/qwen3.5-122b-a10b": nvidia("qwen/qwen3.5-122b-a10b"),
-    "qwen/qwen3.5-397b-a17b": nvidia("qwen/qwen3.5-397b-a17b"),
-    "stepfun-ai/step-3.5-flash": nvidia("stepfun-ai/step-3.5-flash"),
-    "google/gemma-4-31b-it": nvidia("google/gemma-4-31b-it"),
-    "z-ai/glm4.7": nvidia("z-ai/glm4.7"),
-    "z-ai/glm5": nvidia("z-ai/glm5"),
-    "z-ai/glm-5.1": nvidia("z-ai/glm-5.1"),
-  },
-  uncloseai: {
-    "qwen3-coder-30b": uncloseai(
-      "hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:Q4_K_M",
+    "mistralai/mistral-medium-3.5-128b": nvidia(
+      "mistralai/mistral-medium-3.5-128b",
     ),
-    "hermes-3-8b": hermesai("adamo1139/Hermes-3-Llama-3.1-8B-FP8-Dynamic"),
+    "mistralai/ministral-14b-instruct-2512": nvidia(
+      "mistralai/ministral-14b-instruct-2512",
+    ),
+    "qwen/qwen3.5-122b-a10b": nvidia("qwen/qwen3.5-122b-a10b"),
+    "stepfun-ai/step-3.7-flash": nvidia("stepfun-ai/step-3.7-flash"),
+    "google/gemma-4-31b-it": nvidia("google/gemma-4-31b-it"),
+    "google/diffusiongemma-26b-a4b-it": nvidia(
+      "google/diffusiongemma-26b-a4b-it",
+    ),
+    "z-ai/glm-5.2": nvidia("z-ai/glm-5.2"),
   },
 };
 
 const staticUnsupportedModels = new Set([
-  staticModels.ollama["gemma3:1b"],
+  staticModels.ollama["olmo-3:7b"],
   staticModels.ollama["gemma3:4b"],
-  staticModels.ollama["gemma3:12b"],
+  staticModels.ollama["lfm2.5-thinking:1.2b"],
   // deepseek-v3.1:free removed from OpenRouter (no longer available)
 ]);
 
@@ -181,25 +167,28 @@ const registerFileSupport = (
   staticFilePartSupportByModel.set(model, Array.from(mimeTypes));
 };
 
+registerFileSupport(staticModels.openai["gpt-5.6-sol"], OPENAI_FILE_MIME_TYPES);
 registerFileSupport(
-  staticModels.openai["gpt-5.2-chat"],
-  OPENAI_FILE_MIME_TYPES,
-);
-registerFileSupport(staticModels.openai["gpt-5.2"], OPENAI_FILE_MIME_TYPES);
-registerFileSupport(
-  staticModels.openai["gpt-5.1-chat"],
+  staticModels.openai["gpt-5.6-terra"],
   OPENAI_FILE_MIME_TYPES,
 );
 registerFileSupport(
-  staticModels.openai["gpt-5.1-codex"],
+  staticModels.openai["gpt-5.6-luna"],
   OPENAI_FILE_MIME_TYPES,
 );
-registerFileSupport(staticModels.openai["gpt-5"], OPENAI_FILE_MIME_TYPES);
-registerFileSupport(staticModels.openai["gpt-5-mini"], OPENAI_FILE_MIME_TYPES);
-registerFileSupport(staticModels.openai["gpt-5-nano"], OPENAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.openai["gpt-5.5"], OPENAI_FILE_MIME_TYPES);
+registerFileSupport(
+  staticModels.openai["gpt-5.4-mini"],
+  OPENAI_FILE_MIME_TYPES,
+);
+registerFileSupport(
+  staticModels.openai["gpt-5.4-nano"],
+  OPENAI_FILE_MIME_TYPES,
+);
+registerFileSupport(staticModels.openai["gpt-4.1"], OPENAI_FILE_MIME_TYPES);
 
 registerFileSupport(
-  staticModels.google["gemini-2.5-flash-lite"],
+  staticModels.google["gemini-3.5-flash"],
   GEMINI_FILE_MIME_TYPES,
 );
 registerFileSupport(
@@ -220,17 +209,15 @@ registerFileSupport(
 );
 
 registerFileSupport(
-  staticModels.anthropic["sonnet-4.5"],
+  staticModels.anthropic["claude-sonnet-5"],
   ANTHROPIC_FILE_MIME_TYPES,
 );
 registerFileSupport(
-  staticModels.anthropic["opus-4.5"],
+  staticModels.anthropic["claude-opus-4-8"],
   ANTHROPIC_FILE_MIME_TYPES,
 );
 
-registerFileSupport(staticModels.xai["grok-4-1-fast"], XAI_FILE_MIME_TYPES);
-registerFileSupport(staticModels.xai["grok-4-1"], XAI_FILE_MIME_TYPES);
-registerFileSupport(staticModels.xai["grok-3-mini"], XAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.xai["grok-4.5"], XAI_FILE_MIME_TYPES);
 
 const openaiCompatibleProviders = openaiCompatibleModelsSafeParse(
   process.env.OPENAI_COMPATIBLE_DATA,
@@ -260,7 +247,7 @@ export const getFilePartSupportedMimeTypes = (model: LanguageModel) => {
   return staticFilePartSupportByModel.get(model) ?? [];
 };
 
-const fallbackModel = staticModels.openai["gpt-5.2-chat"];
+const fallbackModel = staticModels.openai["gpt-5.6-sol"];
 
 // Create a provider model instance, optionally with a user-provided API key
 function createProviderModel(
@@ -313,8 +300,7 @@ function createProviderModel(
     anthropic: (id) => anthropic(id) as LanguageModel,
     xai: (id) => xai(id) as LanguageModel,
     ollama: (id) => ollama(id) as LanguageModel,
-    uncloseai: (id) => uncloseai(id) as LanguageModel,
-    hermesai: (id) => hermesai(id) as LanguageModel,
+    gputn: (id) => gputn(id) as LanguageModel,
   };
   const factory = defaultMap[provider];
   return factory ? factory(modelId) : fallbackModel;

@@ -16,97 +16,86 @@ export type ResolvedModelDisplay = {
 // Users can override any of these per-device via the Model Labels settings.
 const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   // OpenAI
-  "gpt-5.2-chat": { label: "GPT 5.2", badge: "chat" },
-  "gpt-5.2": { label: "GPT 5.2" },
-  "gpt-5.1-chat": { label: "GPT 5.1", badge: "chat" },
-  "gpt-5.1-codex": { label: "GPT 5.1", badge: "codex" },
-  "gpt-5.1-codex-mini": { label: "GPT 5.1", badge: "codex mini" },
-  "gpt-5.1": { label: "GPT 5.1" },
-  "gpt-5": { label: "GPT 5" },
-  "gpt-5-mini": { label: "GPT 5", badge: "mini" },
-  "gpt-5-nano": { label: "GPT 5", badge: "nano" },
+  "gpt-5.6-sol": { label: "GPT 5.6", badge: "sol" },
+  "gpt-5.6-terra": { label: "GPT 5.6", badge: "terra" },
+  "gpt-5.6-luna": { label: "GPT 5.6", badge: "luna" },
+  "gpt-5.5": { label: "GPT 5.5" },
+  "gpt-5.4-mini": { label: "GPT 5.4", badge: "mini" },
+  "gpt-5.4-nano": { label: "GPT 5.4", badge: "nano" },
   "gpt-4.1": { label: "GPT 4.1" },
-  "gpt-4.1-mini": { label: "GPT 4.1", badge: "mini" },
-  "o4-mini": { label: "o4", badge: "mini" },
-  o3: { label: "o3" },
 
   // Google
-  "gemini-2.5-flash-lite": { label: "Gemini 2.5", badge: "flash lite" },
+  "gemini-3.5-flash": { label: "Gemini 3.5", badge: "flash" },
   "gemini-2.5-flash": { label: "Gemini 2.5", badge: "flash" },
   "gemini-3.1-pro": { label: "Gemini 3.1", badge: "pro" },
+  "gemini-2.5-pro": { label: "Gemini 2.5", badge: "pro" },
   "gemini-3.1-flash-lite": {
     label: "Gemini 3.1",
     badge: "flash lite",
   },
-  "gemini-2.5-pro": { label: "Gemini 2.5", badge: "pro" },
 
   // Anthropic
-  "sonnet-4.5": { label: "Claude 4.5", badge: "sonnet" },
-  "haiku-4.5": { label: "Claude 4.5", badge: "haiku" },
-  "opus-4.5": { label: "Claude 4.5", badge: "opus" },
+  "claude-sonnet-5": { label: "Claude 5", badge: "sonnet" },
+  "claude-haiku-4-5": { label: "Claude 4.5", badge: "haiku" },
+  "claude-opus-4-8": { label: "Claude 4.5", badge: "opus" },
 
   // xAI
-  "grok-4-1-fast": { label: "Grok 4.1", badge: "fast" },
-  "grok-4-1": { label: "Grok 4.1" },
-  "grok-3-mini": { label: "Grok 3", badge: "mini" },
+  "grok-4.5": { label: "Grok 4.5" },
 
   // Ollama
-  "gemma3:1b": { label: "Gemma 3", badge: "1b" },
-  "gemma3:4b": { label: "Gemma 3", badge: "4b" },
-  "gemma3:12b": { label: "Gemma 3", badge: "12b" },
+  "olmo-3:7b": { label: "Olmo 3", badge: "7B" },
+  "gemma3:4b": { label: "Gemma 3", badge: "4B" },
+  "lfm2.5-thinking:1.2b": { label: "LFM 2.5", badge: "1.2B" },
 
   // Groq
-  "kimi-k2-instruct": { label: "Kimi K2", badge: "instruct" },
+  "llama-3.3-70b-versatile": { label: "Llama 3.3", badge: "70B" },
   "llama-4-scout-17b": { label: "Llama 4", badge: "scout" },
-  "gpt-oss-20b": { label: "GPT OSS", badge: "20b" },
-  "gpt-oss-120b": { label: "GPT OSS", badge: "120b" },
-  "qwen3-32b": { label: "Qwen 3", badge: "32b" },
+  "gpt-oss-120b": { label: "GPT OSS", badge: "120B" },
+  "groq/compound": { label: "Compound" },
 
   // OpenRouter
-  "glm-4.5-air": { label: "GLM 4.5", badge: "air" },
-  "minimax-m2.5": { label: "MiniMax M2.5" },
+  "gpt-oss-20B": { label: "GPT OSS", badge: "20B" },
+  "poolside/laguna-xs-2.1": { label: "Laguna 2.1", badge: "xs" },
+  "google/gemma-4-26b-a4b-it": { label: "Gemma 4", badge: "26B" },
 
   // NVIDIA (using full model IDs as keys)
-  "deepseek-ai/deepseek-v3.1-terminus": {
-    label: "DeepSeek",
-    badge: "v3.1 terminus",
-  },
-  "deepseek-ai/deepseek-v3.2": { label: "DeepSeek", badge: "v3.2" },
-  "deepseek-ai/deepseek-v4-flash": { label: "DeepSeek", badge: "v4 flash" },
-  "deepseek-ai/deepseek-v4-pro": { label: "DeepSeek", badge: "v4 pro" },
-  "moonshotai/kimi-k2-instruct-0905": { label: "Kimi K2", badge: "instruct" },
-  "moonshotai/kimi-k2-thinking": { label: "Kimi K2", badge: "thinking" },
+  "deepseek-ai/deepseek-v4-flash": { label: "DeepSeek V4", badge: "flash" },
+  "deepseek-ai/deepseek-v4-pro": { label: "DeepSeek V4", badge: "pro" },
   "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {
     label: "Nemotron 3",
-    badge: "nano omni",
+    badge: "nano",
   },
-  "qwen/qwen3-next-80b-a3b-thinking": { label: "Qwen 3", badge: "next" },
+  "qwen/qwen3-next-80b-a3b-instruct": { label: "Qwen 3", badge: "next" },
   "qwen/qwen3-coder-480b-a35b-instruct": { label: "Qwen 3", badge: "coder" },
-  "openai/gpt-oss-120b": { label: "GPT OSS", badge: "120b" },
-  "bytedance/seed-oss-36b-instruct": { label: "Seed OSS", badge: "36b" },
-  "minimaxai/minimax-m2.7": { label: "MiniMax M2.7" },
-  "mistralai/devstral-2-123b-instruct-2512": {
-    label: "Devstral 2",
-    badge: "123b",
-  },
+  "openai/gpt-oss-120b": { label: "GPT OSS", badge: "120B" },
+  "bytedance/seed-oss-36b-instruct": { label: "Seed OSS", badge: "36B" },
+  "minimaxai/minimax-m3": { label: "MiniMax M3" },
+  "mistralai/devstral-2-123b-instruct-2512": { label: "Devstral 2" },
   "mistralai/mistral-large-3-675b-instruct-2512": {
     label: "Mistral 3",
     badge: "large",
   },
   "nvidia/nemotron-3-super-120b-a12b": { label: "Nemotron 3", badge: "super" },
+  "nvidia/nemotron-3-ultra-550b-a55b": { label: "Nemotron 3", badge: "ultra" },
   "nvidia/nemotron-nano-12b-v2-vl": { label: "Nemotron", badge: "nano" },
+  "mistralai/mistral-nemotron": { label: "Mistral", badge: "Nemotron" },
   "mistralai/mistral-small-4-119b-2603": { label: "Mistral 4", badge: "small" },
-  "qwen/qwen3.5-122b-a10b": { label: "Qwen 3.5", badge: "122b" },
-  "qwen/qwen3.5-397b-a17b": { label: "Qwen 3.5", badge: "397b" },
-  "stepfun-ai/step-3.5-flash": { label: "Step 3.5", badge: "flash" },
-  "google/gemma-4-31b-it": { label: "Gemma 4", badge: "31b it" },
-  "z-ai/glm4.7": { label: "GLM 4.7" },
-  "z-ai/glm5": { label: "GLM 5" },
-  "z-ai/glm-5.1": { label: "GLM 5.1" },
+  "mistralai/mistral-medium-3.5-128b": {
+    label: "Mistral 3.5",
+    badge: "medium",
+  },
+  "mistralai/ministral-14b-instruct-2512": { label: "Ministral", badge: "14B" },
+  "qwen/qwen3.5-122b-a10b": { label: "Qwen 3.5", badge: "122B" },
+  "stepfun-ai/step-3.7-flash": { label: "Step 3.7", badge: "flash" },
+  "google/gemma-4-31b-it": { label: "Gemma 4", badge: "31B" },
+  "google/diffusiongemma-26b-a4b-it": {
+    label: "Diffusion Gemma",
+    badge: "26B",
+  },
+  "z-ai/glm-5.2": { label: "GLM 5.2" },
 
-  // UncloseAI
-  "qwen3-coder-30b": { label: "Qwen 3", badge: "30b" },
-  "hermes-3-8b": { label: "Hermes 3", badge: "8b" },
+  // GPUtn
+  "Lorbus/Qwen3.6-27B-int4-AutoRound": { label: "Qwen 3.6", badge: "27B" },
 };
 
 export const getDefaultModelDisplay = (

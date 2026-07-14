@@ -14,11 +14,11 @@ beforeAll(async () => {
 });
 
 describe("customModelProvider file support metadata", () => {
-  it("includes default file support for OpenAI gpt-5.2-chat", () => {
+  it("includes default file support for OpenAI gpt-5.6-sol", () => {
     const { customModelProvider, getFilePartSupportedMimeTypes } = modelsModule;
     const model = customModelProvider.getModel({
       provider: "openai",
-      model: "gpt-5.2-chat",
+      model: "gpt-5.6-sol",
     });
     expect(getFilePartSupportedMimeTypes(model)).toEqual(
       Array.from(OPENAI_FILE_MIME_TYPES),
@@ -28,7 +28,7 @@ describe("customModelProvider file support metadata", () => {
       (item) => item.provider === "openai",
     );
     const metadata = openaiProvider?.models.find(
-      (item) => item.name === "gpt-5.2-chat",
+      (item) => item.name === "gpt-5.6-sol",
     );
 
     expect(metadata?.supportedFileMimeTypes).toEqual(
@@ -71,7 +71,7 @@ describe("customModelProvider file support metadata", () => {
       (item) => item.name === "qwen/qwen3.5-122b-a10b",
     );
     const qwen397b = nvidiaProvider?.models.find(
-      (item) => item.name === "qwen/qwen3.5-397b-a17b",
+      (item) => item.name === "qwen/qwen3.5-122b-a10b",
     );
 
     expect(qwen122b?.isToolCallUnsupported).toBe(false);
@@ -83,7 +83,7 @@ describe("customModelProvider file support metadata", () => {
     });
     const qwen397bModel = customModelProvider.getModel({
       provider: "nvidia",
-      model: "qwen/qwen3.5-397b-a17b",
+      model: "qwen/qwen3.5-122b-a10b",
     });
 
     expect(isToolCallUnsupportedModel(qwen122bModel)).toBe(false);

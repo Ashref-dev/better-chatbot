@@ -25,13 +25,9 @@ export const metadata: Metadata = {
     "Ashref Chat is a chatbot that uses the Tools to answer questions.",
   manifest: "/manifest.webmanifest",
   applicationName: "Ashref Chat",
-  appleWebApp: {
-    capable: true,
-    title: "Ashref Chat",
-    statusBarStyle: "default",
-  },
   icons: {
     icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
       {
         url: "/logo-dark.svg",
         media: "(prefers-color-scheme: dark)",
@@ -42,6 +38,7 @@ export const metadata: Metadata = {
       },
     ],
     shortcut: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
       {
         url: "/logo-dark.svg",
         media: "(prefers-color-scheme: dark)",
@@ -52,6 +49,11 @@ export const metadata: Metadata = {
       },
     ],
     apple: "/icons/icon-192.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Ashref Chat",
+    statusBarStyle: "default",
   },
 };
 

@@ -1,4 +1,5 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { streamText } from "ai";
 import {
   GEMINI_FILE_MIME_TYPES,
   OPENAI_FILE_MIME_TYPES,
@@ -11,6 +12,10 @@ let modelsModule: typeof import("./models");
 
 beforeAll(async () => {
   modelsModule = await import("./models");
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("customModelProvider file support metadata", () => {
@@ -122,5 +127,68 @@ describe("customModelProvider file support metadata", () => {
         expect(metadata.isImageInputUnsupported).toBe(false);
       }
     }
+  });
+});
+
+describe("Hermes Qwen reasoning", () => {
+  it("streams reasoning before the final text response", async () => {
+    const chunks = [
+      { delta: { role: "assistant", content: "" }, finish_reason: null },
+      { delta: { content: "Working it out" }, finish_reason: null },
+      { delta: { content: "</think>" }, finish_reason: null },
+      { delta: { content: "Final answer" }, finish_reason: null },
+      { delta: {}, finish_reason: "stop" },
+    ];
+    const body = `${chunks
+      .map(
+        (choice, index) =>
+          `data: ${JSON.stringify({
+            id: "chatcmpl-test",
+            object: "chat.completion.chunk",
+            created: index,
+            model: "Lorbus/Qwen3.6-27B-int4-AutoRound",
+            choices: [{ index: 0, ...choice }],
+          })}`,
+      )
+      .join("\n\n")}\n\ndata: [DONE]\n\n`;
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(body, {
+          headers: { "content-type": "text/event-stream" },
+        }),
+      ),
+    );
+
+    const model = modelsModule.customModelProvider.getModel({
+      provider: "hermesai",
+      model: "Lorbus/Qwen3.6-27B-int4-AutoRound",
+    });
+    const result = streamText({ model, prompt: "test" });
+    const order: string[] = [];
+    let reasoning = "";
+    let answer = "";
+
+    for await (const part of result.fullStream) {
+      if (
+        ["reasoning-start", "reasoning-end", "text-start", "text-end"].includes(
+          part.type,
+        )
+      ) {
+        order.push(part.type);
+      }
+      if (part.type === "reasoning-delta") reasoning += part.text;
+      if (part.type === "text-delta") answer += part.text;
+    }
+
+    expect(order).toEqual([
+      "reasoning-start",
+      "reasoning-end",
+      "text-start",
+      "text-end",
+    ]);
+    expect(reasoning).toBe("Working it out");
+    expect(answer).toBe("Final answer");
   });
 });

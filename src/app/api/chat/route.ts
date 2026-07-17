@@ -10,7 +10,6 @@ import {
 } from "ai";
 
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
-import { smoothStreamWithThinking } from "lib/ai/smooth-stream-thinking";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
@@ -355,11 +354,7 @@ export async function POST(request: Request) {
           model,
           system: systemPrompt,
           messages: convertToModelMessages(messages),
-          experimental_transform:
-            chatModel?.provider === "hermesai" &&
-            chatModel.model === "Lorbus/Qwen3.6-27B-int4-AutoRound"
-              ? smoothStreamWithThinking({ chunking: "word" })
-              : smoothStream({ chunking: "word" }),
+          experimental_transform: smoothStream({ chunking: "word" }),
           maxRetries: 2,
           tools: vercelAITooles,
           stopWhen: stepCountIs(10),

@@ -12,7 +12,11 @@ import {
 } from "@openrouter/ai-sdk-provider";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { LanguageModel } from "ai";
+import {
+  extractReasoningMiddleware,
+  type LanguageModel,
+  wrapLanguageModel,
+} from "ai";
 import {
   createOpenAICompatibleModels,
   openaiCompatibleModelsSafeParse,
@@ -44,11 +48,18 @@ const hermesai = createOpenAICompatible({
   apiKey: "dummy-api-key",
 });
 
+const HERMES_QWEN_MODEL_ID = "Lorbus/Qwen3.6-27B-int4-AutoRound";
+const hermesQwen = wrapLanguageModel({
+  model: hermesai(HERMES_QWEN_MODEL_ID),
+  middleware: extractReasoningMiddleware({
+    tagName: "think",
+    startWithReasoning: true,
+  }),
+});
+
 const staticModels = {
   hermesai: {
-    "Lorbus/Qwen3.6-27B-int4-AutoRound": hermesai(
-      "Lorbus/Qwen3.6-27B-int4-AutoRound",
-    ),
+    [HERMES_QWEN_MODEL_ID]: hermesQwen,
   },
   openai: {
     "gpt-5.6-sol": openai("gpt-5.6-sol"),

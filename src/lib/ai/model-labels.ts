@@ -60,32 +60,18 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
 
   // NVIDIA (using full model IDs as keys)
   "deepseek-ai/deepseek-v4-flash": { label: "DeepSeek V4", badge: "flash" },
-  "deepseek-ai/deepseek-v4-pro": { label: "DeepSeek V4", badge: "pro" },
   "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {
     label: "Nemotron 3",
     badge: "nano",
   },
-  "qwen/qwen3-next-80b-a3b-instruct": { label: "Qwen 3", badge: "next" },
   "openai/gpt-oss-120b": { label: "GPT OSS", badge: "120B" },
   "thinkingmachines/inkling": { label: "Inkling" },
-  "bytedance/seed-oss-36b-instruct": { label: "Seed OSS", badge: "36B" },
   "minimaxai/minimax-m3": { label: "MiniMax M3" },
-  "mistralai/devstral-2-123b-instruct-2512": { label: "Devstral 2" },
-  "mistralai/mistral-large-3-675b-instruct-2512": {
-    label: "Mistral 3",
-    badge: "large",
-  },
   "nvidia/nemotron-3-super-120b-a12b": { label: "Nemotron 3", badge: "super" },
   "nvidia/nemotron-3-ultra-550b-a55b": { label: "Nemotron 3", badge: "ultra" },
   "nvidia/nemotron-nano-12b-v2-vl": { label: "Nemotron", badge: "nano" },
   "mistralai/mistral-nemotron": { label: "Mistral", badge: "Nemotron" },
   "mistralai/mistral-small-4-119b-2603": { label: "Mistral 4", badge: "small" },
-  "mistralai/mistral-medium-3.5-128b": {
-    label: "Mistral 3.5",
-    badge: "medium",
-  },
-  "mistralai/ministral-14b-instruct-2512": { label: "Ministral", badge: "14B" },
-  "qwen/qwen3.5-122b-a10b": { label: "Qwen 3.5", badge: "122B" },
   "stepfun-ai/step-3.7-flash": { label: "Step 3.7", badge: "flash" },
   "google/gemma-4-31b-it": { label: "Gemma 4", badge: "31B" },
   "google/diffusiongemma-26b-a4b-it": {

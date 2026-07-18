@@ -1,17 +1,12 @@
 import { smoothStream, streamText } from "ai";
 
-import { customModelProvider } from "lib/ai/models";
-import { CREATE_THREAD_TITLE_PROMPT } from "lib/ai/prompts";
-import globalLogger from "logger";
-import { ChatModel } from "app-types/chat";
-import { chatRepository } from "lib/db/repository";
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
+import { titleGenerationModel } from "lib/ai/models";
+import { CREATE_THREAD_TITLE_PROMPT } from "lib/ai/prompts";
+import { chatRepository } from "lib/db/repository";
+import globalLogger from "logger";
 import { handleError } from "../shared.chat";
-import {
-  canAccessChatModel,
-  MODEL_ACCESS_DENIED_MESSAGE,
-} from "lib/ai/model-access";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Title API: `),
@@ -21,12 +16,7 @@ export async function POST(request: Request) {
   try {
     const json = await request.json();
 
-    const {
-      chatModel,
-      message = "hello",
-      threadId,
-    } = json as {
-      chatModel?: ChatModel;
+    const { message = "hello", threadId } = json as {
       message: string;
       threadId: string;
     };
@@ -35,19 +25,16 @@ export async function POST(request: Request) {
     if (!session) {
       return new Response("Unauthorized", { status: 401 });
     }
-    if (!canAccessChatModel(session.user.role, chatModel)) {
-      return new Response(MODEL_ACCESS_DENIED_MESSAGE, {
-        status: 403,
-      });
-    }
-
-    logger.info(
-      `chatModel: ${chatModel?.provider}/${chatModel?.model}, threadId: ${threadId}`,
-    );
+    logger.info(`model: nvidia/openai/gpt-oss-20b, threadId: ${threadId}`);
 
     const result = streamText({
-      model: customModelProvider.getModel(chatModel),
+      model: titleGenerationModel,
       system: CREATE_THREAD_TITLE_PROMPT,
+      providerOptions: {
+        "openai-compatible": {
+          reasoningEffort: "low",
+        },
+      },
       experimental_transform: smoothStream({ chunking: "word" }),
       prompt: message,
       abortSignal: request.signal,

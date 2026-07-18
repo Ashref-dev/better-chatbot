@@ -1,9 +1,9 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { streamText } from "ai";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
+  ANTHROPIC_FILE_MIME_TYPES,
   GEMINI_FILE_MIME_TYPES,
   OPENAI_FILE_MIME_TYPES,
-  ANTHROPIC_FILE_MIME_TYPES,
 } from "./file-support";
 import { USER_ALLOWED_CHAT_MODELS } from "./model-access";
 
@@ -55,7 +55,7 @@ describe("customModelProvider file support metadata", () => {
       .map((name, index) => (name.startsWith("mistralai/") ? index : -1))
       .filter((index) => index >= 0);
 
-    expect(mistralIndices).toEqual([6, 7, 8, 9, 10, 11]);
+    expect(mistralIndices).toEqual([7, 8, 9, 10]);
   });
 
   it("updates the NVIDIA model catalog", () => {
@@ -111,38 +111,6 @@ describe("customModelProvider file support metadata", () => {
     expect(getFilePartSupportedMimeTypes(model)).toEqual(
       Array.from(GEMINI_FILE_MIME_TYPES),
     );
-  });
-
-  it("keeps NVIDIA models tool-call supported", () => {
-    const { customModelProvider, isToolCallUnsupportedModel } = modelsModule;
-
-    const nvidiaProvider = customModelProvider.modelsInfo.find(
-      (item) => item.provider === "nvidia",
-    );
-
-    expect(nvidiaProvider).toBeDefined();
-
-    const qwen122b = nvidiaProvider?.models.find(
-      (item) => item.name === "qwen/qwen3.5-122b-a10b",
-    );
-    const qwen397b = nvidiaProvider?.models.find(
-      (item) => item.name === "qwen/qwen3.5-122b-a10b",
-    );
-
-    expect(qwen122b?.isToolCallUnsupported).toBe(false);
-    expect(qwen397b?.isToolCallUnsupported).toBe(false);
-
-    const qwen122bModel = customModelProvider.getModel({
-      provider: "nvidia",
-      model: "qwen/qwen3.5-122b-a10b",
-    });
-    const qwen397bModel = customModelProvider.getModel({
-      provider: "nvidia",
-      model: "qwen/qwen3.5-122b-a10b",
-    });
-
-    expect(isToolCallUnsupportedModel(qwen122bModel)).toBe(false);
-    expect(isToolCallUnsupportedModel(qwen397bModel)).toBe(false);
   });
 
   it("marks NVIDIA models as image-input unsupported by default", () => {

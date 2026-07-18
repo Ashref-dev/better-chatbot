@@ -1,32 +1,32 @@
 import "server-only";
 
-import { createOllama } from "ollama-ai-provider-v2";
-import { openai, createOpenAI } from "@ai-sdk/openai";
-import { google, createGoogleGenerativeAI } from "@ai-sdk/google";
 import { anthropic, createAnthropic } from "@ai-sdk/anthropic";
-import { xai, createXai } from "@ai-sdk/xai";
+import { createGoogleGenerativeAI, google } from "@ai-sdk/google";
+import { createGroq } from "@ai-sdk/groq";
+import { createOpenAI, openai } from "@ai-sdk/openai";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { createXai, xai } from "@ai-sdk/xai";
 import {
   LanguageModelV2,
-  openrouter,
   createOpenRouter,
+  openrouter,
 } from "@openrouter/ai-sdk-provider";
-import { createGroq } from "@ai-sdk/groq";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import {
-  extractReasoningMiddleware,
   type LanguageModel,
+  extractReasoningMiddleware,
   wrapLanguageModel,
 } from "ai";
+import { ChatModel } from "app-types/chat";
+import { createOllama } from "ollama-ai-provider-v2";
 import {
   createOpenAICompatibleModels,
   openaiCompatibleModelsSafeParse,
 } from "./create-openai-compatiable";
-import { ChatModel } from "app-types/chat";
 import {
-  DEFAULT_FILE_PART_MIME_TYPES,
-  OPENAI_FILE_MIME_TYPES,
-  GEMINI_FILE_MIME_TYPES,
   ANTHROPIC_FILE_MIME_TYPES,
+  DEFAULT_FILE_PART_MIME_TYPES,
+  GEMINI_FILE_MIME_TYPES,
+  OPENAI_FILE_MIME_TYPES,
   XAI_FILE_MIME_TYPES,
 } from "./file-support";
 
@@ -42,6 +42,11 @@ const nvidia = createOpenAICompatible({
   baseURL: "https://integrate.api.nvidia.com/v1",
   apiKey: process.env.NVIDIA_API_KEY,
 });
+
+// Internal model used for conversation title generation. It is intentionally
+// separate from the visible model catalog and is available to every role.
+export const titleGenerationModel = nvidia("openai/gpt-oss-20b");
+
 const hermesai = createOpenAICompatible({
   name: "hermesai",
   baseURL: "https://hermes.ai.unturf.com/v1",
@@ -102,31 +107,16 @@ const staticModels = {
     "google/gemma-4-26b-a4b-it": openrouter("google/gemma-4-26b-a4b-it:free"),
   },
   nvidia: {
-    "bytedance/seed-oss-36b-instruct": nvidia(
-      "bytedance/seed-oss-36b-instruct",
-    ),
+    "thinkingmachines/inkling": nvidia("thinkingmachines/inkling"),
     "deepseek-ai/deepseek-v4-flash": nvidia("deepseek-ai/deepseek-v4-flash"),
-    "deepseek-ai/deepseek-v4-pro": nvidia("deepseek-ai/deepseek-v4-pro"),
     "google/diffusiongemma-26b-a4b-it": nvidia(
       "google/diffusiongemma-26b-a4b-it",
     ),
     "google/gemma-4-31b-it": nvidia("google/gemma-4-31b-it"),
     "minimaxai/minimax-m3": nvidia("minimaxai/minimax-m3"),
-    "mistralai/devstral-2-123b-instruct-2512": nvidia(
-      "mistralai/devstral-2-123b-instruct-2512",
-    ),
-    "mistralai/mistral-large-3-675b-instruct-2512": nvidia(
-      "mistralai/mistral-large-3-675b-instruct-2512",
-    ),
     "mistralai/mistral-nemotron": nvidia("mistralai/mistral-nemotron"),
     "mistralai/mistral-small-4-119b-2603": nvidia(
       "mistralai/mistral-small-4-119b-2603",
-    ),
-    "mistralai/mistral-medium-3.5-128b": nvidia(
-      "mistralai/mistral-medium-3.5-128b",
-    ),
-    "mistralai/ministral-14b-instruct-2512": nvidia(
-      "mistralai/ministral-14b-instruct-2512",
     ),
     "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": nvidia(
       "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
@@ -140,12 +130,7 @@ const staticModels = {
     "nvidia/nemotron-nano-12b-v2-vl": nvidia("nvidia/nemotron-nano-12b-v2-vl"),
     "openai/gpt-oss-120b": nvidia("openai/gpt-oss-120b"),
     "poolside/laguna-xs-2.1": nvidia("poolside/laguna-xs-2.1"),
-    "qwen/qwen3-next-80b-a3b-instruct": nvidia(
-      "qwen/qwen3-next-80b-a3b-instruct",
-    ),
-    "qwen/qwen3.5-122b-a10b": nvidia("qwen/qwen3.5-122b-a10b"),
     "stepfun-ai/step-3.7-flash": nvidia("stepfun-ai/step-3.7-flash"),
-    "thinkingmachines/inkling": nvidia("thinkingmachines/inkling"),
     "z-ai/glm-5.2": nvidia("z-ai/glm-5.2"),
   },
 };

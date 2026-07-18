@@ -374,6 +374,15 @@ export async function POST(request: Request) {
           tools: vercelAITooles,
           stopWhen: stepCountIs(10),
           toolChoice: "auto",
+          providerOptions:
+            chatModel?.provider === "nvidia" &&
+            chatModel.model === "deepseek-ai/deepseek-v4-flash"
+              ? {
+                  "openai-compatible": {
+                    reasoningEffort: "none",
+                  },
+                }
+              : undefined,
           abortSignal: request.signal,
         });
         result.consumeStream();

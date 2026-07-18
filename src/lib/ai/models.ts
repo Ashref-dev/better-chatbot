@@ -71,10 +71,10 @@ const staticModels = {
     "gpt-4.1": openai("gpt-4.1"),
   },
   google: {
-    "gemini-3.1-pro": google("gemini-3.1-pro"),
     "gemini-2.5-pro": google("gemini-2.5-pro"),
-    "gemini-3.5-flash": google("gemini-3.5-flash"),
     "gemini-2.5-flash": google("gemini-2.5-flash"),
+    "gemini-3.1-pro": google("gemini-3.1-pro"),
+    "gemini-3.5-flash": google("gemini-3.5-flash"),
     "gemini-3.1-flash-lite": google("gemini-3.1-flash-lite"),
   },
   anthropic: {

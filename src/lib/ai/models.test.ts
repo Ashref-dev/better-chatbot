@@ -19,16 +19,16 @@ afterEach(() => {
 });
 
 describe("customModelProvider file support metadata", () => {
-  it("orders Gemini models by capability tier", () => {
+  it("orders Gemini models by generation, then capability tier", () => {
     const googleProvider = modelsModule.customModelProvider.modelsInfo.find(
       (item) => item.provider === "google",
     );
 
     expect(googleProvider?.models.map((model) => model.name)).toEqual([
-      "gemini-3.1-pro",
       "gemini-2.5-pro",
-      "gemini-3.5-flash",
       "gemini-2.5-flash",
+      "gemini-3.1-pro",
+      "gemini-3.5-flash",
       "gemini-3.1-flash-lite",
     ]);
   });

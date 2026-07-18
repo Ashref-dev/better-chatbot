@@ -19,6 +19,32 @@ afterEach(() => {
 });
 
 describe("customModelProvider file support metadata", () => {
+  it("orders Gemini models by capability tier", () => {
+    const googleProvider = modelsModule.customModelProvider.modelsInfo.find(
+      (item) => item.provider === "google",
+    );
+
+    expect(googleProvider?.models.map((model) => model.name)).toEqual([
+      "gemini-3.1-pro",
+      "gemini-2.5-pro",
+      "gemini-3.5-flash",
+      "gemini-2.5-flash",
+      "gemini-3.1-flash-lite",
+    ]);
+  });
+
+  it("keeps NVIDIA Mistral models together", () => {
+    const nvidiaProvider = modelsModule.customModelProvider.modelsInfo.find(
+      (item) => item.provider === "nvidia",
+    );
+    const modelNames = nvidiaProvider?.models.map((model) => model.name) ?? [];
+    const mistralIndices = modelNames
+      .map((name, index) => (name.startsWith("mistralai/") ? index : -1))
+      .filter((index) => index >= 0);
+
+    expect(mistralIndices).toEqual([6, 7, 8, 9, 10, 11]);
+  });
+
   it("includes default file support for OpenAI gpt-5.6-sol", () => {
     const { customModelProvider, getFilePartSupportedMimeTypes } = modelsModule;
     const model = customModelProvider.getModel({

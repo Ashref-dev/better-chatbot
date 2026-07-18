@@ -71,10 +71,10 @@ const staticModels = {
     "gpt-4.1": openai("gpt-4.1"),
   },
   google: {
-    "gemini-3.5-flash": google("gemini-3.5-flash"),
-    "gemini-2.5-flash": google("gemini-2.5-flash"),
     "gemini-3.1-pro": google("gemini-3.1-pro"),
     "gemini-2.5-pro": google("gemini-2.5-pro"),
+    "gemini-3.5-flash": google("gemini-3.5-flash"),
+    "gemini-2.5-flash": google("gemini-2.5-flash"),
     "gemini-3.1-flash-lite": google("gemini-3.1-flash-lite"),
   },
   anthropic: {
@@ -102,21 +102,15 @@ const staticModels = {
     "google/gemma-4-26b-a4b-it": openrouter("google/gemma-4-26b-a4b-it:free"),
   },
   nvidia: {
-    "deepseek-ai/deepseek-v4-flash": nvidia("deepseek-ai/deepseek-v4-flash"),
-    "deepseek-ai/deepseek-v4-pro": nvidia("deepseek-ai/deepseek-v4-pro"),
-    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": nvidia(
-      "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
-    ),
-    "qwen/qwen3-next-80b-a3b-instruct": nvidia(
-      "qwen/qwen3-next-80b-a3b-instruct",
-    ),
-    "qwen/qwen3-coder-480b-a35b-instruct": nvidia(
-      "qwen/qwen3-coder-480b-a35b-instruct",
-    ),
-    "openai/gpt-oss-120b": nvidia("openai/gpt-oss-120b"),
     "bytedance/seed-oss-36b-instruct": nvidia(
       "bytedance/seed-oss-36b-instruct",
     ),
+    "deepseek-ai/deepseek-v4-flash": nvidia("deepseek-ai/deepseek-v4-flash"),
+    "deepseek-ai/deepseek-v4-pro": nvidia("deepseek-ai/deepseek-v4-pro"),
+    "google/diffusiongemma-26b-a4b-it": nvidia(
+      "google/diffusiongemma-26b-a4b-it",
+    ),
+    "google/gemma-4-31b-it": nvidia("google/gemma-4-31b-it"),
     "minimaxai/minimax-m3": nvidia("minimaxai/minimax-m3"),
     "mistralai/devstral-2-123b-instruct-2512": nvidia(
       "mistralai/devstral-2-123b-instruct-2512",
@@ -124,13 +118,6 @@ const staticModels = {
     "mistralai/mistral-large-3-675b-instruct-2512": nvidia(
       "mistralai/mistral-large-3-675b-instruct-2512",
     ),
-    "nvidia/nemotron-3-super-120b-a12b": nvidia(
-      "nvidia/nemotron-3-super-120b-a12b",
-    ),
-    "nvidia/nemotron-3-ultra-550b-a55b": nvidia(
-      "nvidia/nemotron-3-ultra-550b-a55b",
-    ),
-    "nvidia/nemotron-nano-12b-v2-vl": nvidia("nvidia/nemotron-nano-12b-v2-vl"),
     "mistralai/mistral-nemotron": nvidia("mistralai/mistral-nemotron"),
     "mistralai/mistral-small-4-119b-2603": nvidia(
       "mistralai/mistral-small-4-119b-2603",
@@ -141,12 +128,25 @@ const staticModels = {
     "mistralai/ministral-14b-instruct-2512": nvidia(
       "mistralai/ministral-14b-instruct-2512",
     ),
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": nvidia(
+      "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+    ),
+    "nvidia/nemotron-3-super-120b-a12b": nvidia(
+      "nvidia/nemotron-3-super-120b-a12b",
+    ),
+    "nvidia/nemotron-3-ultra-550b-a55b": nvidia(
+      "nvidia/nemotron-3-ultra-550b-a55b",
+    ),
+    "nvidia/nemotron-nano-12b-v2-vl": nvidia("nvidia/nemotron-nano-12b-v2-vl"),
+    "openai/gpt-oss-120b": nvidia("openai/gpt-oss-120b"),
+    "qwen/qwen3-coder-480b-a35b-instruct": nvidia(
+      "qwen/qwen3-coder-480b-a35b-instruct",
+    ),
+    "qwen/qwen3-next-80b-a3b-instruct": nvidia(
+      "qwen/qwen3-next-80b-a3b-instruct",
+    ),
     "qwen/qwen3.5-122b-a10b": nvidia("qwen/qwen3.5-122b-a10b"),
     "stepfun-ai/step-3.7-flash": nvidia("stepfun-ai/step-3.7-flash"),
-    "google/gemma-4-31b-it": nvidia("google/gemma-4-31b-it"),
-    "google/diffusiongemma-26b-a4b-it": nvidia(
-      "google/diffusiongemma-26b-a4b-it",
-    ),
     "z-ai/glm-5.2": nvidia("z-ai/glm-5.2"),
   },
 };

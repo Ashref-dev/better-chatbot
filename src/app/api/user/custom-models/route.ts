@@ -3,12 +3,16 @@ import { CustomModelEntryZodSchema } from "app-types/user";
 import { userRepository } from "lib/db/repository";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { hasFullModelAccess } from "lib/ai/model-access";
 
 export async function GET() {
   try {
     const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!hasFullModelAccess(session.user.role)) {
+      return NextResponse.json([]);
     }
     const preferences = await userRepository.getPreferences(session.user.id);
     return NextResponse.json(preferences?.customModels ?? []);
@@ -25,6 +29,12 @@ export async function PUT(request: Request) {
     const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!hasFullModelAccess(session.user.role)) {
+      return NextResponse.json(
+        { error: "Custom models are not available for your account" },
+        { status: 403 },
+      );
     }
     const json = await request.json();
     const models = z.array(CustomModelEntryZodSchema).parse(json);

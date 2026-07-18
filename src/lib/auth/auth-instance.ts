@@ -65,7 +65,7 @@ const options = {
           const isFirstUser = await getIsFirstUser();
 
           // Set role based on whether this is the first user
-          const role = isFirstUser ? USER_ROLES.ADMIN : DEFAULT_USER_ROLE;
+          const role = isFirstUser ? USER_ROLES.ADMIN : USER_ROLES.USER;
 
           logger.info(
             `User creation hook: ${user.email} will get role: ${role} (isFirstUser: ${isFirstUser})`,

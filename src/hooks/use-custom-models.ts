@@ -42,7 +42,11 @@ export function useCustomModels() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(entries),
-    }).then(() => mutate(entries, false));
+    }).then((response) => {
+      if (response.ok) {
+        mutate(entries, false);
+      }
+    });
   }, [data, isLoading, mutate]);
 
   const models = data ?? [];
@@ -62,11 +66,14 @@ export function useCustomModels() {
 
       await mutate(
         async () => {
-          await fetch(API_URL, {
+          const response = await fetch(API_URL, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(next),
           });
+          if (!response.ok) {
+            throw new Error("Failed to save custom model");
+          }
           return next;
         },
         { optimisticData: next, rollbackOnError: true },
@@ -93,11 +100,14 @@ export function useCustomModels() {
 
       await mutate(
         async () => {
-          await fetch(API_URL, {
+          const response = await fetch(API_URL, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(next),
           });
+          if (!response.ok) {
+            throw new Error("Failed to remove custom model");
+          }
           return next;
         },
         { optimisticData: next, rollbackOnError: true },

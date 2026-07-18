@@ -14,6 +14,10 @@ import { workflowRepository } from "lib/db/repository";
 import { safe } from "ts-safe";
 import { objectFlow } from "lib/utils";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
+import {
+  canAccessChatModel,
+  MODEL_ACCESS_DENIED_MESSAGE,
+} from "lib/ai/model-access";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Agent Generate API: `),
@@ -33,6 +37,11 @@ export async function POST(request: Request) {
     const session = await getSession();
     if (!session) {
       return new Response("Unauthorized", { status: 401 });
+    }
+    if (!canAccessChatModel(session.user.role, chatModel)) {
+      return new Response(MODEL_ACCESS_DENIED_MESSAGE, {
+        status: 403,
+      });
     }
 
     const toolNames = new Set<string>();

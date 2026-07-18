@@ -56,6 +56,10 @@ import { nanoBananaTool, openaiImageTool } from "lib/ai/tools/image";
 import { ImageToolName } from "lib/ai/tools";
 import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
 import { serverFileStorage } from "lib/file-storage";
+import {
+  canAccessChatModel,
+  MODEL_ACCESS_DENIED_MESSAGE,
+} from "lib/ai/model-access";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Chat API: `),
@@ -82,6 +86,13 @@ export async function POST(request: Request) {
       mentions = [],
       attachments = [],
     } = chatApiSchemaRequestBodySchema.parse(json);
+
+    if (!canAccessChatModel(session.user.role, chatModel, customModelId)) {
+      return Response.json(
+        { message: MODEL_ACCESS_DENIED_MESSAGE },
+        { status: 403 },
+      );
+    }
 
     // Load user's custom API keys (if any)
     let userApiKeys: Record<string, string> | undefined;

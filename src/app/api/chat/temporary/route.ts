@@ -11,6 +11,10 @@ import { buildUserSystemPrompt } from "lib/ai/prompts";
 import { getUserPreferences } from "lib/user/server";
 
 import { colorize } from "consola/utils";
+import {
+  canAccessChatModel,
+  MODEL_ACCESS_DENIED_MESSAGE,
+} from "lib/ai/model-access";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Temporary Chat API: `),
@@ -33,6 +37,11 @@ export async function POST(request: Request) {
       };
       instructions?: string;
     };
+    if (!canAccessChatModel(session.user.role, chatModel)) {
+      return new Response(MODEL_ACCESS_DENIED_MESSAGE, {
+        status: 403,
+      });
+    }
     logger.info(`model: ${chatModel?.provider}/${chatModel?.model}`);
     const model = customModelProvider.getModel(chatModel);
     const userPreferences =

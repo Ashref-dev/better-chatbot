@@ -8,6 +8,10 @@ import { chatRepository } from "lib/db/repository";
 import { getSession } from "auth/server";
 import { colorize } from "consola/utils";
 import { handleError } from "../shared.chat";
+import {
+  canAccessChatModel,
+  MODEL_ACCESS_DENIED_MESSAGE,
+} from "lib/ai/model-access";
 
 const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `Title API: `),
@@ -30,6 +34,11 @@ export async function POST(request: Request) {
     const session = await getSession();
     if (!session) {
       return new Response("Unauthorized", { status: 401 });
+    }
+    if (!canAccessChatModel(session.user.role, chatModel)) {
+      return new Response(MODEL_ACCESS_DENIED_MESSAGE, {
+        status: 403,
+      });
     }
 
     logger.info(

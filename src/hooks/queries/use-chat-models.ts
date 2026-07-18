@@ -50,10 +50,22 @@ export const useChatModels = (options?: SWRConfiguration) => {
     fallbackData: [],
     onSuccess: (data) => {
       const status = appStore.getState();
-      if (!status.chatModel) {
-        const firstProvider = data[0].provider;
-        const model = data[0].models[0].name;
-        appStore.setState({ chatModel: { provider: firstProvider, model } });
+      const selectedModelIsAvailable = data.some(
+        (provider) =>
+          provider.provider === status.chatModel?.provider &&
+          provider.models.some(
+            (model) => model.name === status.chatModel?.model,
+          ),
+      );
+      const firstProvider = data.find((provider) => provider.models.length > 0);
+
+      if (!selectedModelIsAvailable && firstProvider) {
+        appStore.setState({
+          chatModel: {
+            provider: firstProvider.provider,
+            model: firstProvider.models[0].name,
+          },
+        });
       }
     },
     ...options,

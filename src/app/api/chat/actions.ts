@@ -29,6 +29,10 @@ import { serverCache } from "lib/cache";
 import { CacheKeys } from "lib/cache/cache-keys";
 import { getSession } from "auth/server";
 import logger from "logger";
+import {
+  canAccessChatModel,
+  MODEL_ACCESS_DENIED_MESSAGE,
+} from "lib/ai/model-access";
 
 import { JSONSchema7 } from "json-schema";
 import { ObjectJsonSchema7 } from "app-types/util";
@@ -119,6 +123,14 @@ export async function generateExampleToolSchemaAction(options: {
   toolInfo: MCPToolInfo;
   prompt?: string;
 }) {
+  const session = await getSession();
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+  if (!canAccessChatModel(session.user.role, options.model)) {
+    throw new Error(MODEL_ACCESS_DENIED_MESSAGE);
+  }
+
   const model = customModelProvider.getModel(options.model);
 
   const schema = jsonSchema(
@@ -203,6 +215,14 @@ export async function generateObjectAction({
   };
   schema: JSONSchema7 | ObjectJsonSchema7;
 }) {
+  const session = await getSession();
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+  if (!canAccessChatModel(session.user.role, model)) {
+    throw new Error(MODEL_ACCESS_DENIED_MESSAGE);
+  }
+
   const result = await generateObject({
     model: customModelProvider.getModel(model),
     system: prompt.system,

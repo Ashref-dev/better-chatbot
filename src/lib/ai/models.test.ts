@@ -5,6 +5,7 @@ import {
   OPENAI_FILE_MIME_TYPES,
   ANTHROPIC_FILE_MIME_TYPES,
 } from "./file-support";
+import { USER_ALLOWED_CHAT_MODELS } from "./model-access";
 
 vi.mock("server-only", () => ({}));
 
@@ -19,6 +20,18 @@ afterEach(() => {
 });
 
 describe("customModelProvider file support metadata", () => {
+  it("contains every model allowed for normal users", () => {
+    for (const allowedModel of USER_ALLOWED_CHAT_MODELS) {
+      const provider = modelsModule.customModelProvider.modelsInfo.find(
+        (item) => item.provider === allowedModel.provider,
+      );
+
+      expect(provider?.models.map((model) => model.name)).toContain(
+        allowedModel.model,
+      );
+    }
+  });
+
   it("orders Gemini models by generation, then capability tier", () => {
     const googleProvider = modelsModule.customModelProvider.modelsInfo.find(
       (item) => item.provider === "google",

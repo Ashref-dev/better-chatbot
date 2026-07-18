@@ -3,7 +3,7 @@
 import { appStore } from "@/app/store";
 import { useModelLabelOverrides } from "@/hooks/use-model-label-overrides";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
-import { ChatModel } from "app-types/chat";
+import { ChatModel, type ModelProviderPresentation } from "app-types/chat";
 import { resolveModelDisplay } from "lib/ai/model-labels";
 import { cn } from "lib/utils";
 import { CheckIcon, ChevronDown, Settings } from "lucide-react";
@@ -61,6 +61,9 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
   const { data: providers } = useChatModels();
   const modelLabelOverrides = useModelLabelOverrides();
   const [model, setModel] = useState(props.currentModel);
+  const selectedProvider = providers?.find(
+    (provider) => provider.provider === model?.provider,
+  );
 
   const selectedDisplay = useMemo(() => {
     return resolveModelDisplay(
@@ -92,7 +95,11 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
               <div className="mr-auto flex items-center gap-[0.1rem]">
                 {(props.showProvider ?? true) && (
                   <ModelProviderIcon
-                    provider={model?.provider || ""}
+                    provider={
+                      selectedProvider?.presentation?.iconProvider ||
+                      model?.provider ||
+                      ""
+                    }
                     className="size-2.5 mr-1"
                   />
                 )}
@@ -130,6 +137,7 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
                       <ProviderHeader
                         provider={provider.provider}
                         hasAPIKey={provider.hasAPIKey}
+                        presentation={provider.presentation}
                         onManageModels={
                           provider.provider === "openRouter"
                             ? () => {
@@ -173,7 +181,11 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
                               });
                               setOpen(false);
                             }}
-                            value={`${item.name} ${itemDisplay.label} ${itemDisplay.badge || ""}`}
+                            value={
+                              provider.presentation?.hideModelIds
+                                ? `${itemDisplay.label} ${itemDisplay.badge || ""}`
+                                : `${item.name} ${itemDisplay.label} ${itemDisplay.badge || ""}`
+                            }
                             data-testid={`model-option-${provider.provider}-${item.name}`}
                           >
                             {model?.provider === provider.provider &&
@@ -197,11 +209,12 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
                                   </span>
                                 )}
                               </div>
-                              {itemDisplay.label !== item.name && (
-                                <span className="text-[10px] text-muted-foreground truncate">
-                                  {item.name}
-                                </span>
-                              )}
+                              {!provider.presentation?.hideModelIds &&
+                                itemDisplay.label !== item.name && (
+                                  <span className="text-[10px] text-muted-foreground truncate">
+                                    {item.name}
+                                  </span>
+                                )}
                             </div>
 
                             {item.isToolCallUnsupported && (
@@ -232,23 +245,28 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
 const ProviderHeader = memo(function ProviderHeader({
   provider,
   hasAPIKey,
+  presentation,
   onManageModels,
 }: {
   provider: string;
   hasAPIKey: boolean;
+  presentation?: ModelProviderPresentation;
   onManageModels?: () => void;
 }) {
   return (
     <div className="text-sm text-muted-foreground flex items-center gap-1.5 group-hover:text-foreground transition-colors duration-300">
-      {provider === "openai" ? (
+      {(presentation?.iconProvider ?? provider) === "openai" ? (
         <ModelProviderIcon
           provider="openai"
           className="size-3 text-foreground"
         />
       ) : (
-        <ModelProviderIcon provider={provider} className="size-3" />
+        <ModelProviderIcon
+          provider={presentation?.iconProvider ?? provider}
+          className="size-3"
+        />
       )}
-      {provider}
+      {presentation?.label ?? provider}
       {provider === "openRouter" && onManageModels && (
         <button
           onClick={(e) => {

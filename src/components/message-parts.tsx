@@ -498,12 +498,16 @@ export const AssistMessagePart = memo(function AssistMessagePart({
                         </h4>
                         <div className="flex gap-3 items-center">
                           <ModelProviderIcon
-                            provider={metadata.chatModel.provider}
+                            provider={
+                              metadata.modelProviderPresentation
+                                ?.iconProvider ?? metadata.chatModel.provider
+                            }
                             className="size-5 flex-shrink-0"
                           />
                           <div className="space-y-0.5 flex-1">
                             <div className="text-sm font-medium text-foreground">
-                              {metadata.chatModel.provider}
+                              {metadata.modelProviderPresentation?.label ??
+                                metadata.chatModel.provider}
                             </div>
                             <div className="text-xs text-muted-foreground">
                               <span className="mr-1">

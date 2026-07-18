@@ -7,6 +7,7 @@ import { tag } from "lib/tag";
 export type ChatMetadata = {
   usage?: LanguageModelUsage;
   chatModel?: ChatModel;
+  modelProviderPresentation?: ModelProviderPresentation;
   toolChoice?: "auto" | "none" | "manual";
   toolCount?: number;
   agentId?: string;
@@ -15,6 +16,12 @@ export type ChatMetadata = {
 export type ChatModel = {
   provider: string;
   model: string;
+};
+
+export type ModelProviderPresentation = {
+  label: string;
+  iconProvider: string;
+  hideModelIds: boolean;
 };
 
 export const ChatAttachmentSchema = z.object({

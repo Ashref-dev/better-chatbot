@@ -58,6 +58,7 @@ import { buildCsvIngestionPreviewParts } from "@/lib/ai/ingest/csv-ingest";
 import { serverFileStorage } from "lib/file-storage";
 import {
   canAccessChatModel,
+  getModelProviderPresentation,
   MODEL_ACCESS_DENIED_MESSAGE,
 } from "lib/ai/model-access";
 
@@ -239,6 +240,9 @@ export async function POST(request: Request) {
       toolChoice: toolChoice,
       toolCount: 0,
       chatModel: chatModel,
+      modelProviderPresentation: getModelProviderPresentation(
+        session.user.role,
+      ),
     };
 
     const stream = createUIMessageStream({

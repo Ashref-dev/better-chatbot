@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   canAccessChatModel,
   filterModelProvidersForRole,
+  getModelProvidersForRole,
   hasFullModelAccess,
 } from "./model-access";
 
@@ -37,6 +38,23 @@ describe("model access", () => {
     expect(hasFullModelAccess("editor")).toBe(true);
     expect(hasFullModelAccess("admin")).toBe(true);
     expect(filterModelProvidersForRole("editor", providers)).toEqual(providers);
+  });
+
+  it("presents normal-user models as one anonymous group", () => {
+    expect(getModelProvidersForRole("user", providers)).toEqual([
+      {
+        provider: "nvidia",
+        models: [
+          { name: "thinkingmachines/inkling" },
+          { name: "mistralai/mistral-small-4-119b-2603" },
+        ],
+        presentation: {
+          label: "Models",
+          iconProvider: "hermesai",
+          hideModelIds: true,
+        },
+      },
+    ]);
   });
 
   it("rejects unlisted and custom models for normal users", () => {

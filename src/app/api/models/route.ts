@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { customModelProvider } from "@/lib/ai/models";
 import {
-  filterModelProvidersForRole,
+  getModelProvidersForRole,
   hasFullModelAccess,
 } from "@/lib/ai/model-access";
 import { getSession } from "auth/server";
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(
-      filterModelProvidersForRole(session.user.role, updatedModelsInfo),
+      getModelProvidersForRole(session.user.role, updatedModelsInfo),
     );
   } catch (error) {
     console.error("Error getting models:", error);

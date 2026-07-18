@@ -4,6 +4,7 @@ import useSWR, { SWRConfiguration } from "swr";
 import { useEffect, useState } from "react";
 import { getStorageManager } from "@/lib/browser-stroage";
 import { CustomModelEntry } from "app-types/user";
+import type { ModelProviderPresentation } from "app-types/chat";
 
 const hiddenModelsStorage = getStorageManager<string[]>("hidden-models");
 
@@ -37,6 +38,7 @@ export const useChatModels = (options?: SWRConfiguration) => {
     {
       provider: string;
       hasAPIKey: boolean;
+      presentation?: ModelProviderPresentation;
       models: {
         name: string;
         isToolCallUnsupported: boolean;

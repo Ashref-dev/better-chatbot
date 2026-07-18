@@ -34,8 +34,20 @@ import { MCPIcon } from "ui/mcp-icon";
 import { ModelLabelsContent } from "./model-labels-content";
 import { BackgroundEffectsContent } from "./background-effects-content";
 import { CustomModelsContent } from "./custom-models-content";
+import { authClient } from "auth/client";
+import { hasFullModelAccess } from "lib/ai/model-access";
+
+type PreferenceTabId =
+  | "userInstructions"
+  | "mcpInstructions"
+  | "exports"
+  | "modelCatalog"
+  | "modelLabels"
+  | "backgroundEffects";
 
 export function ChatPreferencesPopup() {
+  const { data: session } = authClient.useSession();
+  const canManageModels = hasFullModelAccess(session?.user.role);
   const [openChatPreferences, chatPreferencesTab, appStoreMutate] = appStore(
     useShallow((state) => [
       state.openChatPreferences,
@@ -49,31 +61,41 @@ export function ChatPreferencesPopup() {
   const tabs = useMemo(() => {
     return [
       {
+        id: "userInstructions" as const,
         label: t("Chat.ChatPreferences.userInstructions"),
         icon: <UserIcon className="w-4 h-4" />,
       },
       {
+        id: "mcpInstructions" as const,
         label: t("Chat.ChatPreferences.mcpInstructions"),
         icon: <MCPIcon className="w-4 h-4 fill-muted-foreground" />,
       },
       {
+        id: "exports" as const,
         label: t("Chat.ChatPreferences.myExports"),
         icon: <Share2 className="w-4 h-4" />,
       },
+      ...(canManageModels
+        ? [
+            {
+              id: "modelCatalog" as const,
+              label: "Model Catalog",
+              icon: <Boxes className="w-4 h-4" />,
+            },
+            {
+              id: "modelLabels" as const,
+              label: "Model Labels",
+              icon: <Tags className="w-4 h-4" />,
+            },
+          ]
+        : []),
       {
-        label: "Model Catalog",
-        icon: <Boxes className="w-4 h-4" />,
-      },
-      {
-        label: "Model Labels",
-        icon: <Tags className="w-4 h-4" />,
-      },
-      {
+        id: "backgroundEffects" as const,
         label: "Background Effects",
         icon: <Sparkles className="w-4 h-4" />,
       },
     ];
-  }, [t]);
+  }, [canManageModels, t]);
 
   const [tab, setTab] = useState(0);
 
@@ -110,10 +132,12 @@ export function ChatPreferencesPopup() {
       setTab(0);
       appStoreMutate({ chatPreferencesTab: undefined });
     } else if (chatPreferencesTab !== undefined) {
-      setTab(chatPreferencesTab);
+      setTab(chatPreferencesTab < tabs.length ? chatPreferencesTab : 0);
       appStoreMutate({ chatPreferencesTab: undefined });
     }
-  }, [openChatPreferences]);
+  }, [openChatPreferences, tabs.length]);
+
+  const selectedTabId: PreferenceTabId = tabs[tab]?.id ?? "userInstructions";
 
   return (
     <Drawer
@@ -148,7 +172,7 @@ export function ChatPreferencesPopup() {
                   <nav className="px-4 flex flex-col gap-2">
                     {tabs.map((tabItem, index) => (
                       <button
-                        key={index}
+                        key={tabItem.id}
                         onClick={() => setTab(index)}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
                           tab === index
@@ -168,19 +192,24 @@ export function ChatPreferencesPopup() {
                   <div className="p-4 md:p-8">
                     {openChatPreferences && (
                       <>
-                        {tab == 0 ? (
+                        {selectedTabId === "userInstructions" && (
                           <UserInstructionsContent />
-                        ) : tab == 1 ? (
+                        )}
+                        {selectedTabId === "mcpInstructions" && (
                           <MCPInstructionsContent />
-                        ) : tab == 2 ? (
+                        )}
+                        {selectedTabId === "exports" && (
                           <ExportsManagementContent />
-                        ) : tab == 3 ? (
+                        )}
+                        {selectedTabId === "modelCatalog" && (
                           <CustomModelsContent />
-                        ) : tab == 4 ? (
+                        )}
+                        {selectedTabId === "modelLabels" && (
                           <ModelLabelsContent />
-                        ) : tab == 5 ? (
+                        )}
+                        {selectedTabId === "backgroundEffects" && (
                           <BackgroundEffectsContent />
-                        ) : null}
+                        )}
                       </>
                     )}
                   </div>

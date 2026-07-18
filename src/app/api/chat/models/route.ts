@@ -1,5 +1,5 @@
 import { customModelProvider } from "lib/ai/models";
-import { filterModelProvidersForRole } from "lib/ai/model-access";
+import { getModelProvidersForRole } from "lib/ai/model-access";
 import { getSession } from "auth/server";
 
 export const GET = async () => {
@@ -8,7 +8,7 @@ export const GET = async () => {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const models = filterModelProvidersForRole(
+  const models = getModelProvidersForRole(
     session.user.role,
     customModelProvider.modelsInfo,
   );

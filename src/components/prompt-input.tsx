@@ -153,6 +153,13 @@ export default function PromptInput({
     return model ?? globalModel;
   }, [model, globalModel]);
 
+  const selectedModelIconProvider = useMemo(() => {
+    const provider = providers?.find(
+      (provider) => provider.provider === chatModel?.provider,
+    );
+    return provider?.presentation?.iconProvider ?? chatModel?.provider ?? "";
+  }, [providers, chatModel?.provider]);
+
   const selectedModelDisplay = useMemo(() => {
     return resolveModelDisplay(
       chatModel?.provider,
@@ -623,7 +630,7 @@ export default function PromptInput({
                     {chatModel?.model ? (
                       <>
                         <ModelProviderIcon
-                          provider={chatModel.provider}
+                          provider={selectedModelIconProvider}
                           className="size-3 opacity-0 group-data-[state=open]:opacity-100 group-hover:opacity-100"
                         />
                         <span

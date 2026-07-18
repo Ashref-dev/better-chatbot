@@ -67,6 +67,7 @@ import { useObjectState } from "@/hooks/use-object-state";
 import { useTranslations } from "next-intl";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
 import { ChatModel } from "app-types/chat";
+import { resolveModelDisplay } from "lib/ai/model-labels";
 
 // Type definitions
 type SchemaProperty = {
@@ -329,7 +330,9 @@ const GenerateExampleInputJsonDialog = ({
             <SelectContent>
               {providers?.map((provider) => (
                 <SelectGroup key={provider.provider}>
-                  <SelectLabel>{provider.provider}</SelectLabel>
+                  <SelectLabel>
+                    {provider.presentation?.label ?? provider.provider}
+                  </SelectLabel>
                   {provider.models.map((model) => (
                     <SelectItem
                       key={model.name}
@@ -338,7 +341,10 @@ const GenerateExampleInputJsonDialog = ({
                         model: model.name,
                       })}
                     >
-                      {model.name}
+                      {provider.presentation?.hideModelIds
+                        ? resolveModelDisplay(provider.provider, model.name)
+                            .label
+                        : model.name}
                     </SelectItem>
                   ))}
                 </SelectGroup>

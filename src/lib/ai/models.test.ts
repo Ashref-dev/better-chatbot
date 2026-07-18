@@ -45,6 +45,17 @@ describe("customModelProvider file support metadata", () => {
     expect(mistralIndices).toEqual([6, 7, 8, 9, 10, 11]);
   });
 
+  it("updates the NVIDIA model catalog", () => {
+    const nvidiaProvider = modelsModule.customModelProvider.modelsInfo.find(
+      (item) => item.provider === "nvidia",
+    );
+    const modelNames = nvidiaProvider?.models.map((model) => model.name) ?? [];
+
+    expect(modelNames).toContain("thinkingmachines/inkling");
+    expect(modelNames).toContain("poolside/laguna-xs-2.1");
+    expect(modelNames).not.toContain("qwen/qwen3-coder-480b-a35b-instruct");
+  });
+
   it("includes default file support for OpenAI gpt-5.6-sol", () => {
     const { customModelProvider, getFilePartSupportedMimeTypes } = modelsModule;
     const model = customModelProvider.getModel({

@@ -139,14 +139,13 @@ const staticModels = {
     ),
     "nvidia/nemotron-nano-12b-v2-vl": nvidia("nvidia/nemotron-nano-12b-v2-vl"),
     "openai/gpt-oss-120b": nvidia("openai/gpt-oss-120b"),
-    "qwen/qwen3-coder-480b-a35b-instruct": nvidia(
-      "qwen/qwen3-coder-480b-a35b-instruct",
-    ),
+    "poolside/laguna-xs-2.1": nvidia("poolside/laguna-xs-2.1"),
     "qwen/qwen3-next-80b-a3b-instruct": nvidia(
       "qwen/qwen3-next-80b-a3b-instruct",
     ),
     "qwen/qwen3.5-122b-a10b": nvidia("qwen/qwen3.5-122b-a10b"),
     "stepfun-ai/step-3.7-flash": nvidia("stepfun-ai/step-3.7-flash"),
+    "thinkingmachines/inkling": nvidia("thinkingmachines/inkling"),
     "z-ai/glm-5.2": nvidia("z-ai/glm-5.2"),
   },
 };

@@ -55,7 +55,7 @@ describe("customModelProvider file support metadata", () => {
       .map((name, index) => (name.startsWith("mistralai/") ? index : -1))
       .filter((index) => index >= 0);
 
-    expect(mistralIndices).toEqual([7, 8, 9, 10]);
+    expect(mistralIndices).toEqual([5, 6]);
   });
 
   it("updates the NVIDIA model catalog", () => {

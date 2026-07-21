@@ -40,6 +40,7 @@ import {
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Textarea } from "ui/textarea";
 import { Think } from "ui/think";
+import type { ChatModel } from "app-types/chat";
 
 export function ChatBotTemporary() {
   const t = useTranslations("Chat.TemporaryChat");
@@ -76,6 +77,7 @@ export function ChatBotTemporary() {
         return {
           body: {
             chatModel: temporaryChat.chatModel,
+            reasoningEffort: temporaryChat.reasoningEffort,
             instructions: temporaryChat.instructions,
             messages,
           },
@@ -278,14 +280,17 @@ function DrawerTemporaryContent({
     }
   }, [isLoading]);
 
-  const setModel = useCallback((model) => {
-    appStoreMutate({
-      temporaryChat: {
-        ...temporaryChat,
-        chatModel: model,
-      },
-    });
-  }, []);
+  const setModel = useCallback(
+    (chatModel: ChatModel) => {
+      appStoreMutate((state) => ({
+        temporaryChat: {
+          ...state.temporaryChat,
+          chatModel,
+        },
+      }));
+    },
+    [appStoreMutate],
+  );
 
   useEffect(() => {
     if (!temporaryChat.chatModel) {

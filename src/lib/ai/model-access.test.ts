@@ -11,9 +11,6 @@ const providers = [
     provider: "nvidia",
     models: [
       { name: "thinkingmachines/inkling" },
-      { name: "thinkingmachines/inkling-low" },
-      { name: "thinkingmachines/inkling-medium" },
-      { name: "thinkingmachines/inkling-high" },
       { name: "mistralai/mistral-small-4-119b-2603" },
       { name: "qwen/qwen3.5-122b-a10b" },
     ],
@@ -30,9 +27,7 @@ describe("model access", () => {
       {
         provider: "nvidia",
         models: [
-          { name: "thinkingmachines/inkling-low" },
-          { name: "thinkingmachines/inkling-medium" },
-          { name: "thinkingmachines/inkling-high" },
+          { name: "thinkingmachines/inkling" },
           { name: "mistralai/mistral-small-4-119b-2603" },
         ],
       },
@@ -50,9 +45,7 @@ describe("model access", () => {
       {
         provider: "nvidia",
         models: [
-          { name: "thinkingmachines/inkling-low" },
-          { name: "thinkingmachines/inkling-medium" },
-          { name: "thinkingmachines/inkling-high" },
+          { name: "thinkingmachines/inkling" },
           { name: "mistralai/mistral-small-4-119b-2603" },
         ],
         presentation: {
@@ -68,7 +61,7 @@ describe("model access", () => {
     expect(
       canAccessChatModel("user", {
         provider: "nvidia",
-        model: "thinkingmachines/inkling-low",
+        model: "thinkingmachines/inkling",
       }),
     ).toBe(true);
     expect(
@@ -80,7 +73,7 @@ describe("model access", () => {
     expect(
       canAccessChatModel(
         "user",
-        { provider: "nvidia", model: "thinkingmachines/inkling-low" },
+        { provider: "nvidia", model: "thinkingmachines/inkling" },
         "custom-model",
       ),
     ).toBe(false);

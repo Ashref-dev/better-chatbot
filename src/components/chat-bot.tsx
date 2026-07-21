@@ -98,6 +98,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
   const [
     appStoreMutate,
     model,
+    reasoningEffort,
     toolChoice,
     allowedAppDefaultToolkit,
     allowedMcpServers,
@@ -109,6 +110,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     useShallow((state) => [
       state.mutate,
       state.chatModel,
+      state.reasoningEffort,
       state.toolChoice,
       state.allowedAppDefaultToolkit,
       state.allowedMcpServers,
@@ -231,6 +233,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           ...body,
           id,
           chatModel: currentChatModel,
+          reasoningEffort: latestRef.current.reasoningEffort,
           customModelId,
           toolChoice: latestRef.current.toolChoice,
           allowedAppDefaultToolkit:
@@ -270,6 +273,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
   const latestRef = useToRef({
     toolChoice,
     model,
+    reasoningEffort,
     allowedAppDefaultToolkit,
     allowedMcpServers,
     messages,

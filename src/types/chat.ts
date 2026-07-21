@@ -7,6 +7,7 @@ import { tag } from "lib/tag";
 export type ChatMetadata = {
   usage?: LanguageModelUsage;
   chatModel?: ChatModel;
+  reasoningEffort?: ReasoningEffort;
   modelProviderPresentation?: ModelProviderPresentation;
   toolChoice?: "auto" | "none" | "manual";
   toolCount?: number;
@@ -17,6 +18,16 @@ export type ChatModel = {
   provider: string;
   model: string;
 };
+
+export const ReasoningEffortSchema = z.enum([
+  "minimal",
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+]);
+
+export type ReasoningEffort = z.infer<typeof ReasoningEffortSchema>;
 
 export type ModelProviderPresentation = {
   label: string;
@@ -109,6 +120,7 @@ export const chatApiSchemaRequestBodySchema = z.object({
       model: z.string(),
     })
     .optional(),
+  reasoningEffort: ReasoningEffortSchema.optional(),
   customModelId: z.string().optional(),
   toolChoice: z.enum(["auto", "none", "manual"]),
   mentions: z.array(ChatMentionSchema).optional(),

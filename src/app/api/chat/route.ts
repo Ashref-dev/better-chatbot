@@ -9,11 +9,13 @@ import {
   UIMessage,
 } from "ai";
 
+import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
+import { withReasoningEffortFallback } from "lib/ai/reasoning-effort-fallback";
 import {
-  customModelProvider,
-  getInklingReasoningEffort,
-  isToolCallUnsupportedModel,
-} from "lib/ai/models";
+  getReasoningEffortSupport,
+  getReasoningProviderOptions,
+  getValidatedReasoningEffort,
+} from "lib/ai/reasoning-effort";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
@@ -83,6 +85,7 @@ export async function POST(request: Request) {
       id,
       message,
       chatModel,
+      reasoningEffort: requestedReasoningEffort,
       customModelId,
       toolChoice,
       allowedAppDefaultToolkit,
@@ -117,10 +120,16 @@ export async function POST(request: Request) {
       // Continue without user keys
     }
 
-    const model = customModelProvider.getModel(
+    const selectedReasoningEffort = getValidatedReasoningEffort(
       chatModel,
-      customModelId,
-      userApiKeys,
+      requestedReasoningEffort,
+    );
+    const reasoningSupport = selectedReasoningEffort
+      ? getReasoningEffortSupport(chatModel)
+      : undefined;
+    const model = withReasoningEffortFallback(
+      customModelProvider.getModel(chatModel, customModelId, userApiKeys),
+      reasoningSupport,
     );
 
     let thread = await chatRepository.selectThreadDetails(id);
@@ -244,6 +253,7 @@ export async function POST(request: Request) {
       toolChoice: toolChoice,
       toolCount: 0,
       chatModel: chatModel,
+      reasoningEffort: selectedReasoningEffort,
       modelProviderPresentation: getModelProviderPresentation(
         session.user.role,
       ),
@@ -369,11 +379,15 @@ export async function POST(request: Request) {
         }
         logger.info(`model: ${chatModel?.provider}/${chatModel?.model}`);
 
-        const reasoningEffort =
-          getInklingReasoningEffort(chatModel) ??
+        const providerOptions =
+          getReasoningProviderOptions(chatModel, selectedReasoningEffort) ??
           (chatModel?.provider === "nvidia" &&
           chatModel.model === "deepseek-ai/deepseek-v4-flash"
-            ? "none"
+            ? {
+                "openai-compatible": {
+                  reasoningEffort: "none",
+                },
+              }
             : undefined);
 
         const result = streamText({
@@ -385,13 +399,7 @@ export async function POST(request: Request) {
           tools: vercelAITooles,
           stopWhen: stepCountIs(10),
           toolChoice: "auto",
-          providerOptions: reasoningEffort
-            ? {
-                "openai-compatible": {
-                  reasoningEffort,
-                },
-              }
-            : undefined,
+          providerOptions,
           abortSignal: request.signal,
         });
         result.consumeStream();

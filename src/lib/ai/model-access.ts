@@ -11,9 +11,7 @@ type ModelProviderInfo<TModel extends ModelInfo> = {
 };
 
 export const USER_ALLOWED_CHAT_MODELS = [
-  { provider: "nvidia", model: "thinkingmachines/inkling-low" },
-  { provider: "nvidia", model: "thinkingmachines/inkling-medium" },
-  { provider: "nvidia", model: "thinkingmachines/inkling-high" },
+  { provider: "nvidia", model: "thinkingmachines/inkling" },
   {
     provider: "nvidia",
     model: "mistralai/mistral-small-4-119b-2603",

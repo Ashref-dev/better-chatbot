@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { ChatMention, ChatModel, ChatThread } from "app-types/chat";
+import {
+  ChatMention,
+  ChatModel,
+  ChatThread,
+  ReasoningEffort,
+} from "app-types/chat";
 import { AllowedMCPServer, MCPServerInfo } from "app-types/mcp";
 import { OPENAI_VOICE } from "lib/ai/speech/open-ai/use-voice-chat.openai";
 import { WorkflowSummary } from "app-types/workflow";
@@ -47,6 +52,7 @@ export interface AppState {
     name: string;
   }[];
   chatModel?: ChatModel;
+  reasoningEffort?: ReasoningEffort;
   openShortcutsPopup: boolean;
   openChatPreferences: boolean;
   chatPreferencesTab?: number;
@@ -56,6 +62,7 @@ export interface AppState {
     isOpen: boolean;
     instructions: string;
     chatModel?: ChatModel;
+    reasoningEffort?: ReasoningEffort;
   };
   voiceChat: {
     isOpen: boolean;
@@ -92,6 +99,7 @@ const initialState: AppState = {
   ],
   toolPresets: [],
   chatModel: undefined,
+  reasoningEffort: undefined,
   openShortcutsPopup: false,
   openChatPreferences: false,
   mcpCustomizationPopup: undefined,
@@ -121,6 +129,7 @@ export const appStore = create<AppState & AppDispatch>()(
       name: "mc-app-store-v2.0.1",
       partialize: (state) => ({
         chatModel: state.chatModel || initialState.chatModel,
+        reasoningEffort: state.reasoningEffort,
         toolChoice: state.toolChoice || initialState.toolChoice,
         allowedMcpServers:
           state.allowedMcpServers || initialState.allowedMcpServers,

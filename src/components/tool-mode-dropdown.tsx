@@ -33,13 +33,19 @@ import { useShallow } from "zustand/shallow";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 import { capitalizeFirstLetter, cn, createDebounce } from "lib/utils";
+import { ReasoningEffortSlider } from "./reasoning-effort-slider";
 
 const debounce = createDebounce();
 
 export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
   const t = useTranslations("Chat.Tool");
-  const [toolChoice, appStoreMutate] = appStore(
-    useShallow((state) => [state.toolChoice, state.mutate]),
+  const [toolChoice, chatModel, reasoningEffort, appStoreMutate] = appStore(
+    useShallow((state) => [
+      state.toolChoice,
+      state.chatModel,
+      state.reasoningEffort,
+      state.mutate,
+    ]),
   );
   const [open, setOpen] = useState(false);
 
@@ -95,12 +101,13 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
                   open && "bg-input!",
                 )}
                 onClick={() => setOpen(true)}
+                aria-label="Mode and reasoning"
               >
                 <Settings2 />
               </Button>
             </TooltipTrigger>
             <TooltipContent className="flex items-center gap-2" side="top">
-              {t("selectToolMode")}
+              Mode &amp; reasoning
               <span className="text-muted-foreground ml-2">
                 {getShortcutKeyList(Shortcuts.toolMode).join("")}
               </span>
@@ -108,9 +115,15 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
           </Tooltip>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" side="top">
+      <DropdownMenuContent align="start" side="top" className="w-80">
+        <ReasoningEffortSlider
+          model={chatModel}
+          value={reasoningEffort}
+          onValueChange={(value) => appStoreMutate({ reasoningEffort: value })}
+        />
+        <DropdownMenuSeparator />
         <DropdownMenuLabel className="text-muted-foreground flex items-center gap-2">
-          {t("selectToolMode")}
+          Tool mode
           <DropdownMenuShortcut>
             <span className="text-xs text-muted-foreground bg-muted rounded-md px-2 py-0.5">
               {getShortcutKeyList(Shortcuts.toolMode).join("")}

@@ -120,15 +120,19 @@ export default function PromptInput({
     ]),
   );
 
+  const chatModel = useMemo(() => {
+    return model ?? globalModel;
+  }, [model, globalModel]);
+
   const modelInfo = useMemo(() => {
     const provider = providers?.find(
-      (provider) => provider.provider === globalModel?.provider,
+      (provider) => provider.provider === chatModel?.provider,
     );
     const model = provider?.models.find(
-      (model) => model.name === globalModel?.model,
+      (model) => model.name === chatModel?.model,
     );
     return model;
-  }, [providers, globalModel]);
+  }, [providers, chatModel]);
 
   const supportedFileMimeTypes = modelInfo?.supportedFileMimeTypes;
   const canUploadImages =
@@ -148,10 +152,6 @@ export default function PromptInput({
     if (!threadId) return undefined;
     return threadImageToolModel[threadId];
   }, [threadImageToolModel, threadId]);
-
-  const chatModel = useMemo(() => {
-    return model ?? globalModel;
-  }, [model, globalModel]);
 
   const selectedModelIconProvider = useMemo(() => {
     const provider = providers?.find(

@@ -6,6 +6,7 @@ import {
   OPENAI_FILE_MIME_TYPES,
 } from "./file-support";
 import { USER_ALLOWED_CHAT_MODELS } from "./model-access";
+import { getReasoningEffortSupport } from "./reasoning-effort";
 
 vi.mock("server-only", () => ({}));
 
@@ -46,6 +47,18 @@ describe("customModelProvider file support metadata", () => {
     ]);
   });
 
+  it("enables reasoning effort for every OpenAI GPT model in the catalog", () => {
+    const openaiProvider = modelsModule.customModelProvider.modelsInfo.find(
+      (item) => item.provider === "openai",
+    );
+
+    for (const model of openaiProvider?.models ?? []) {
+      expect(
+        getReasoningEffortSupport({ provider: "openai", model: model.name }),
+      ).toBeDefined();
+    }
+  });
+
   it("keeps NVIDIA Mistral models together", () => {
     const nvidiaProvider = modelsModule.customModelProvider.modelsInfo.find(
       (item) => item.provider === "nvidia",
@@ -55,7 +68,7 @@ describe("customModelProvider file support metadata", () => {
       .map((name, index) => (name.startsWith("mistralai/") ? index : -1))
       .filter((index) => index >= 0);
 
-    expect(mistralIndices).toEqual([8, 9]);
+    expect(mistralIndices).toEqual([5, 6]);
   });
 
   it("updates the NVIDIA model catalog", () => {
@@ -65,9 +78,9 @@ describe("customModelProvider file support metadata", () => {
     const modelNames = nvidiaProvider?.models.map((model) => model.name) ?? [];
 
     expect(modelNames).toContain("thinkingmachines/inkling");
-    expect(modelNames).toContain("thinkingmachines/inkling-low");
-    expect(modelNames).toContain("thinkingmachines/inkling-medium");
-    expect(modelNames).toContain("thinkingmachines/inkling-high");
+    expect(modelNames).not.toContain("thinkingmachines/inkling-low");
+    expect(modelNames).not.toContain("thinkingmachines/inkling-medium");
+    expect(modelNames).not.toContain("thinkingmachines/inkling-high");
     expect(modelNames).toContain("poolside/laguna-xs-2.1");
     expect(modelNames).not.toContain("qwen/qwen3-coder-480b-a35b-instruct");
   });

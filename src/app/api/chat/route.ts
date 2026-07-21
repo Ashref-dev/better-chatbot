@@ -9,7 +9,11 @@ import {
   UIMessage,
 } from "ai";
 
-import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
+import {
+  customModelProvider,
+  getInklingReasoningEffort,
+  isToolCallUnsupportedModel,
+} from "lib/ai/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
@@ -365,6 +369,13 @@ export async function POST(request: Request) {
         }
         logger.info(`model: ${chatModel?.provider}/${chatModel?.model}`);
 
+        const reasoningEffort =
+          getInklingReasoningEffort(chatModel) ??
+          (chatModel?.provider === "nvidia" &&
+          chatModel.model === "deepseek-ai/deepseek-v4-flash"
+            ? "none"
+            : undefined);
+
         const result = streamText({
           model,
           system: systemPrompt,
@@ -374,15 +385,13 @@ export async function POST(request: Request) {
           tools: vercelAITooles,
           stopWhen: stepCountIs(10),
           toolChoice: "auto",
-          providerOptions:
-            chatModel?.provider === "nvidia" &&
-            chatModel.model === "deepseek-ai/deepseek-v4-flash"
-              ? {
-                  "openai-compatible": {
-                    reasoningEffort: "none",
-                  },
-                }
-              : undefined,
+          providerOptions: reasoningEffort
+            ? {
+                "openai-compatible": {
+                  reasoningEffort,
+                },
+              }
+            : undefined,
           abortSignal: request.signal,
         });
         result.consumeStream();

@@ -43,6 +43,33 @@ const nvidia = createOpenAICompatible({
   apiKey: process.env.NVIDIA_API_KEY,
 });
 
+export const INKLING_MODEL_ID = "thinkingmachines/inkling";
+
+export const INKLING_REASONING_EFFORTS = {
+  "thinkingmachines/inkling-low": "minimal",
+  "thinkingmachines/inkling-medium": "medium",
+  "thinkingmachines/inkling-high": "xhigh",
+} as const;
+
+export function getInklingReasoningEffort(model?: ChatModel) {
+  if (model?.provider !== "nvidia") return undefined;
+
+  return INKLING_REASONING_EFFORTS[
+    model.model as keyof typeof INKLING_REASONING_EFFORTS
+  ];
+}
+
+function resolveProviderModelId(provider: string, modelId: string) {
+  if (
+    provider === "nvidia" &&
+    Object.prototype.hasOwnProperty.call(INKLING_REASONING_EFFORTS, modelId)
+  ) {
+    return INKLING_MODEL_ID;
+  }
+
+  return modelId;
+}
+
 // Internal model used for conversation title generation. It is intentionally
 // separate from the visible model catalog and is available to every role.
 export const titleGenerationModel = nvidia("openai/gpt-oss-20b");
@@ -107,7 +134,10 @@ const staticModels = {
     "google/gemma-4-26b-a4b-it": openrouter("google/gemma-4-26b-a4b-it:free"),
   },
   nvidia: {
-    "thinkingmachines/inkling": nvidia("thinkingmachines/inkling"),
+    [INKLING_MODEL_ID]: nvidia(INKLING_MODEL_ID),
+    "thinkingmachines/inkling-low": nvidia(INKLING_MODEL_ID),
+    "thinkingmachines/inkling-medium": nvidia(INKLING_MODEL_ID),
+    "thinkingmachines/inkling-high": nvidia(INKLING_MODEL_ID),
     "deepseek-ai/deepseek-v4-flash": nvidia("deepseek-ai/deepseek-v4-flash"),
     "google/diffusiongemma-26b-a4b-it": nvidia(
       "google/diffusiongemma-26b-a4b-it",
@@ -328,7 +358,11 @@ export const customModelProvider = {
 
     // User has their own API key → create provider with that key
     if (userKey) {
-      return createProviderModel(model.provider, model.model, userKey);
+      return createProviderModel(
+        model.provider,
+        resolveProviderModelId(model.provider, model.model),
+        userKey,
+      );
     }
 
     return allModels[model.provider]?.[model.model] || fallbackModel;

@@ -115,7 +115,11 @@ export const ToolModeDropdown = ({ disabled }: { disabled?: boolean }) => {
           </Tooltip>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" side="top" className="w-80 min-w-0">
+      <DropdownMenuContent
+        align="start"
+        side="top"
+        className="w-auto max-w-[calc(100vw-1rem)]"
+      >
         <ReasoningEffortSlider
           model={chatModel}
           value={reasoningEffort}

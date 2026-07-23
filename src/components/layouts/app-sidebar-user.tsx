@@ -1,51 +1,54 @@
 "use client";
 
+import { appStore } from "@/app/store";
+import { useThemeStyle } from "@/hooks/use-theme-style";
+import { getLocaleAction } from "@/i18n/get-locale";
+import { BasicUser } from "app-types/user";
+import { authClient } from "auth/client";
+import { BASE_THEMES, COOKIE_KEY_LOCALE, SUPPORTED_LOCALES } from "lib/const";
+import { getUserAvatar } from "lib/user/utils";
+import { capitalizeFirstLetter, cn, fetcher } from "lib/utils";
 import {
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenu,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal,
-  DropdownMenuSubContent,
-  DropdownMenuCheckboxItem,
-} from "ui/dropdown-menu";
-import { AvatarFallback, AvatarImage, Avatar } from "ui/avatar";
-import { SidebarMenuButton, SidebarMenuItem, SidebarMenu } from "ui/sidebar";
-import {
+  ChevronRight,
   ChevronsUpDown,
   Command,
-  LogOutIcon,
-  Settings2,
-  Palette,
   Languages,
-  Sun,
+  LogOutIcon,
   MoonStar,
-  ChevronRight,
+  Palette,
   Settings,
+  Settings2,
+  Sun,
 } from "lucide-react";
-import { useTheme } from "next-themes";
-import { appStore } from "@/app/store";
-import { BASE_THEMES, COOKIE_KEY_LOCALE, SUPPORTED_LOCALES } from "lib/const";
-import { capitalizeFirstLetter, cn, fetcher } from "lib/utils";
-import { authClient } from "auth/client";
 import { useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
+import { Suspense, useCallback, useRef } from "react";
 import useSWR from "swr";
-import { getLocaleAction } from "@/i18n/get-locale";
-import { Suspense, useCallback } from "react";
-import { GithubIcon } from "ui/github-icon";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { DiscordIcon } from "ui/discord-icon";
-import { useThemeStyle } from "@/hooks/use-theme-style";
-import { BasicUser } from "app-types/user";
-import { getUserAvatar } from "lib/user/utils";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "ui/dropdown-menu";
+import { GithubIcon } from "ui/github-icon";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "ui/sidebar";
 import { Skeleton } from "ui/skeleton";
 
 export function AppSidebarUserInner(props: {
   user?: BasicUser;
 }) {
+  const pendingPopupRef = useRef<"chatPreferences" | "userSettings" | null>(
+    null,
+  );
   const { data: user } = useSWR<BasicUser>(`/api/user/details`, fetcher, {
     fallbackData: props.user,
     suspense: true,
@@ -93,6 +96,18 @@ export function AppSidebarUserInner(props: {
             side="top"
             className="bg-background w-[--radix-dropdown-menu-trigger-width] min-w-60 rounded-lg"
             align="center"
+            onCloseAutoFocus={(event) => {
+              const pendingPopup = pendingPopupRef.current;
+              if (!pendingPopup) return;
+
+              event.preventDefault();
+              pendingPopupRef.current = null;
+              appStoreMutate(
+                pendingPopup === "chatPreferences"
+                  ? { openChatPreferences: true }
+                  : { openUserSettings: true },
+              );
+            }}
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
@@ -122,7 +137,9 @@ export function AppSidebarUserInner(props: {
 
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => appStoreMutate({ openChatPreferences: true })}
+              onSelect={() => {
+                pendingPopupRef.current = "chatPreferences";
+              }}
             >
               <Settings2 className="size-4 text-foreground" />
               <span>{t("chatPreferences")}</span>
@@ -159,7 +176,9 @@ export function AppSidebarUserInner(props: {
             <DropdownMenuSeparator />
 
             <DropdownMenuItem
-              onClick={() => appStoreMutate({ openUserSettings: true })}
+              onSelect={() => {
+                pendingPopupRef.current = "userSettings";
+              }}
               className="cursor-pointer"
               data-testid="user-settings-menu-item"
             >

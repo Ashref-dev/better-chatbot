@@ -29,13 +29,13 @@ describe("reasoning effort support", () => {
     });
   });
 
-  it("ignores unsupported models and unsupported effort levels", () => {
+  it("clamps unsupported effort levels and ignores unsupported models", () => {
     expect(
       getValidatedReasoningEffort(
         { provider: "openai", model: "gpt-5.6-sol" },
         "xhigh",
       ),
-    ).toBeUndefined();
+    ).toBe("high");
     expect(
       getReasoningProviderOptions(
         { provider: "nvidia", model: "mistralai/mistral-small-4-119b-2603" },

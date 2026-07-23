@@ -1,41 +1,41 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AutoHeight } from "ui/auto-height";
 
 import { appStore } from "@/app/store";
-import { useShallow } from "zustand/shallow";
-import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
+import { authClient } from "auth/client";
+import { hasFullModelAccess } from "lib/ai/model-access";
+import { Shortcuts, isShortcutEvent } from "lib/keyboard-shortcuts";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerPortal,
-  DrawerTitle,
-} from "ui/drawer";
-import {
-  MCPInstructionsContent,
-  UserInstructionsContent,
-  ExportsManagementContent,
-} from "./chat-preferences-content";
-import {
-  UserIcon,
-  X,
-  Share2,
-  Tags,
-  Sparkles,
   Boxes,
   ChevronLeft,
   ChevronRight,
+  Share2,
+  Sparkles,
+  Tags,
+  UserIcon,
+  X,
 } from "lucide-react";
-import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
+import { Button } from "ui/button";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "ui/drawer";
 import { MCPIcon } from "ui/mcp-icon";
-import { ModelLabelsContent } from "./model-labels-content";
+import { useShallow } from "zustand/shallow";
 import { BackgroundEffectsContent } from "./background-effects-content";
+import {
+  ExportsManagementContent,
+  MCPInstructionsContent,
+  UserInstructionsContent,
+} from "./chat-preferences-content";
 import { CustomModelsContent } from "./custom-models-content";
-import { authClient } from "auth/client";
-import { hasFullModelAccess } from "lib/ai/model-access";
+import { ModelLabelsContent } from "./model-labels-content";
 
 type PreferenceTabId =
   | "userInstructions"
@@ -146,79 +146,79 @@ export function ChatPreferencesPopup() {
       direction="top"
       onOpenChange={(open) => appStoreMutate({ openChatPreferences: open })}
     >
-      <DrawerPortal>
-        <DrawerContent
-          style={{
-            userSelect: "text",
-          }}
-          className="max-h-[100vh]! w-full h-full border-none rounded-none flex flex-col bg-card overflow-hidden p-4 md:p-6"
-        >
-          <div className="flex items-center justify-end">
-            <Button variant="ghost" size="icon" onClick={handleClose}>
+      <DrawerContent
+        style={{
+          userSelect: "text",
+        }}
+        className="max-h-[100vh]! w-full h-full border-none rounded-none flex flex-col bg-card overflow-hidden p-4 md:p-6"
+      >
+        <div className="flex items-center justify-end">
+          <DrawerClose asChild>
+            <Button variant="ghost" size="icon">
               <X />
             </Button>
-          </div>
-          <DrawerTitle className="sr-only">Chat Preferences</DrawerTitle>
-          <DrawerDescription className="sr-only" />
+          </DrawerClose>
+        </div>
+        <DrawerTitle className="sr-only">Chat Preferences</DrawerTitle>
+        <DrawerDescription className="sr-only" />
 
-          <div className="flex justify-center">
-            <div className="w-full mt-4 lg:w-5xl lg:mt-14">
-              {/* Mobile: Tabs as horizontal scroll with arrows */}
-              <MobileTabScroller tabs={tabs} tab={tab} setTab={setTab} />
+        <div className="flex justify-center">
+          <div className="w-full mt-4 lg:w-5xl lg:mt-14">
+            {/* Mobile: Tabs as horizontal scroll with arrows */}
+            <MobileTabScroller tabs={tabs} tab={tab} setTab={setTab} />
 
-              <div className="flex flex-1 overflow-hidden">
-                {/* Desktop: Sidebar */}
-                <div className="hidden md:block w-64">
-                  <nav className="px-4 flex flex-col gap-2">
-                    {tabs.map((tabItem, index) => (
-                      <button
-                        key={tabItem.id}
-                        onClick={() => setTab(index)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                          tab === index
-                            ? "bg-primary text-primary-foreground shadow-md"
-                            : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        {tabItem.icon}
-                        <span className="font-medium">{tabItem.label}</span>
-                      </button>
-                    ))}
-                  </nav>
-                </div>
-
-                {/* Content */}
-                <AutoHeight className="flex-1 rounded-lg border max-h-[80vh] overflow-y-auto">
-                  <div className="p-4 md:p-8">
-                    {openChatPreferences && (
-                      <>
-                        {selectedTabId === "userInstructions" && (
-                          <UserInstructionsContent />
-                        )}
-                        {selectedTabId === "mcpInstructions" && (
-                          <MCPInstructionsContent />
-                        )}
-                        {selectedTabId === "exports" && (
-                          <ExportsManagementContent />
-                        )}
-                        {selectedTabId === "modelCatalog" && (
-                          <CustomModelsContent />
-                        )}
-                        {selectedTabId === "modelLabels" && (
-                          <ModelLabelsContent />
-                        )}
-                        {selectedTabId === "backgroundEffects" && (
-                          <BackgroundEffectsContent />
-                        )}
-                      </>
-                    )}
-                  </div>
-                </AutoHeight>
+            <div className="flex flex-1 overflow-hidden">
+              {/* Desktop: Sidebar */}
+              <div className="hidden md:block w-64">
+                <nav className="px-4 flex flex-col gap-2">
+                  {tabs.map((tabItem, index) => (
+                    <button
+                      key={tabItem.id}
+                      onClick={() => setTab(index)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                        tab === index
+                          ? "bg-primary text-primary-foreground shadow-md"
+                          : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {tabItem.icon}
+                      <span className="font-medium">{tabItem.label}</span>
+                    </button>
+                  ))}
+                </nav>
               </div>
+
+              {/* Content */}
+              <AutoHeight className="flex-1 rounded-lg border max-h-[80vh] overflow-y-auto">
+                <div className="p-4 md:p-8">
+                  {openChatPreferences && (
+                    <>
+                      {selectedTabId === "userInstructions" && (
+                        <UserInstructionsContent />
+                      )}
+                      {selectedTabId === "mcpInstructions" && (
+                        <MCPInstructionsContent />
+                      )}
+                      {selectedTabId === "exports" && (
+                        <ExportsManagementContent />
+                      )}
+                      {selectedTabId === "modelCatalog" && (
+                        <CustomModelsContent />
+                      )}
+                      {selectedTabId === "modelLabels" && (
+                        <ModelLabelsContent />
+                      )}
+                      {selectedTabId === "backgroundEffects" && (
+                        <BackgroundEffectsContent />
+                      )}
+                    </>
+                  )}
+                </div>
+              </AutoHeight>
             </div>
           </div>
-        </DrawerContent>
-      </DrawerPortal>
+        </div>
+      </DrawerContent>
     </Drawer>
   );
 }

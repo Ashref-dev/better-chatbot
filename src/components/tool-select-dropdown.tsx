@@ -252,7 +252,7 @@ export function ToolSelectDropdown({
               ) : (
                 <CountAnimation
                   number={bindingTools.length}
-                  className="block text-xs leading-none"
+                  className="block text-[13px] leading-none"
                 />
               )}
             </div>

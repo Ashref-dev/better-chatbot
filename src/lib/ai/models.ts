@@ -103,7 +103,6 @@ const staticModels = {
   },
   openRouter: {
     "openai/gpt-oss-20b:free": openrouter("openai/gpt-oss-20b:free"),
-    "poolside/laguna-xs-2.1:free": openrouter("poolside/laguna-xs-2.1:free"),
     "google/gemma-4-26b-a4b-it:free": openrouter(
       "google/gemma-4-26b-a4b-it:free",
     ),
@@ -114,7 +113,6 @@ const staticModels = {
     "google/diffusiongemma-26b-a4b-it": nvidia(
       "google/diffusiongemma-26b-a4b-it",
     ),
-    "google/gemma-4-31b-it": nvidia("google/gemma-4-31b-it"),
     "minimaxai/minimax-m3": nvidia("minimaxai/minimax-m3"),
     "mistralai/mistral-nemotron": nvidia("mistralai/mistral-nemotron"),
     "mistralai/mistral-small-4-119b-2603": nvidia(
@@ -248,7 +246,6 @@ const fallbackModel = staticModels.openai["gpt-5.6-sol"];
 
 const OPENROUTER_MODEL_ID_ALIASES: Record<string, string> = {
   "gpt-oss-20B": "openai/gpt-oss-20b:free",
-  "poolside/laguna-xs-2.1": "poolside/laguna-xs-2.1:free",
   "google/gemma-4-26b-a4b-it": "google/gemma-4-26b-a4b-it:free",
 };
 

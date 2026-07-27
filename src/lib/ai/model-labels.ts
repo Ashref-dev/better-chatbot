@@ -55,10 +55,6 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
 
   // OpenRouter
   "openai/gpt-oss-20b:free": { label: "GPT OSS", badge: "20B · free" },
-  "poolside/laguna-xs-2.1:free": {
-    label: "Laguna 2.1",
-    badge: "xs · free",
-  },
   "google/gemma-4-26b-a4b-it:free": {
     label: "Gemma 4",
     badge: "26B · free",
@@ -78,8 +74,8 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   "nvidia/nemotron-nano-12b-v2-vl": { label: "Nemotron", badge: "nano" },
   "mistralai/mistral-nemotron": { label: "Mistral", badge: "Nemotron" },
   "mistralai/mistral-small-4-119b-2603": { label: "Mistral 4", badge: "small" },
+  "poolside/laguna-xs-2.1": { label: "Laguna 2.1", badge: "XS" },
   "stepfun-ai/step-3.7-flash": { label: "Step 3.7", badge: "flash" },
-  "google/gemma-4-31b-it": { label: "Gemma 4", badge: "31B" },
   "google/diffusiongemma-26b-a4b-it": {
     label: "Diffusion Gemma",
     badge: "26B",
@@ -127,8 +123,13 @@ export const resolveModelDisplay = (
   }
 
   if (defaultDisplay) {
+    const providerDisplay =
+      provider === "nvidia" && rawModel === "openai/gpt-oss-120b"
+        ? { label: "GPT OSS" }
+        : defaultDisplay;
+
     return {
-      ...defaultDisplay,
+      ...providerDisplay,
       source: "default",
     };
   }

@@ -68,7 +68,7 @@ describe("customModelProvider file support metadata", () => {
       .map((name, index) => (name.startsWith("mistralai/") ? index : -1))
       .filter((index) => index >= 0);
 
-    expect(mistralIndices).toEqual([5, 6]);
+    expect(mistralIndices).toEqual([4, 5]);
   });
 
   it("updates the NVIDIA model catalog", () => {
@@ -81,6 +81,7 @@ describe("customModelProvider file support metadata", () => {
     expect(modelNames).not.toContain("thinkingmachines/inkling-low");
     expect(modelNames).not.toContain("thinkingmachines/inkling-medium");
     expect(modelNames).not.toContain("thinkingmachines/inkling-high");
+    expect(modelNames).not.toContain("google/gemma-4-31b-it");
     expect(modelNames).toContain("poolside/laguna-xs-2.1");
     expect(modelNames).not.toContain("qwen/qwen3-coder-480b-a35b-instruct");
   });

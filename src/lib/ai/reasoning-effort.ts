@@ -2,6 +2,7 @@ import type { ChatModel, ReasoningEffort } from "app-types/chat";
 
 export const REASONING_EFFORT_LABELS: Record<ReasoningEffort, string> = {
   none: "None",
+  on: "On",
   minimal: "Minimal",
   low: "Low",
   medium: "Medium",
@@ -10,10 +11,12 @@ export const REASONING_EFFORT_LABELS: Record<ReasoningEffort, string> = {
 };
 
 type ReasoningProviderOptionKey = "openai" | "openai-compatible";
+type ReasoningOptionMode = "effort" | "thinking-toggle";
 
 export type ReasoningEffortSupport = {
   providerOptionKey: ReasoningProviderOptionKey;
   efforts: readonly ReasoningEffort[];
+  optionMode?: ReasoningOptionMode;
 };
 
 const OPENAI_REASONING_MODEL_IDS = new Set([
@@ -44,6 +47,12 @@ const NEMOTRON_ULTRA_REASONING_SUPPORT = {
 const NEMOTRON_SUPER_REASONING_SUPPORT = {
   providerOptionKey: "openai-compatible",
   efforts: ["none", "low", "high"],
+} as const satisfies ReasoningEffortSupport;
+
+const NEMOTRON_3_NANO_REASONING_SUPPORT = {
+  providerOptionKey: "openai-compatible",
+  efforts: ["none", "on"],
+  optionMode: "thinking-toggle",
 } as const satisfies ReasoningEffortSupport;
 
 export function getReasoningEffortSupport(
@@ -79,6 +88,13 @@ export function getReasoningEffortSupport(
     return NEMOTRON_SUPER_REASONING_SUPPORT;
   }
 
+  if (
+    model.provider === "nvidia" &&
+    model.model === "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+  ) {
+    return NEMOTRON_3_NANO_REASONING_SUPPORT;
+  }
+
   return undefined;
 }
 
@@ -106,6 +122,16 @@ export function getReasoningProviderOptions(
   const validatedEffort = getValidatedReasoningEffort(model, effort);
 
   if (!support || !validatedEffort) return undefined;
+
+  if (support.optionMode === "thinking-toggle") {
+    return {
+      [support.providerOptionKey]: {
+        chat_template_kwargs: {
+          enable_thinking: validatedEffort === "on",
+        },
+      },
+    };
+  }
 
   return {
     [support.providerOptionKey]: {

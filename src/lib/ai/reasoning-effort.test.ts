@@ -59,6 +59,29 @@ describe("reasoning effort support", () => {
     });
   });
 
+  it("maps Nemotron 3 Nano reasoning to the thinking toggle", () => {
+    const model = {
+      provider: "nvidia",
+      model: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+    };
+
+    expect(getReasoningEffortSupport(model)).toEqual({
+      providerOptionKey: "openai-compatible",
+      efforts: ["none", "on"],
+      optionMode: "thinking-toggle",
+    });
+    expect(getReasoningProviderOptions(model, "none")).toEqual({
+      "openai-compatible": {
+        chat_template_kwargs: { enable_thinking: false },
+      },
+    });
+    expect(getReasoningProviderOptions(model, "on")).toEqual({
+      "openai-compatible": {
+        chat_template_kwargs: { enable_thinking: true },
+      },
+    });
+  });
+
   it("clamps unsupported effort levels and ignores unsupported models", () => {
     expect(
       getValidatedReasoningEffort(

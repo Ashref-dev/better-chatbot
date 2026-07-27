@@ -204,7 +204,7 @@ export function ToolSelectDropdown({
               <Separator orientation="vertical" />
             </div>
 
-            <div className="min-w-5 flex items-center justify-center leading-none">
+            <div className="min-w-5 self-stretch flex items-center justify-center leading-none sm:self-center sm:h-auto">
               {isLoading ? (
                 <Loader className="animate-spin size-3.5" />
               ) : (mentions?.length ?? 0) > 0 ? (
@@ -212,7 +212,7 @@ export function ToolSelectDropdown({
               ) : (
                 <CountAnimation
                   number={bindingTools.length}
-                  className="inline-flex items-center text-xs leading-none"
+                  className="block text-xs leading-none"
                 />
               )}
             </div>

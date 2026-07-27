@@ -379,16 +379,10 @@ export async function POST(request: Request) {
         }
         logger.info(`model: ${chatModel?.provider}/${chatModel?.model}`);
 
-        const providerOptions =
-          getReasoningProviderOptions(chatModel, selectedReasoningEffort) ??
-          (chatModel?.provider === "nvidia" &&
-          chatModel.model === "deepseek-ai/deepseek-v4-flash"
-            ? {
-                "openai-compatible": {
-                  reasoningEffort: "none",
-                },
-              }
-            : undefined);
+        const providerOptions = getReasoningProviderOptions(
+          chatModel,
+          selectedReasoningEffort,
+        );
 
         const result = streamText({
           model,

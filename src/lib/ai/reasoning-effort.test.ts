@@ -20,12 +20,40 @@ describe("reasoning effort support", () => {
 
   it("enables Inkling's extra-high reasoning level through NVIDIA", () => {
     expect(
+      getReasoningEffortSupport({
+        provider: "nvidia",
+        model: "thinkingmachines/inkling",
+      }),
+    ).toEqual({
+      providerOptionKey: "openai-compatible",
+      efforts: ["none", "minimal", "low", "medium", "high", "xhigh"],
+    });
+    expect(
       getReasoningProviderOptions(
         { provider: "nvidia", model: "thinkingmachines/inkling" },
         "xhigh",
       ),
     ).toEqual({
       "openai-compatible": { reasoningEffort: "xhigh" },
+    });
+  });
+
+  it("supports DeepSeek V4's none/high reasoning switch", () => {
+    const model = {
+      provider: "nvidia",
+      model: "deepseek-ai/deepseek-v4-flash",
+    };
+
+    expect(getReasoningEffortSupport(model)).toEqual({
+      providerOptionKey: "openai-compatible",
+      efforts: ["none", "high"],
+      defaultEffort: "none",
+    });
+    expect(getReasoningProviderOptions(model, undefined)).toEqual({
+      "openai-compatible": { reasoningEffort: "none" },
+    });
+    expect(getReasoningProviderOptions(model, "high")).toEqual({
+      "openai-compatible": { reasoningEffort: "high" },
     });
   });
 

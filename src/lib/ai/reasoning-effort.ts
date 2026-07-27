@@ -17,6 +17,7 @@ export type ReasoningEffortSupport = {
   providerOptionKey: ReasoningProviderOptionKey;
   efforts: readonly ReasoningEffort[];
   optionMode?: ReasoningOptionMode;
+  defaultEffort?: ReasoningEffort;
 };
 
 const OPENAI_REASONING_MODEL_IDS = new Set([
@@ -36,7 +37,13 @@ const OPENAI_REASONING_SUPPORT = {
 
 const INKLING_REASONING_SUPPORT = {
   providerOptionKey: "openai-compatible",
-  efforts: ["minimal", "low", "medium", "high", "xhigh"],
+  efforts: ["none", "minimal", "low", "medium", "high", "xhigh"],
+} as const satisfies ReasoningEffortSupport;
+
+const DEEPSEEK_V4_REASONING_SUPPORT = {
+  providerOptionKey: "openai-compatible",
+  efforts: ["none", "high"],
+  defaultEffort: "none",
 } as const satisfies ReasoningEffortSupport;
 
 const NEMOTRON_ULTRA_REASONING_SUPPORT = {
@@ -84,6 +91,13 @@ export function getReasoningEffortSupport(
     model.model === "thinkingmachines/inkling"
   ) {
     return INKLING_REASONING_SUPPORT;
+  }
+
+  if (
+    model.provider === "nvidia" &&
+    model.model === "deepseek-ai/deepseek-v4-flash"
+  ) {
+    return DEEPSEEK_V4_REASONING_SUPPORT;
   }
 
   if (
@@ -144,6 +158,7 @@ export function getReasoningProviderOptions(
   const support = getReasoningEffortSupport(model);
   const validatedEffort =
     getValidatedReasoningEffort(model, effort) ??
+    support?.defaultEffort ??
     (support?.optionMode === "thinking-toggle" ||
     support?.optionMode === "thinking-mode"
       ? "none"

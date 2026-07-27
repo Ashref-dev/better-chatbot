@@ -147,7 +147,7 @@ function SelectedToolsPreview({ tools }: SelectedToolsPreviewProps): ReactNode {
           return (
             <span
               key={tool.key}
-              className="relative flex size-5 items-center justify-center rounded-full border border-border/60 bg-background/27 text-foreground shadow-xs backdrop-blur-sm max-sm:size-[18px]"
+              className="relative flex size-5 items-center justify-center rounded-full border border-border/60 bg-background/29 text-foreground shadow-xs backdrop-blur-sm max-sm:size-[18px]"
             >
               <Icon className="size-3 max-sm:size-2.5" />
             </span>

@@ -44,6 +44,21 @@ describe("reasoning effort support", () => {
     });
   });
 
+  it("enables Nemotron Super's none, low, and high levels", () => {
+    const model = {
+      provider: "nvidia",
+      model: "nvidia/nemotron-3-super-120b-a12b",
+    };
+
+    expect(getReasoningEffortSupport(model)).toEqual({
+      providerOptionKey: "openai-compatible",
+      efforts: ["none", "low", "high"],
+    });
+    expect(getReasoningProviderOptions(model, "low")).toEqual({
+      "openai-compatible": { reasoningEffort: "low" },
+    });
+  });
+
   it("clamps unsupported effort levels and ignores unsupported models", () => {
     expect(
       getValidatedReasoningEffort(

@@ -41,6 +41,11 @@ const NEMOTRON_ULTRA_REASONING_SUPPORT = {
   efforts: ["none", "medium", "high"],
 } as const satisfies ReasoningEffortSupport;
 
+const NEMOTRON_SUPER_REASONING_SUPPORT = {
+  providerOptionKey: "openai-compatible",
+  efforts: ["none", "low", "high"],
+} as const satisfies ReasoningEffortSupport;
+
 export function getReasoningEffortSupport(
   model?: ChatModel,
 ): ReasoningEffortSupport | undefined {
@@ -65,6 +70,13 @@ export function getReasoningEffortSupport(
     model.model === "nvidia/nemotron-3-ultra-550b-a55b"
   ) {
     return NEMOTRON_ULTRA_REASONING_SUPPORT;
+  }
+
+  if (
+    model.provider === "nvidia" &&
+    model.model === "nvidia/nemotron-3-super-120b-a12b"
+  ) {
+    return NEMOTRON_SUPER_REASONING_SUPPORT;
   }
 
   return undefined;

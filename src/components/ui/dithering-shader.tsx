@@ -177,11 +177,11 @@ export function DitheringShader({
   const uniformsRef = useRef<Record<string, WebGLUniformLocation | null>>({});
   const startTimeRef = useRef<number>(Date.now());
   const sizeRef = useRef({ w: 1, h: 1 });
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const { background } = useThemeColors();
 
   const bg = colorBack ?? background;
-  const fg = colorFront ?? (theme === "dark" ? "#2a2a4a" : "#d0d0dc");
+  const fg = colorFront ?? (resolvedTheme === "dark" ? "#666666" : "#9a9a9a");
 
   useEffect(() => {
     const canvas = canvasRef.current;

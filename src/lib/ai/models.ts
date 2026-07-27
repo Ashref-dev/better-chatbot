@@ -228,7 +228,7 @@ export const getFilePartSupportedMimeTypes = (model: LanguageModel) => {
   return staticFilePartSupportByModel.get(model) ?? [];
 };
 
-const fallbackModel = staticModels.openai["gpt-5.6-sol"];
+const fallbackModel = staticModels.nvidia["openai/gpt-oss-120b"];
 
 const OPENROUTER_MODEL_ID_ALIASES: Record<string, string> = {
   "gpt-oss-20B": "openai/gpt-oss-20b:free",

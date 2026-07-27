@@ -105,6 +105,29 @@ describe("reasoning effort support", () => {
     });
   });
 
+  it("maps Diffusion Gemma reasoning to the thinking toggle", () => {
+    const model = {
+      provider: "nvidia",
+      model: "google/diffusiongemma-26b-a4b-it",
+    };
+
+    expect(getReasoningEffortSupport(model)).toEqual({
+      providerOptionKey: "openai-compatible",
+      efforts: ["none", "on"],
+      optionMode: "thinking-toggle",
+    });
+    expect(getReasoningProviderOptions(model, undefined)).toEqual({
+      "openai-compatible": {
+        chat_template_kwargs: { enable_thinking: false },
+      },
+    });
+    expect(getReasoningProviderOptions(model, "on")).toEqual({
+      "openai-compatible": {
+        chat_template_kwargs: { enable_thinking: true },
+      },
+    });
+  });
+
   it("clamps unsupported effort levels and ignores unsupported models", () => {
     expect(
       getValidatedReasoningEffort(

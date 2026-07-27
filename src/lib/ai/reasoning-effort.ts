@@ -55,6 +55,12 @@ const NEMOTRON_3_NANO_REASONING_SUPPORT = {
   optionMode: "thinking-toggle",
 } as const satisfies ReasoningEffortSupport;
 
+const DIFFUSION_GEMMA_REASONING_SUPPORT = {
+  providerOptionKey: "openai-compatible",
+  efforts: ["none", "on"],
+  optionMode: "thinking-toggle",
+} as const satisfies ReasoningEffortSupport;
+
 const MINIMAX_M3_REASONING_SUPPORT = {
   providerOptionKey: "openai-compatible",
   efforts: ["none", "on"],
@@ -105,6 +111,13 @@ export function getReasoningEffortSupport(
     return MINIMAX_M3_REASONING_SUPPORT;
   }
 
+  if (
+    model.provider === "nvidia" &&
+    model.model === "google/diffusiongemma-26b-a4b-it"
+  ) {
+    return DIFFUSION_GEMMA_REASONING_SUPPORT;
+  }
+
   return undefined;
 }
 
@@ -129,7 +142,12 @@ export function getReasoningProviderOptions(
   effort: ReasoningEffort | undefined,
 ) {
   const support = getReasoningEffortSupport(model);
-  const validatedEffort = getValidatedReasoningEffort(model, effort);
+  const validatedEffort =
+    getValidatedReasoningEffort(model, effort) ??
+    (support?.optionMode === "thinking-toggle" ||
+    support?.optionMode === "thinking-mode"
+      ? "none"
+      : undefined);
 
   if (!support || !validatedEffort) return undefined;
 

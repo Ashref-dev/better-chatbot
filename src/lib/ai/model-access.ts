@@ -12,10 +12,14 @@ type ModelProviderInfo<TModel extends ModelInfo> = {
 
 export const USER_ALLOWED_CHAT_MODELS = [
   { provider: "nvidia", model: "thinkingmachines/inkling" },
+  { provider: "nvidia", model: "mistralai/mistral-nemotron" },
   {
     provider: "nvidia",
-    model: "mistralai/mistral-small-4-119b-2603",
+    model: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
   },
+  { provider: "nvidia", model: "nvidia/nemotron-3-super-120b-a12b" },
+  { provider: "nvidia", model: "nvidia/nemotron-3-ultra-550b-a55b" },
+  { provider: "nvidia", model: "nvidia/nemotron-nano-12b-v2-vl" },
 ] as const satisfies readonly ChatModel[];
 
 export const MODEL_ACCESS_DENIED_MESSAGE =

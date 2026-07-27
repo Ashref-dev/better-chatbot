@@ -91,7 +91,7 @@ describe("reasoning effort support", () => {
     ).toBe("high");
     expect(
       getReasoningProviderOptions(
-        { provider: "nvidia", model: "mistralai/mistral-small-4-119b-2603" },
+        { provider: "nvidia", model: "mistralai/mistral-nemotron" },
         "high",
       ),
     ).toBeUndefined();

@@ -11,7 +11,11 @@ const providers = [
     provider: "nvidia",
     models: [
       { name: "thinkingmachines/inkling" },
-      { name: "mistralai/mistral-small-4-119b-2603" },
+      { name: "mistralai/mistral-nemotron" },
+      { name: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning" },
+      { name: "nvidia/nemotron-3-super-120b-a12b" },
+      { name: "nvidia/nemotron-3-ultra-550b-a55b" },
+      { name: "nvidia/nemotron-nano-12b-v2-vl" },
       { name: "qwen/qwen3.5-122b-a10b" },
     ],
   },
@@ -28,7 +32,11 @@ describe("model access", () => {
         provider: "nvidia",
         models: [
           { name: "thinkingmachines/inkling" },
-          { name: "mistralai/mistral-small-4-119b-2603" },
+          { name: "mistralai/mistral-nemotron" },
+          { name: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning" },
+          { name: "nvidia/nemotron-3-super-120b-a12b" },
+          { name: "nvidia/nemotron-3-ultra-550b-a55b" },
+          { name: "nvidia/nemotron-nano-12b-v2-vl" },
         ],
       },
     ]);
@@ -46,7 +54,11 @@ describe("model access", () => {
         provider: "nvidia",
         models: [
           { name: "thinkingmachines/inkling" },
-          { name: "mistralai/mistral-small-4-119b-2603" },
+          { name: "mistralai/mistral-nemotron" },
+          { name: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning" },
+          { name: "nvidia/nemotron-3-super-120b-a12b" },
+          { name: "nvidia/nemotron-3-ultra-550b-a55b" },
+          { name: "nvidia/nemotron-nano-12b-v2-vl" },
         ],
         presentation: {
           label: "Models",

@@ -73,7 +73,6 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   "nvidia/nemotron-3-ultra-550b-a55b": { label: "Nemotron 3", badge: "ultra" },
   "nvidia/nemotron-nano-12b-v2-vl": { label: "Nemotron", badge: "nano" },
   "mistralai/mistral-nemotron": { label: "Mistral", badge: "Nemotron" },
-  "mistralai/mistral-small-4-119b-2603": { label: "Mistral 4", badge: "small" },
   "poolside/laguna-xs-2.1": { label: "Laguna 2.1", badge: "XS" },
   "stepfun-ai/step-3.7-flash": { label: "Step 3.7", badge: "flash" },
   "google/diffusiongemma-26b-a4b-it": {

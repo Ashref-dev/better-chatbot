@@ -115,9 +115,6 @@ const staticModels = {
     ),
     "minimaxai/minimax-m3": nvidia("minimaxai/minimax-m3"),
     "mistralai/mistral-nemotron": nvidia("mistralai/mistral-nemotron"),
-    "mistralai/mistral-small-4-119b-2603": nvidia(
-      "mistralai/mistral-small-4-119b-2603",
-    ),
     "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": nvidia(
       "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
     ),

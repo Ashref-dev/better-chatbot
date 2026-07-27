@@ -11,11 +11,7 @@ import {
   createOpenRouter,
   openrouter,
 } from "@openrouter/ai-sdk-provider";
-import {
-  type LanguageModel,
-  extractReasoningMiddleware,
-  wrapLanguageModel,
-} from "ai";
+import { type LanguageModel } from "ai";
 import type { ChatModel } from "app-types/chat";
 import { createOllama } from "ollama-ai-provider-v2";
 import {
@@ -53,18 +49,11 @@ const hermesai = createOpenAICompatible({
   apiKey: "dummy-api-key",
 });
 
-const HERMES_QWEN_MODEL_ID = "Lorbus/Qwen3.6-27B-int4-AutoRound";
-const hermesQwen = wrapLanguageModel({
-  model: hermesai(HERMES_QWEN_MODEL_ID),
-  middleware: extractReasoningMiddleware({
-    tagName: "think",
-    startWithReasoning: true,
-  }),
-});
+const HERMES_MODEL_ID = "solidrust/Hermes-3-Llama-3.1-8B-AWQ";
 
 const staticModels = {
   hermesai: {
-    [HERMES_QWEN_MODEL_ID]: hermesQwen,
+    [HERMES_MODEL_ID]: hermesai(HERMES_MODEL_ID),
   },
   openai: {
     "gpt-5.6-sol": openai("gpt-5.6-sol"),

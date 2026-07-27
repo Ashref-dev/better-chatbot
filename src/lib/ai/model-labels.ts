@@ -82,7 +82,7 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   "z-ai/glm-5.2": { label: "GLM 5.2" },
 
   // HermesAI
-  "Lorbus/Qwen3.6-27B-int4-AutoRound": { label: "Qwen 3.6", badge: "27B" },
+  "solidrust/Hermes-3-Llama-3.1-8B-AWQ": { label: "Hermes 3", badge: "8B" },
 };
 
 export const getDefaultModelDisplay = (

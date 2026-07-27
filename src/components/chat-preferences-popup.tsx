@@ -229,24 +229,20 @@ function DesktopPreferenceTab({
   label: string;
   onSelect: () => void;
 }) {
+  const surfaceClass = active
+    ? "bg-primary"
+    : "bg-transparent group-hover:bg-muted/50";
+
   return (
     <div className="group relative w-full">
-      <svg
+      <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 size-full"
-      >
-        <rect
-          width="100%"
-          height="100%"
-          rx="12"
-          ry="12"
-          className={
-            active
-              ? "fill-primary"
-              : "fill-transparent group-hover:fill-muted/50"
-          }
-        />
-      </svg>
+        className={`pointer-events-none absolute inset-0 rounded-lg ${surfaceClass}`}
+      />
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-y-0 left-3 right-3 ${surfaceClass}`}
+      />
       <button
         type="button"
         aria-current={active ? "page" : undefined}

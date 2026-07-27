@@ -198,7 +198,12 @@ function ToolTriggerContent({
   if (showSelectedTools) {
     return <SelectedToolsPreview tools={selectedTools} />;
   }
-  return <Wrench className="size-3.5 text-muted-foreground opacity-50" />;
+  return (
+    <span className="flex items-center gap-1.5 text-muted-foreground">
+      <Wrench className="size-3.5 opacity-50" />
+      <span className="text-xs opacity-60">No tools</span>
+    </span>
+  );
 }
 
 export function ToolSelectDropdown({

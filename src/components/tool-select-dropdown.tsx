@@ -175,13 +175,20 @@ export function ToolSelectDropdown({
     mcpList,
   ]);
 
+  const hasMention = (mentions?.length ?? 0) > 0;
+  const showCompactMobileTools =
+    !agentMention && !hasMention && bindingTools.length > 0 && !isLoading;
+
   const triggerButton = useMemo(() => {
     return (
       <Button
         variant="ghost"
         size={"sm"}
         className={cn(
-          "gap-0.5 bg-input/60 border rounded-full data-[state=open]:bg-input! hover:bg-input!",
+          "gap-0.5 rounded-full border bg-input/60 transition-[width,background-color,color] duration-200 data-[state=open]:bg-input! hover:bg-input!",
+          showCompactMobileTools
+            ? "max-sm:w-11 max-sm:px-2"
+            : "max-sm:w-16 max-sm:px-2",
           !bindingTools.length &&
             !isLoading &&
             "text-muted-foreground bg-transparent border-transparent",
@@ -190,24 +197,57 @@ export function ToolSelectDropdown({
           className,
         )}
       >
-        <span className={!bindingTools ? "text-muted-foreground" : ""}>
-          {agentMention
-            ? "Agent"
-            : (mentions?.length ?? 0 > 0)
-              ? "Mention"
-              : "Tools"}
+        <span
+          className={cn(
+            "hidden sm:inline-flex",
+            !bindingTools.length && "text-muted-foreground",
+          )}
+        >
+          {agentMention ? "Agent" : hasMention ? "Mention" : "Tools"}
+        </span>
+
+        <span
+          className={cn(
+            "inline-flex items-center sm:hidden",
+            showCompactMobileTools ? "gap-1" : "gap-1.5",
+            !showCompactMobileTools &&
+              !agentMention &&
+              !hasMention &&
+              "text-muted-foreground",
+          )}
+        >
+          {isLoading ? (
+            <Loader className="size-3.5 animate-spin" />
+          ) : agentMention ? (
+            "Agent"
+          ) : hasMention ? (
+            <>
+              Mention
+              <AtSign className="size-3.5" />
+            </>
+          ) : showCompactMobileTools ? (
+            <>
+              <Wrench className="size-3.5" />
+              <CountAnimation
+                number={bindingTools.length}
+                className="block text-xs leading-none"
+              />
+            </>
+          ) : (
+            "Tools"
+          )}
         </span>
 
         {((!agentMention && bindingTools.length > 0) || isLoading) && (
-          <>
-            <div className="h-4 hidden sm:block mx-1">
+          <div className="hidden items-center sm:flex">
+            <div className="mx-1 h-4">
               <Separator orientation="vertical" />
             </div>
 
             <div className="min-w-5 self-stretch flex items-center justify-center leading-none sm:self-center sm:h-auto">
               {isLoading ? (
                 <Loader className="animate-spin size-3.5" />
-              ) : (mentions?.length ?? 0) > 0 ? (
+              ) : hasMention ? (
                 <AtSign className="size-3.5" />
               ) : (
                 <CountAnimation
@@ -216,11 +256,20 @@ export function ToolSelectDropdown({
                 />
               )}
             </div>
-          </>
+          </div>
         )}
       </Button>
     );
-  }, [mentions?.length, bindingTools.length, isLoading, open]);
+  }, [
+    agentMention,
+    bindingTools.length,
+    className,
+    hasMention,
+    isLoading,
+    mentions?.length,
+    open,
+    showCompactMobileTools,
+  ]);
 
   useEffect(() => {
     if (bindingTools.length > 128) {

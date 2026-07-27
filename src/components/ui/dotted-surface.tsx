@@ -13,7 +13,7 @@ export function DottedSurface({
   className,
   performance = false,
 }: DottedSurfaceProps) {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export function DottedSurface({
           0,
           iy * SEPARATION - (AMOUNTY * SEPARATION) / 2,
         );
-        const c = theme === "dark" ? 200 : 0;
+        const c = resolvedTheme === "dark" ? 0.78 : 0.16;
         colors.push(c, c, c);
       }
     }
@@ -126,7 +126,7 @@ export function DottedSurface({
         container.removeChild(renderer.domElement);
       }
     };
-  }, [theme, performance]);
+  }, [resolvedTheme, performance]);
 
   return (
     <div ref={containerRef} className={`w-full h-full ${className ?? ""}`} />

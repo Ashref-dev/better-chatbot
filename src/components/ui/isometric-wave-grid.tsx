@@ -17,7 +17,7 @@ const IsometricWaveGrid = ({
 }: IsometricWaveGridProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -38,7 +38,7 @@ const IsometricWaveGrid = ({
     const mouse = { x: -1000, y: -1000, targetX: -1000, targetY: -1000 };
     let time = 0;
 
-    const rgb = theme === "dark" ? "200, 200, 220" : "40, 40, 60";
+    const rgb = resolvedTheme === "dark" ? "220, 220, 220" : "40, 40, 60";
 
     const resize = () => {
       width = container.offsetWidth;
@@ -120,7 +120,7 @@ const IsometricWaveGrid = ({
       container.removeEventListener("mouseleave", handleMouseLeave);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [theme, speed, density]);
+  }, [resolvedTheme, speed, density]);
 
   return (
     <div

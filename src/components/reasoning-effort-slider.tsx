@@ -49,9 +49,9 @@ export function ReasoningEffortSlider({
 
   return (
     <>
-      <DropdownMenuLabel className="text-muted-foreground">
+      <DropdownMenuLabel className="text-muted-foreground/80">
         <span>Reasoning effort</span>
-        <span className="ml-2 text-xs font-normal text-muted-foreground">
+        <span className="ml-2 text-xs font-normal text-muted-foreground/80">
           {selectedLabel}
         </span>
       </DropdownMenuLabel>
@@ -92,7 +92,7 @@ export function ReasoningEffortSlider({
         />
       </div>
 
-      <div className="mx-2 mt-1 flex justify-between pb-2 text-[10px] text-muted-foreground">
+      <div className="mx-2 mt-1 flex justify-between pb-2 text-[10px] text-muted-foreground/80">
         <span>Default</span>
         <span>{REASONING_EFFORT_LABELS[support.efforts.at(-1)!]}</span>
       </div>

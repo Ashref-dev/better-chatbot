@@ -201,7 +201,9 @@ function ToolTriggerContent({
   return (
     <span className="inline-flex items-center gap-1.5 leading-none text-muted-foreground">
       <Wrench className="size-3.5 shrink-0 opacity-50" />
-      <span className="text-xs leading-none opacity-60">Tools</span>
+      <span className="hidden text-xs leading-none opacity-60 sm:inline">
+        Tools
+      </span>
     </span>
   );
 }

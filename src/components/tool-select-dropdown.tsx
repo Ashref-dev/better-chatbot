@@ -155,7 +155,7 @@ function SelectedToolsPreview({ tools }: SelectedToolsPreviewProps): ReactNode {
         })}
       </span>
       {overflowCount > 0 && (
-        <span className="flex h-5 min-w-4 items-center justify-center text-[11px] leading-none text-muted-foreground tabular-nums max-sm:h-4 max-sm:min-w-3.5 max-sm:text-[10px]">
+        <span className="flex h-5 min-w-4 items-center justify-center text-[11px] leading-none text-muted-foreground tabular-nums max-sm:-ml-0.5 max-sm:h-4 max-sm:min-w-3.5 max-sm:text-[10px]">
           +{overflowCount}
         </span>
       )}

@@ -172,18 +172,13 @@ export function ChatPreferencesPopup() {
               <div className="hidden md:block w-64">
                 <nav className="px-4 flex flex-col gap-2">
                   {tabs.map((tabItem, index) => (
-                    <button
+                    <DesktopPreferenceTab
                       key={tabItem.id}
-                      onClick={() => setTab(index)}
-                      className={`relative isolate flex w-full appearance-none items-center gap-3 rounded-lg border-0 bg-clip-padding px-4 py-3 text-left transition-colors duration-200 ${
-                        tab === index
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {tabItem.icon}
-                      <span className="font-medium">{tabItem.label}</span>
-                    </button>
+                      active={tab === index}
+                      icon={tabItem.icon}
+                      label={tabItem.label}
+                      onSelect={() => setTab(index)}
+                    />
                   ))}
                 </nav>
               </div>
@@ -220,6 +215,46 @@ export function ChatPreferencesPopup() {
         </div>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+function DesktopPreferenceTab({
+  active,
+  icon,
+  label,
+  onSelect,
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onSelect: () => void;
+}) {
+  return (
+    <div
+      className={`group relative isolate w-full overflow-hidden rounded-lg ${
+        active ? "shadow-sm" : ""
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className={`absolute -inset-1 transition-colors duration-200 ${
+          active ? "bg-primary" : "bg-transparent group-hover:bg-muted/50"
+        }`}
+      />
+      <button
+        type="button"
+        aria-current={active ? "page" : undefined}
+        onClick={onSelect}
+        className={`relative z-10 flex w-full appearance-none items-center gap-3 border-0 bg-transparent px-4 py-3 text-left transition-colors duration-200 ${
+          active
+            ? "text-primary-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        {icon}
+        <span className="font-medium">{label}</span>
+      </button>
+    </div>
   );
 }
 

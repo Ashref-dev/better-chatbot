@@ -135,24 +135,27 @@ function SelectedToolsPreview({ tools }: SelectedToolsPreviewProps): ReactNode {
   const overflowCount = tools.length - visibleTools.length;
 
   return (
-    <span className="flex items-center gap-1.5">
-      <Wrench className="size-3.5 text-muted-foreground" />
-      <span aria-hidden="true" className="h-4 w-px bg-border" />
-      <span aria-hidden="true" className="flex items-center -space-x-1.5">
+    <span className="flex items-center gap-1.5 whitespace-nowrap max-sm:gap-1">
+      <Wrench className="size-3.5 text-muted-foreground max-sm:size-3" />
+      <span aria-hidden="true" className="h-4 w-px bg-border max-sm:h-3" />
+      <span
+        aria-hidden="true"
+        className="flex items-center -space-x-1.5 max-sm:-space-x-2.5"
+      >
         {visibleTools.map((tool) => {
           const Icon = tool.icon;
           return (
             <span
               key={tool.key}
-              className="relative flex size-5 items-center justify-center rounded-full border border-border/60 bg-background/35 text-foreground shadow-xs backdrop-blur-sm"
+              className="relative flex size-5 items-center justify-center rounded-full border border-border/60 bg-background/35 text-foreground shadow-xs backdrop-blur-sm max-sm:size-[18px]"
             >
-              <Icon className="size-3" />
+              <Icon className="size-3 max-sm:size-2.5" />
             </span>
           );
         })}
       </span>
       {overflowCount > 0 && (
-        <span className="flex h-5 min-w-4 items-center justify-center text-[11px] leading-none text-muted-foreground tabular-nums">
+        <span className="flex h-5 min-w-4 items-center justify-center text-[11px] leading-none text-muted-foreground tabular-nums max-sm:h-4 max-sm:min-w-3.5 max-sm:text-[10px]">
           +{overflowCount}
         </span>
       )}

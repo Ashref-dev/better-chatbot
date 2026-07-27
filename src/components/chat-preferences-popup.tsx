@@ -230,22 +230,28 @@ function DesktopPreferenceTab({
   onSelect: () => void;
 }) {
   return (
-    <div
-      className={`group relative isolate w-full overflow-hidden rounded-lg ${
-        active ? "shadow-sm" : ""
-      }`}
-    >
-      <span
+    <div className="group relative w-full">
+      <svg
         aria-hidden="true"
-        className={`absolute -inset-1 transition-colors duration-200 ${
-          active ? "bg-primary" : "bg-transparent group-hover:bg-muted/50"
-        }`}
-      />
+        className="pointer-events-none absolute inset-0 size-full"
+      >
+        <rect
+          width="100%"
+          height="100%"
+          rx="12"
+          ry="12"
+          className={
+            active
+              ? "fill-primary"
+              : "fill-transparent group-hover:fill-muted/50"
+          }
+        />
+      </svg>
       <button
         type="button"
         aria-current={active ? "page" : undefined}
         onClick={onSelect}
-        className={`relative z-10 flex w-full appearance-none items-center gap-3 border-0 bg-transparent px-4 py-3 text-left transition-colors duration-200 ${
+        className={`relative flex w-full appearance-none items-center gap-3 border-0 bg-transparent px-4 py-3 text-left ${
           active
             ? "text-primary-foreground"
             : "text-muted-foreground hover:text-foreground"

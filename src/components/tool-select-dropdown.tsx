@@ -199,7 +199,7 @@ export function ToolSelectDropdown({
       >
         <span
           className={cn(
-            "hidden sm:inline-flex",
+            "hidden px-0.5 sm:inline-flex",
             !bindingTools.length && "text-muted-foreground",
           )}
         >

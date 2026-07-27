@@ -230,7 +230,7 @@ export function ToolSelectDropdown({
               <Wrench className="size-3.5" />
               <CountAnimation
                 number={bindingTools.length}
-                className="flex w-4 justify-center text-center text-[13px] leading-none"
+                className="flex h-4 w-4 items-center justify-center text-center text-[13px] leading-4 tabular-nums"
               />
             </>
           ) : (

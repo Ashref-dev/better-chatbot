@@ -54,9 +54,15 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
   "groq/compound": { label: "Compound" },
 
   // OpenRouter
-  "gpt-oss-20B": { label: "GPT OSS", badge: "20B" },
-  "poolside/laguna-xs-2.1": { label: "Laguna 2.1", badge: "xs" },
-  "google/gemma-4-26b-a4b-it": { label: "Gemma 4", badge: "26B" },
+  "openai/gpt-oss-20b:free": { label: "GPT OSS", badge: "20B · free" },
+  "poolside/laguna-xs-2.1:free": {
+    label: "Laguna 2.1",
+    badge: "xs · free",
+  },
+  "google/gemma-4-26b-a4b-it:free": {
+    label: "Gemma 4",
+    badge: "26B · free",
+  },
 
   // NVIDIA (using full model IDs as keys)
   "deepseek-ai/deepseek-v4-flash": { label: "DeepSeek V4", badge: "flash" },

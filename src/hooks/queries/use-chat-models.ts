@@ -8,6 +8,12 @@ import type { ModelProviderPresentation } from "app-types/chat";
 
 const hiddenModelsStorage = getStorageManager<string[]>("hidden-models");
 
+const LEGACY_OPENROUTER_MODEL_IDS: Record<string, string> = {
+  "gpt-oss-20B": "openai/gpt-oss-20b:free",
+  "poolside/laguna-xs-2.1": "poolside/laguna-xs-2.1:free",
+  "google/gemma-4-26b-a4b-it": "google/gemma-4-26b-a4b-it:free",
+};
+
 export const useChatModels = (options?: SWRConfiguration) => {
   // Fetch custom models from DB API
   const { data: customModelsData } = useSWR<CustomModelEntry[]>(
@@ -52,16 +58,30 @@ export const useChatModels = (options?: SWRConfiguration) => {
     fallbackData: [],
     onSuccess: (data) => {
       const status = appStore.getState();
+      const selectedModel = status.chatModel
+        ? {
+            ...status.chatModel,
+            model:
+              status.chatModel.provider === "openRouter"
+                ? (LEGACY_OPENROUTER_MODEL_IDS[status.chatModel.model] ??
+                  status.chatModel.model)
+                : status.chatModel.model,
+          }
+        : undefined;
       const selectedModelIsAvailable = data.some(
         (provider) =>
-          provider.provider === status.chatModel?.provider &&
-          provider.models.some(
-            (model) => model.name === status.chatModel?.model,
-          ),
+          provider.provider === selectedModel?.provider &&
+          provider.models.some((model) => model.name === selectedModel?.model),
       );
       const firstProvider = data.find((provider) => provider.models.length > 0);
 
-      if (!selectedModelIsAvailable && firstProvider) {
+      if (
+        selectedModel &&
+        selectedModelIsAvailable &&
+        selectedModel.model !== status.chatModel?.model
+      ) {
+        appStore.setState({ chatModel: selectedModel });
+      } else if (!selectedModelIsAvailable && firstProvider) {
         appStore.setState({
           chatModel: {
             provider: firstProvider.provider,
@@ -78,18 +98,23 @@ export const useChatModels = (options?: SWRConfiguration) => {
     const providerCustom = customModels.filter(
       (m) => m.provider === providerInfo.provider,
     );
+    const builtInModelIds = new Set(
+      providerInfo.models.map((model) => model.name),
+    );
 
     const allModels =
       providerCustom.length === 0
         ? providerInfo.models
         : [
             ...providerInfo.models,
-            ...providerCustom.map((model) => ({
-              name: model.modelId,
-              isToolCallUnsupported: !model.supportsTools,
-              isImageInputUnsupported: true,
-              supportedFileMimeTypes: [] as string[],
-            })),
+            ...providerCustom
+              .filter((model) => !builtInModelIds.has(model.modelId))
+              .map((model) => ({
+                name: model.modelId,
+                isToolCallUnsupported: !model.supportsTools,
+                isImageInputUnsupported: true,
+                supportedFileMimeTypes: [] as string[],
+              })),
           ];
 
     // Filter out hidden models

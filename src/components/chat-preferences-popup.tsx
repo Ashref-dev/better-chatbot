@@ -229,20 +229,20 @@ function DesktopPreferenceTab({
   label: string;
   onSelect: () => void;
 }) {
-  const surfaceClass = active
-    ? "bg-primary"
-    : "bg-transparent group-hover:bg-muted/50";
+  const surfaceColor = active ? "bg-primary" : "bg-muted";
+  const surfaceOpacity = active
+    ? "opacity-100"
+    : "opacity-0 group-hover:opacity-50";
 
   return (
     <div className="group relative w-full">
-      <span
+      <div
         aria-hidden="true"
-        className={`pointer-events-none absolute inset-0 rounded-lg ${surfaceClass}`}
-      />
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none absolute inset-y-0 left-3 right-3 ${surfaceClass}`}
-      />
+        className={`pointer-events-none absolute inset-0 ${surfaceOpacity}`}
+      >
+        <span className={`absolute inset-0 rounded-lg ${surfaceColor}`} />
+        <span className={`absolute inset-y-0 left-3 right-3 ${surfaceColor}`} />
+      </div>
       <button
         type="button"
         aria-current={active ? "page" : undefined}

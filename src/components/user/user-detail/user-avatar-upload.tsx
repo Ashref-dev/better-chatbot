@@ -127,7 +127,7 @@ export function UserAvatarUpload({
         )}
 
         {/* Edit Button - Bottom Right */}
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <Popover modal open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
             <Button
               size="icon"

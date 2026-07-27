@@ -196,7 +196,7 @@ function ApiKeysSection() {
               className="relative flex items-center gap-3 p-3 border rounded-lg group"
             >
               {isEditing ? (
-                <div className="absolute inset-0 flex items-center gap-2 px-3 bg-background/95 backdrop-blur-sm rounded-lg z-10">
+                <div className="absolute -inset-px flex items-center gap-2 px-3 bg-background/95 backdrop-blur-sm rounded-[13px] z-10">
                   <Input
                     type="text"
                     placeholder={

@@ -11,7 +11,7 @@ export const REASONING_EFFORT_LABELS: Record<ReasoningEffort, string> = {
 };
 
 type ReasoningProviderOptionKey = "openai" | "openai-compatible";
-type ReasoningOptionMode = "effort" | "thinking-toggle";
+type ReasoningOptionMode = "effort" | "thinking-toggle" | "thinking-mode";
 
 export type ReasoningEffortSupport = {
   providerOptionKey: ReasoningProviderOptionKey;
@@ -55,6 +55,12 @@ const NEMOTRON_3_NANO_REASONING_SUPPORT = {
   optionMode: "thinking-toggle",
 } as const satisfies ReasoningEffortSupport;
 
+const MINIMAX_M3_REASONING_SUPPORT = {
+  providerOptionKey: "openai-compatible",
+  efforts: ["none", "on"],
+  optionMode: "thinking-mode",
+} as const satisfies ReasoningEffortSupport;
+
 export function getReasoningEffortSupport(
   model?: ChatModel,
 ): ReasoningEffortSupport | undefined {
@@ -95,6 +101,10 @@ export function getReasoningEffortSupport(
     return NEMOTRON_3_NANO_REASONING_SUPPORT;
   }
 
+  if (model.provider === "nvidia" && model.model === "minimaxai/minimax-m3") {
+    return MINIMAX_M3_REASONING_SUPPORT;
+  }
+
   return undefined;
 }
 
@@ -128,6 +138,16 @@ export function getReasoningProviderOptions(
       [support.providerOptionKey]: {
         chat_template_kwargs: {
           enable_thinking: validatedEffort === "on",
+        },
+      },
+    };
+  }
+
+  if (support.optionMode === "thinking-mode") {
+    return {
+      [support.providerOptionKey]: {
+        chat_template_kwargs: {
+          thinking_mode: validatedEffort === "none" ? "disabled" : "enabled",
         },
       },
     };

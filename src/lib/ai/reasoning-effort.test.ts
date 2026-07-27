@@ -82,6 +82,29 @@ describe("reasoning effort support", () => {
     });
   });
 
+  it("maps MiniMax M3 reasoning to the documented thinking mode", () => {
+    const model = {
+      provider: "nvidia",
+      model: "minimaxai/minimax-m3",
+    };
+
+    expect(getReasoningEffortSupport(model)).toEqual({
+      providerOptionKey: "openai-compatible",
+      efforts: ["none", "on"],
+      optionMode: "thinking-mode",
+    });
+    expect(getReasoningProviderOptions(model, "none")).toEqual({
+      "openai-compatible": {
+        chat_template_kwargs: { thinking_mode: "disabled" },
+      },
+    });
+    expect(getReasoningProviderOptions(model, "on")).toEqual({
+      "openai-compatible": {
+        chat_template_kwargs: { thinking_mode: "enabled" },
+      },
+    });
+  });
+
   it("clamps unsupported effort levels and ignores unsupported models", () => {
     expect(
       getValidatedReasoningEffort(

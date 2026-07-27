@@ -141,5 +141,38 @@ test.describe("User Settings Popup", () => {
 
     // Drawer should close
     await expect(drawer).not.toBeVisible();
+
+    // The dropdown and drawer focus cleanup must not leave the sidebar locked.
+    await page.getByTestId("sidebar-user-button").click();
+    await expect(page.getByTestId("user-settings-menu-item")).toBeVisible();
+  });
+
+  test("should keep the mobile sidebar interactive after closing settings", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    const mobileSidebarToggle = page.getByTestId(
+      "sidebar-header-toggle-mobile",
+    );
+    await mobileSidebarToggle.click();
+    await expect(
+      page.locator('[data-sidebar="sidebar"][data-mobile="true"]'),
+    ).toBeVisible();
+
+    await page.getByTestId("sidebar-user-button").click();
+    await page.getByTestId("user-settings-menu-item").click();
+
+    const drawer = page.getByRole("dialog", { name: "User Settings" });
+    await expect(drawer).toBeVisible();
+    await drawer.getByRole("button").first().click();
+    await expect(drawer).not.toBeVisible();
+
+    await mobileSidebarToggle.click();
+    await expect(
+      page.locator('[data-sidebar="sidebar"][data-mobile="true"]'),
+    ).not.toBeVisible();
   });
 });

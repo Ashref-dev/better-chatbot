@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { Suspense, useCallback, useRef } from "react";
+import { Suspense, useCallback, useEffect, useRef } from "react";
 import useSWR from "swr";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { DiscordIcon } from "ui/discord-icon";
@@ -49,6 +49,9 @@ export function AppSidebarUserInner(props: {
   const pendingPopupRef = useRef<"chatPreferences" | "userSettings" | null>(
     null,
   );
+  const pendingPopupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const { data: user } = useSWR<BasicUser>(`/api/user/details`, fetcher, {
     fallbackData: props.user,
     suspense: true,
@@ -59,6 +62,14 @@ export function AppSidebarUserInner(props: {
   });
   const appStoreMutate = appStore((state) => state.mutate);
   const t = useTranslations("Layout");
+
+  useEffect(() => {
+    return () => {
+      if (pendingPopupTimerRef.current) {
+        clearTimeout(pendingPopupTimerRef.current);
+      }
+    };
+  }, []);
 
   const logout = () => {
     authClient.signOut().finally(() => {
@@ -96,17 +107,19 @@ export function AppSidebarUserInner(props: {
             side="top"
             className="bg-background w-[--radix-dropdown-menu-trigger-width] min-w-60 rounded-lg"
             align="center"
-            onCloseAutoFocus={(event) => {
+            onCloseAutoFocus={() => {
               const pendingPopup = pendingPopupRef.current;
               if (!pendingPopup) return;
 
-              event.preventDefault();
               pendingPopupRef.current = null;
-              appStoreMutate(
-                pendingPopup === "chatPreferences"
-                  ? { openChatPreferences: true }
-                  : { openUserSettings: true },
-              );
+              pendingPopupTimerRef.current = setTimeout(() => {
+                pendingPopupTimerRef.current = null;
+                appStoreMutate(
+                  pendingPopup === "chatPreferences"
+                    ? { openChatPreferences: true }
+                    : { openUserSettings: true },
+                );
+              }, 0);
             }}
           >
             <DropdownMenuLabel className="p-0 font-normal">

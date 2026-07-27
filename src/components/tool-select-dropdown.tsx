@@ -2,7 +2,7 @@
 
 import { appStore } from "@/app/store";
 import { AllowedMCPServer } from "app-types/mcp";
-import { cn, objectFlow } from "lib/utils";
+import { cn } from "lib/utils";
 import {
   ArrowUpRightIcon,
   AtSign,
@@ -23,9 +23,18 @@ import {
   Wrench,
   WrenchIcon,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type ComponentType,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -60,14 +69,12 @@ import { WorkflowSummary } from "app-types/workflow";
 import { WorkflowGreeting } from "./workflow/workflow-greeting";
 import { AppDefaultToolkit } from "lib/ai/tools";
 import { ChatMention } from "app-types/chat";
-import { CountAnimation } from "ui/count-animation";
 import {
   MobileAwareSubmenu,
   MobileSubmenuProvider,
   MobileCompatibleMenuItem,
 } from "ui/mobile-aware-submenu";
 
-import { Separator } from "ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { AgentSummary } from "app-types/agent";
 import { authClient } from "auth/client";
@@ -103,6 +110,93 @@ const calculateToolCount = (
   );
   return mcpToolCount + allowedAppDefaultToolkit.length;
 };
+
+const APP_TOOLKIT_ICONS: Record<AppDefaultToolkit, LucideIcon> = {
+  [AppDefaultToolkit.Visualization]: ChartColumn,
+  [AppDefaultToolkit.WebSearch]: GlobeIcon,
+  [AppDefaultToolkit.Http]: HardDriveUploadIcon,
+  [AppDefaultToolkit.Code]: CodeIcon,
+};
+
+type ToolPreview = {
+  key: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+};
+
+const MotionButton = motion.create(Button);
+
+type SelectedToolsPreviewProps = {
+  tools: ToolPreview[];
+};
+
+function SelectedToolsPreview({ tools }: SelectedToolsPreviewProps): ReactNode {
+  const visibleTools = tools.slice(0, 3);
+  const overflowCount = tools.length - visibleTools.length;
+
+  return (
+    <span className="flex items-center gap-1.5">
+      <Wrench className="size-3.5 text-muted-foreground" />
+      <span aria-hidden="true" className="h-4 w-px bg-border" />
+      <span aria-hidden="true" className="flex items-center -space-x-1.5">
+        {visibleTools.map((tool) => {
+          const Icon = tool.icon;
+          return (
+            <span
+              key={tool.key}
+              className="relative flex size-5 items-center justify-center rounded-full border border-border/60 bg-background/25 text-foreground shadow-xs backdrop-blur-sm"
+            >
+              <Icon className="size-3" />
+            </span>
+          );
+        })}
+      </span>
+      {overflowCount > 0 && (
+        <span className="flex h-5 min-w-4 items-center justify-center text-[11px] leading-none text-muted-foreground tabular-nums">
+          +{overflowCount}
+        </span>
+      )}
+    </span>
+  );
+}
+
+type ToolTriggerContentProps = {
+  isLoading: boolean;
+  isAgentMention: boolean;
+  hasMention: boolean;
+  showSelectedTools: boolean;
+  selectedTools: ToolPreview[];
+};
+
+function ToolTriggerContent({
+  isLoading,
+  isAgentMention,
+  hasMention,
+  showSelectedTools,
+  selectedTools,
+}: ToolTriggerContentProps): ReactNode {
+  if (isLoading) {
+    return (
+      <>
+        <span>Tools</span>
+        <Loader className="size-3.5 animate-spin" />
+      </>
+    );
+  }
+  if (isAgentMention) return "Agent";
+  if (hasMention) {
+    return (
+      <>
+        <span>Mention</span>
+        <AtSign className="size-3.5" />
+      </>
+    );
+  }
+  if (showSelectedTools) {
+    return <SelectedToolsPreview tools={selectedTools} />;
+  }
+  return "Tools";
+}
 
 export function ToolSelectDropdown({
   align,
@@ -148,47 +242,64 @@ export function ToolSelectDropdown({
     return mentions?.find((m) => m.type === "agent");
   }, [mentions]);
 
-  const bindingTools = useMemo<string[]>(() => {
-    if (mentions?.length) {
-      return mentions.map((m) => m.name);
-    }
-    if (toolChoice == "none") return [];
+  const selectedToolPreviews = useMemo<ToolPreview[]>(() => {
+    if (mentions?.length || toolChoice == "none") return [];
+
     const translate = t.raw("defaultToolKit");
     const defaultTools = Object.values(AppDefaultToolkit)
-      .filter((t) => allowedAppDefaultToolkit?.includes(t))
-      .map((t) => translate[t]);
-    const mcpIds = mcpList.map((v) => v.id);
-    const mcpTools = Object.values(
-      objectFlow(allowedMcpServers ?? {}).filter((_, id) =>
-        mcpIds.includes(id),
-      ),
-    )
-      .map((v) => v.tools)
-      .flat();
+      .filter((toolkit) => allowedAppDefaultToolkit?.includes(toolkit))
+      .map((toolkit) => ({
+        key: `default:${toolkit}`,
+        label: translate[toolkit],
+        icon: APP_TOOLKIT_ICONS[toolkit],
+      }));
+
+    const mcpIds = new Set(mcpList.map((server) => server.id));
+    const mcpTools = Object.entries(allowedMcpServers ?? {})
+      .filter(([serverId]) => mcpIds.has(serverId))
+      .flatMap(([serverId, server]) =>
+        server.tools.map((toolName) => ({
+          key: `mcp:${serverId}:${toolName}`,
+          label: toolName,
+          icon: MCPIcon,
+        })),
+      );
 
     return [...defaultTools, ...mcpTools];
   }, [
     mentions,
-    allowedAppDefaultToolkit,
-    allowedMcpServers,
     toolChoice,
+    t,
+    allowedAppDefaultToolkit,
     mcpList,
+    allowedMcpServers,
   ]);
 
+  const bindingTools = useMemo<string[]>(() => {
+    if (mentions?.length) return mentions.map((mention) => mention.name);
+    return selectedToolPreviews.map((tool) => tool.label);
+  }, [mentions, selectedToolPreviews]);
+
   const hasMention = (mentions?.length ?? 0) > 0;
-  const showCompactMobileTools =
+  const showSelectedTools =
     !agentMention && !hasMention && bindingTools.length > 0 && !isLoading;
 
   const triggerButton = useMemo(() => {
     return (
-      <Button
+      <MotionButton
+        aria-label={
+          showSelectedTools
+            ? `${bindingTools.length} tools selected`
+            : undefined
+        }
+        layout="size"
+        transition={{
+          layout: { duration: 0.2, ease: [0.22, 1, 0.36, 1] },
+        }}
         variant="ghost"
         size={"sm"}
         className={cn(
-          "gap-0.5 rounded-full border bg-input/60 transition-[width,background-color,color] duration-200 data-[state=open]:bg-input! hover:bg-input!",
-          showCompactMobileTools
-            ? "max-sm:w-14 max-sm:px-2.5"
-            : "max-sm:w-16 max-sm:px-2",
+          "gap-1.5 rounded-full border bg-input/60 px-2.5 transition-[background-color,color,border-color] duration-200 data-[state=open]:bg-input! hover:bg-input!",
           !bindingTools.length &&
             !isLoading &&
             "text-muted-foreground bg-transparent border-transparent",
@@ -197,68 +308,14 @@ export function ToolSelectDropdown({
           className,
         )}
       >
-        <span
-          className={cn(
-            "hidden sm:inline-flex",
-            !bindingTools.length && "text-muted-foreground",
-          )}
-        >
-          {agentMention ? "Agent" : hasMention ? "Mention" : "Tools"}
-        </span>
-
-        <span
-          className={cn(
-            "inline-flex items-center sm:hidden",
-            "gap-1",
-            !showCompactMobileTools &&
-              !agentMention &&
-              !hasMention &&
-              "text-muted-foreground",
-          )}
-        >
-          {isLoading ? (
-            <Loader className="size-3.5 animate-spin" />
-          ) : agentMention ? (
-            "Agent"
-          ) : hasMention ? (
-            <>
-              Mention
-              <AtSign className="size-3.5" />
-            </>
-          ) : showCompactMobileTools ? (
-            <>
-              <Wrench className="size-3.5" />
-              <CountAnimation
-                number={bindingTools.length}
-                className="relative top-px flex h-4 w-4 items-center justify-center text-center text-[13px] leading-4 tabular-nums"
-              />
-            </>
-          ) : (
-            "Tools"
-          )}
-        </span>
-
-        {((!agentMention && bindingTools.length > 0) || isLoading) && (
-          <div className="hidden items-center sm:flex">
-            <div className="mx-1 h-4">
-              <Separator orientation="vertical" />
-            </div>
-
-            <div className="min-w-5 self-stretch flex items-center justify-center leading-none sm:self-center sm:h-auto">
-              {isLoading ? (
-                <Loader className="animate-spin size-3.5" />
-              ) : hasMention ? (
-                <AtSign className="size-3.5" />
-              ) : (
-                <CountAnimation
-                  number={bindingTools.length}
-                  className="block text-[13px] leading-none"
-                />
-              )}
-            </div>
-          </div>
-        )}
-      </Button>
+        <ToolTriggerContent
+          isLoading={isLoading}
+          isAgentMention={Boolean(agentMention)}
+          hasMention={hasMention}
+          showSelectedTools={showSelectedTools}
+          selectedTools={selectedToolPreviews}
+        />
+      </MotionButton>
     );
   }, [
     agentMention,
@@ -266,9 +323,9 @@ export function ToolSelectDropdown({
     className,
     hasMention,
     isLoading,
-    mentions?.length,
     open,
-    showCompactMobileTools,
+    selectedToolPreviews,
+    showSelectedTools,
   ]);
 
   useEffect(() => {
@@ -936,21 +993,7 @@ function AppDefaultToolKitSelector() {
     return Object.values(AppDefaultToolkit).map((toolkit) => {
       const label = raw[toolkit] || toolkit;
       const id = toolkit;
-      let icon = Wrench;
-      switch (toolkit) {
-        case AppDefaultToolkit.Visualization:
-          icon = ChartColumn;
-          break;
-        case AppDefaultToolkit.WebSearch:
-          icon = GlobeIcon;
-          break;
-        case AppDefaultToolkit.Http:
-          icon = HardDriveUploadIcon;
-          break;
-        case AppDefaultToolkit.Code:
-          icon = CodeIcon;
-          break;
-      }
+      const icon = APP_TOOLKIT_ICONS[toolkit];
       return {
         label,
         id,

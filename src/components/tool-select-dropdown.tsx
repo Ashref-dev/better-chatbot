@@ -136,7 +136,7 @@ function SelectedToolsPreview({ tools }: SelectedToolsPreviewProps): ReactNode {
 
   return (
     <span className="flex items-center gap-1.5 whitespace-nowrap max-sm:gap-1">
-      <Wrench className="size-3.5 text-muted-foreground max-sm:size-3" />
+      <Wrench className="size-3.5 text-muted-foreground" />
       <span aria-hidden="true" className="h-4 w-px bg-border max-sm:h-3" />
       <span
         aria-hidden="true"

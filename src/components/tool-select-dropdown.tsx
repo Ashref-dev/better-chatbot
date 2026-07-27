@@ -209,7 +209,7 @@ export function ToolSelectDropdown({
         <span
           className={cn(
             "inline-flex items-center sm:hidden",
-            "gap-1.5",
+            "gap-1",
             !showCompactMobileTools &&
               !agentMention &&
               !hasMention &&
@@ -230,7 +230,7 @@ export function ToolSelectDropdown({
               <Wrench className="size-3.5" />
               <CountAnimation
                 number={bindingTools.length}
-                className="flex w-4 justify-center text-center text-xs leading-none"
+                className="flex w-4 justify-center text-center text-[13px] leading-none"
               />
             </>
           ) : (

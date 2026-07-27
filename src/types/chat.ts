@@ -20,6 +20,7 @@ export type ChatModel = {
 };
 
 export const ReasoningEffortSchema = z.enum([
+  "none",
   "minimal",
   "low",
   "medium",

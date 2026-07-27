@@ -1,6 +1,7 @@
 import type { ChatModel, ReasoningEffort } from "app-types/chat";
 
 export const REASONING_EFFORT_LABELS: Record<ReasoningEffort, string> = {
+  none: "None",
   minimal: "Minimal",
   low: "Low",
   medium: "Medium",
@@ -35,6 +36,11 @@ const INKLING_REASONING_SUPPORT = {
   efforts: ["minimal", "low", "medium", "high", "xhigh"],
 } as const satisfies ReasoningEffortSupport;
 
+const NEMOTRON_ULTRA_REASONING_SUPPORT = {
+  providerOptionKey: "openai-compatible",
+  efforts: ["none", "medium", "high"],
+} as const satisfies ReasoningEffortSupport;
+
 export function getReasoningEffortSupport(
   model?: ChatModel,
 ): ReasoningEffortSupport | undefined {
@@ -52,6 +58,13 @@ export function getReasoningEffortSupport(
     model.model === "thinkingmachines/inkling"
   ) {
     return INKLING_REASONING_SUPPORT;
+  }
+
+  if (
+    model.provider === "nvidia" &&
+    model.model === "nvidia/nemotron-3-ultra-550b-a55b"
+  ) {
+    return NEMOTRON_ULTRA_REASONING_SUPPORT;
   }
 
   return undefined;

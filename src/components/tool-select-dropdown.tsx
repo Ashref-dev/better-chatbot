@@ -187,7 +187,7 @@ export function ToolSelectDropdown({
         className={cn(
           "gap-0.5 rounded-full border bg-input/60 transition-[width,background-color,color] duration-200 data-[state=open]:bg-input! hover:bg-input!",
           showCompactMobileTools
-            ? "max-sm:w-11 max-sm:px-2"
+            ? "max-sm:w-14 max-sm:px-2.5"
             : "max-sm:w-16 max-sm:px-2",
           !bindingTools.length &&
             !isLoading &&
@@ -209,7 +209,7 @@ export function ToolSelectDropdown({
         <span
           className={cn(
             "inline-flex items-center sm:hidden",
-            showCompactMobileTools ? "gap-1" : "gap-1.5",
+            "gap-1.5",
             !showCompactMobileTools &&
               !agentMention &&
               !hasMention &&

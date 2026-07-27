@@ -18,6 +18,34 @@ describe("reasoning effort support", () => {
     });
   });
 
+  it("enables GPT OSS reasoning levels through OpenRouter and NVIDIA", () => {
+    const support = {
+      providerOptionKey: "openai-compatible",
+      efforts: ["low", "medium", "high"],
+    };
+
+    expect(
+      getReasoningEffortSupport({
+        provider: "openRouter",
+        model: "openai/gpt-oss-20b:free",
+      }),
+    ).toEqual(support);
+    expect(
+      getReasoningEffortSupport({
+        provider: "nvidia",
+        model: "openai/gpt-oss-120b",
+      }),
+    ).toEqual(support);
+    expect(
+      getReasoningProviderOptions(
+        { provider: "openRouter", model: "openai/gpt-oss-20b:free" },
+        "high",
+      ),
+    ).toEqual({
+      "openai-compatible": { reasoningEffort: "high" },
+    });
+  });
+
   it("enables Inkling's extra-high reasoning level through NVIDIA", () => {
     expect(
       getReasoningEffortSupport({

@@ -35,6 +35,11 @@ const OPENAI_REASONING_SUPPORT = {
   efforts: ["minimal", "low", "medium", "high"],
 } as const satisfies ReasoningEffortSupport;
 
+const GPT_OSS_REASONING_SUPPORT = {
+  providerOptionKey: "openai-compatible",
+  efforts: ["low", "medium", "high"],
+} as const satisfies ReasoningEffortSupport;
+
 const INKLING_REASONING_SUPPORT = {
   providerOptionKey: "openai-compatible",
   efforts: ["none", "minimal", "low", "medium", "high", "xhigh"],
@@ -84,6 +89,14 @@ export function getReasoningEffortSupport(
     OPENAI_REASONING_MODEL_IDS.has(model.model)
   ) {
     return OPENAI_REASONING_SUPPORT;
+  }
+
+  if (
+    (model.provider === "openRouter" &&
+      model.model === "openai/gpt-oss-20b:free") ||
+    (model.provider === "nvidia" && model.model === "openai/gpt-oss-120b")
+  ) {
+    return GPT_OSS_REASONING_SUPPORT;
   }
 
   if (

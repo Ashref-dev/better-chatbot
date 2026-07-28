@@ -202,8 +202,8 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
             )}
 
             {/* Quick Stats */}
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border bg-muted/30 p-3 text-center">
+            <div className="grid gap-3 sm:grid-cols-3 min-w-0">
+              <div className="rounded-lg border bg-muted/30 p-3 text-center min-w-0">
                 <p className="text-xs font-medium text-muted-foreground mb-1">
                   {tCommon("conversations")}
                 </p>
@@ -215,7 +215,7 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
                 </p>
               </div>
 
-              <div className="rounded-lg border bg-muted/30 p-3 text-center">
+              <div className="rounded-lg border bg-muted/30 p-3 text-center min-w-0">
                 <p className="text-xs font-medium text-muted-foreground mb-1">
                   {tCommon("avgTokensPerMessage")}
                 </p>
@@ -228,18 +228,21 @@ export function UserStatisticsCard({ stats, view }: UserStatisticsCardProps) {
                 </p>
               </div>
 
-              <div className="rounded-lg border bg-muted/30 p-3 text-center">
+              <div className="rounded-lg border bg-muted/30 p-3 text-center min-w-0">
                 <p className="text-xs font-medium text-muted-foreground mr-1 mb-1">
                   {tCommon("topModel")}
                 </p>
-                <p className="text-lg font-semibold flex items-center justify-center gap-1">
+                <p className="text-lg font-semibold flex items-center justify-center gap-1 min-w-0 max-w-full">
                   {stats.modelStats[0] && (
                     <ModelProviderIcon
                       provider={stats.modelStats[0].provider}
                       className="h-3 w-3 mr-1"
                     />
                   )}
-                  <span className="truncate">
+                  <span
+                    className="block min-w-0 max-w-full overflow-x-auto overflow-y-hidden whitespace-nowrap text-ellipsis scrollbar-thin"
+                    title={stats.modelStats[0]?.model}
+                  >
                     {stats.modelStats[0]?.model || tCommon("notAvailable")}
                   </span>
                 </p>

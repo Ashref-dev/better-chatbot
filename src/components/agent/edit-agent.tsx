@@ -393,50 +393,39 @@ export default function EditAgent({
           </div>
         </div>
 
-        <div className="mt-4 flex min-w-0 flex-col gap-2">
-          <div className="flex flex-col gap-1">
+        <div className="mt-4 flex min-w-0 items-center gap-3 sm:gap-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
             <Label
               htmlFor="agent-name"
               className="text-sm font-medium text-foreground"
             >
               {t("Agent.agentNameLabel")}
             </Label>
-            <p
-              id="agent-name-help"
-              className="text-xs leading-relaxed text-muted-foreground"
-            >
-              {t("Agent.agentNameAndIconLabel")}
-            </p>
-          </div>
-          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-            <div className="min-w-0 flex-1">
-              {false ? (
-                <Skeleton className="w-full h-10" />
-              ) : (
-                <Input
-                  value={agent.name || ""}
-                  onChange={(e) => setAgent({ name: e.target.value })}
-                  autoFocus
-                  aria-describedby="agent-name-help"
-                  disabled={isLoading || !hasEditAccess}
-                  className="hover:bg-input bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
-                  id="agent-name"
-                  data-testid="agent-name-input"
-                  placeholder={t("Agent.agentNamePlaceholder")}
-                  readOnly={!hasEditAccess}
-                />
-              )}
-            </div>
             {false ? (
-              <Skeleton className="size-16 shrink-0" />
+              <Skeleton className="w-full h-10" />
             ) : (
-              <AgentIconPicker
-                icon={agent.icon}
-                disabled={!hasEditAccess}
-                onChange={(icon) => setAgent({ icon })}
+              <Input
+                value={agent.name || ""}
+                onChange={(e) => setAgent({ name: e.target.value })}
+                autoFocus
+                disabled={isLoading || !hasEditAccess}
+                className="hover:bg-input bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
+                id="agent-name"
+                data-testid="agent-name-input"
+                placeholder={t("Agent.agentNamePlaceholder")}
+                readOnly={!hasEditAccess}
               />
             )}
           </div>
+          {false ? (
+            <Skeleton className="size-20 shrink-0" />
+          ) : (
+            <AgentIconPicker
+              icon={agent.icon}
+              disabled={!hasEditAccess}
+              onChange={(icon) => setAgent({ icon })}
+            />
+          )}
         </div>
 
         <div className="flex flex-col gap-2">

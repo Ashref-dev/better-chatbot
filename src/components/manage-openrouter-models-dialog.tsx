@@ -16,7 +16,15 @@ import { useCustomModels } from "@/hooks/use-custom-models";
 import { modelLabelOverridesManager } from "@/lib/ai/model-label-overrides";
 import { useModelLabelOverrides } from "@/hooks/use-model-label-overrides";
 import { resolveModelDisplay } from "@/lib/ai/model-labels";
-import { Trash2, Plus, Loader, ArrowRight } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  Loader,
+  ArrowRight,
+  Pencil,
+  Check,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { appStore } from "@/app/store";
 
@@ -29,13 +37,17 @@ export function ManageOpenRouterModelsDialog({
   open,
   onOpenChange,
 }: ManageOpenRouterModelsDialogProps) {
-  const { models, add, remove, exists } = useCustomModels();
+  const { models, add, remove, exists, mutate } = useCustomModels();
   const overrides = useModelLabelOverrides();
   const [modelId, setModelId] = useState("");
   const [customLabel, setCustomLabel] = useState("");
   const [customBadge, setCustomBadge] = useState("");
   const [supportsTools, setSupportsTools] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingModel, setEditingModel] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editBadge, setEditBadge] = useState("");
+  const [editSupportsTools, setEditSupportsTools] = useState(true);
 
   const handleAdd = async () => {
     if (!modelId.trim()) {
@@ -75,6 +87,69 @@ export function ManageOpenRouterModelsDialog({
     modelLabelOverridesManager.remove(provider, modelIdToRemove);
     await remove(provider, modelIdToRemove);
     toast.success("Model removed");
+  };
+
+  const startEdit = (modelIdToEdit: string) => {
+    const model = models.find(
+      (entry) =>
+        entry.provider === "openRouter" && entry.modelId === modelIdToEdit,
+    );
+    if (!model) return;
+
+    const currentOverride =
+      overrides[`openrouter::${modelIdToEdit.toLowerCase()}`];
+    setEditingModel(modelIdToEdit);
+    setEditLabel(currentOverride?.label || "");
+    setEditBadge(currentOverride?.badge || "");
+    setEditSupportsTools(model.supportsTools);
+  };
+
+  const cancelEdit = () => {
+    setEditingModel(null);
+    setEditLabel("");
+    setEditBadge("");
+    setEditSupportsTools(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editingModel) return;
+
+    if (editLabel.trim() || editBadge.trim()) {
+      modelLabelOverridesManager.set("openRouter", editingModel, {
+        label: editLabel.trim() || undefined,
+        badge: editBadge.trim() || undefined,
+      });
+    } else {
+      modelLabelOverridesManager.remove("openRouter", editingModel);
+    }
+
+    const updatedModels = models.map((model) =>
+      model.provider === "openRouter" && model.modelId === editingModel
+        ? { ...model, supportsTools: editSupportsTools }
+        : model,
+    );
+    const currentModel = models.find(
+      (model) =>
+        model.provider === "openRouter" && model.modelId === editingModel,
+    );
+
+    if (currentModel?.supportsTools !== editSupportsTools) {
+      await mutate(
+        async () => {
+          const response = await fetch("/api/user/custom-models", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedModels),
+          });
+          if (!response.ok) throw new Error("Failed to update custom model");
+          return updatedModels;
+        },
+        { optimisticData: updatedModels, rollbackOnError: true },
+      );
+    }
+
+    cancelEdit();
+    toast.success("Model updated");
   };
 
   const openFullSettings = () => {
@@ -202,6 +277,72 @@ export function ManageOpenRouterModelsDialog({
                         model.modelId,
                         overrides,
                       );
+                      const isEditing = editingModel === model.modelId;
+
+                      if (isEditing) {
+                        return (
+                          <div
+                            key={`${model.provider}:${model.modelId}`}
+                            className="p-2 border rounded-md bg-muted/30 space-y-2"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[10px] text-muted-foreground truncate">
+                                {model.modelId}
+                              </span>
+                              <div className="flex gap-1 shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={saveEdit}
+                                  aria-label="Save model"
+                                  title="Save model"
+                                  className="size-7 text-green-600 hover:text-green-700 hover:bg-green-100"
+                                >
+                                  <Check className="size-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={cancelEdit}
+                                  aria-label="Cancel editing"
+                                  title="Cancel editing"
+                                  className="size-7"
+                                >
+                                  <X className="size-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Input
+                                aria-label="Model label"
+                                placeholder="Label"
+                                value={editLabel}
+                                onChange={(event) =>
+                                  setEditLabel(event.target.value)
+                                }
+                                className="h-8 text-xs"
+                              />
+                              <Input
+                                aria-label="Model subtitle"
+                                placeholder="Subtitle"
+                                value={editBadge}
+                                onChange={(event) =>
+                                  setEditBadge(event.target.value)
+                                }
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <Label className="text-[10px]">Tool calls</Label>
+                              <Switch
+                                checked={editSupportsTools}
+                                onCheckedChange={setEditSupportsTools}
+                              />
+                            </div>
+                          </div>
+                        );
+                      }
+
                       return (
                         <div
                           key={`${model.provider}:${model.modelId}`}
@@ -227,16 +368,30 @@ export function ManageOpenRouterModelsDialog({
                               {model.modelId}
                             </p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              handleRemove(model.provider, model.modelId)
-                            }
-                            className="ml-1 size-7 shrink-0 opacity-0 group-hover/item:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
-                          >
-                            <Trash2 className="size-3" />
-                          </Button>
+                          <div className="flex gap-1 ml-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => startEdit(model.modelId)}
+                              aria-label={`Edit ${display.label}`}
+                              title="Edit model"
+                              className="size-7 sm:opacity-0 sm:group-hover/item:opacity-100 hover:bg-muted transition-all"
+                            >
+                              <Pencil className="size-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                handleRemove(model.provider, model.modelId)
+                              }
+                              aria-label={`Delete ${display.label}`}
+                              title="Delete model"
+                              className="size-7 sm:opacity-0 sm:group-hover/item:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
+                            >
+                              <Trash2 className="size-3" />
+                            </Button>
+                          </div>
                         </div>
                       );
                     })}

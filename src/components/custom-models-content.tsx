@@ -718,7 +718,9 @@ function CustomModelsSection() {
                           onClick={() =>
                             startEdit(model.provider, model.modelId)
                           }
-                          className="opacity-0 group-hover:opacity-100 hover:bg-muted transition-all"
+                          aria-label={`Edit ${display.label}`}
+                          title="Edit model"
+                          className="sm:opacity-0 sm:group-hover:opacity-100 hover:bg-muted transition-all"
                         >
                           <Pencil className="size-3.5" />
                         </Button>
@@ -728,7 +730,9 @@ function CustomModelsSection() {
                           onClick={() =>
                             handleRemove(model.provider, model.modelId)
                           }
-                          className="opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
+                          aria-label={`Delete ${display.label}`}
+                          title="Delete model"
+                          className="sm:opacity-0 sm:group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
                         >
                           <Trash2 className="size-3.5" />
                         </Button>

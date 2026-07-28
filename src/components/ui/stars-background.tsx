@@ -95,15 +95,34 @@ export function StarsBackground({
   const offsetY = useMotionValue(1);
   const springX = useSpring(offsetX, transition);
   const springY = useSpring(offsetY, transition);
+  const orientationBaseline = React.useRef<{
+    beta: number;
+    gamma: number;
+  } | null>(null);
+
+  const getMaxParallax = React.useCallback(() => {
+    return Math.min(window.innerWidth * factor * 0.5, 24);
+  }, [factor]);
 
   const updateParallax = React.useCallback(
     (clientX: number, clientY: number) => {
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
-      offsetX.set(-(clientX - centerX) * factor);
-      offsetY.set(-(clientY - centerY) * factor);
+      const maxOffset = getMaxParallax();
+      offsetX.set(
+        Math.max(
+          -maxOffset,
+          Math.min(maxOffset, -(clientX - centerX) * factor),
+        ),
+      );
+      offsetY.set(
+        Math.max(
+          -maxOffset,
+          Math.min(maxOffset, -(clientY - centerY) * factor),
+        ),
+      );
     },
-    [factor, offsetX, offsetY],
+    [factor, getMaxParallax, offsetX, offsetY],
   );
 
   const handleMouseMove = React.useCallback(
@@ -111,6 +130,33 @@ export function StarsBackground({
       updateParallax(event.clientX, event.clientY);
     },
     [updateParallax],
+  );
+
+  const handleDeviceOrientation = React.useCallback(
+    (event: DeviceOrientationEvent) => {
+      if (event.beta == null || event.gamma == null) return;
+
+      if (!orientationBaseline.current) {
+        orientationBaseline.current = {
+          beta: event.beta,
+          gamma: event.gamma,
+        };
+        return;
+      }
+
+      const maxOffset = getMaxParallax();
+      const deltaX = Math.max(
+        -30,
+        Math.min(30, event.gamma - orientationBaseline.current.gamma),
+      );
+      const deltaY = Math.max(
+        -30,
+        Math.min(30, event.beta - orientationBaseline.current.beta),
+      );
+      offsetX.set(-(deltaX / 30) * maxOffset);
+      offsetY.set(-(deltaY / 30) * maxOffset);
+    },
+    [getMaxParallax, offsetX, offsetY],
   );
 
   React.useEffect(() => {
@@ -121,8 +167,14 @@ export function StarsBackground({
     window.addEventListener("mousemove", handleWindowMouseMove, {
       passive: true,
     });
-    return () => window.removeEventListener("mousemove", handleWindowMouseMove);
-  }, [updateParallax]);
+    window.addEventListener("deviceorientation", handleDeviceOrientation, {
+      passive: true,
+    });
+    return () => {
+      window.removeEventListener("mousemove", handleWindowMouseMove);
+      window.removeEventListener("deviceorientation", handleDeviceOrientation);
+    };
+  }, [handleDeviceOrientation, updateParallax]);
 
   const counts = performance ? [400, 150, 60] : [1000, 400, 200];
 
@@ -134,13 +186,26 @@ export function StarsBackground({
         className,
       )}
       style={{
-        background:
-          "radial-gradient(ellipse at bottom, color-mix(in srgb, var(--foreground) 12%, var(--background)) 0%, var(--background) 100%)",
+        background: "var(--background)",
         ...style,
       }}
       onMouseMove={handleMouseMove}
       {...props}
     >
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 origin-bottom"
+        animate={{ opacity: [0.72, 0.9, 0.72], scale: [1, 1.015, 1] }}
+        transition={{
+          duration: 9,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        style={{
+          background:
+            "radial-gradient(ellipse 90% 58% at 50% 100%, color-mix(in srgb, var(--foreground) 13%, var(--background)) 0%, color-mix(in srgb, var(--foreground) 6%, var(--background)) 38%, transparent 82%)",
+        }}
+      />
       <motion.div style={{ x: springX, y: springY }}>
         <StarLayer
           count={counts[0]}

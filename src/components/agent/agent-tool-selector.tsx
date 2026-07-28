@@ -6,13 +6,13 @@ import { ChatMention } from "app-types/chat";
 import { DefaultToolName } from "lib/ai/tools";
 import { cn, noop } from "lib/utils";
 import equal from "lib/equal";
-import { ChevronDownIcon, HammerIcon, Loader, XIcon } from "lucide-react";
+import { ChevronDownIcon, HammerIcon, Loader } from "lucide-react";
 import { ChatMentionInputSuggestion } from "@/components/chat-mention-input";
 import { DefaultToolIcon } from "@/components/default-tool-icon";
 import { MCPIcon } from "ui/mcp-icon";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
-const MAX_VISIBLE_TOOLS = 6;
+const MAX_VISIBLE_TOOLS = 10;
 
 interface AgentToolSelectorProps {
   mentions: ChatMention[];
@@ -132,9 +132,6 @@ export function AgentToolSelector({
               }}
             >
               <MentionIcon mention={mention} />
-              <span className="absolute -right-0.5 -top-0.5 flex size-3 items-center justify-center rounded-full border border-border bg-background text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 max-sm:opacity-100">
-                <XIcon className="size-2" />
-              </span>
             </button>
           );
         })}

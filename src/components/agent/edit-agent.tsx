@@ -393,9 +393,12 @@ export default function EditAgent({
           </div>
         </div>
 
-        <div className="flex min-w-0 gap-4 mt-4">
+        <div className="mt-4 flex min-w-0 flex-col gap-2 sm:flex-row sm:gap-4">
           <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
-            <Label htmlFor="agent-name">
+            <Label
+              htmlFor="agent-name"
+              className="text-xs font-medium text-muted-foreground"
+            >
               {t("Agent.agentNameAndIconLabel")}
             </Label>
             {false ? (
@@ -426,7 +429,10 @@ export default function EditAgent({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="agent-description">
+          <Label
+            htmlFor="agent-description"
+            className="text-xs font-medium text-muted-foreground"
+          >
             {t("Agent.agentDescriptionLabel")}
           </Label>
           {false ? (
@@ -445,15 +451,17 @@ export default function EditAgent({
           )}
         </div>
 
-        <div className="mt-10 flex items-center gap-2">
-          <p className="text-sm text-muted-foreground">
+        <div className="mt-8 flex items-center gap-2 border-t border-border/60 pt-5">
+          <p className="text-xs text-muted-foreground">
             {t("Agent.agentSettingsDescription")}
           </p>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-6">
-          <div className="flex min-w-0 flex-wrap gap-2 items-center">
-            <span className="shrink-0">{t("Agent.thisAgentIs")}</span>
+        <div className="flex min-w-0 flex-col gap-5">
+          <div className="grid min-w-0 gap-2 text-sm sm:flex sm:flex-wrap sm:items-center">
+            <span className="text-muted-foreground">
+              {t("Agent.thisAgentIs")}
+            </span>
             {false ? (
               <Skeleton className="w-44 h-10" />
             ) : (
@@ -462,7 +470,7 @@ export default function EditAgent({
                 data-testid="agent-role-input"
                 disabled={isLoading || !hasEditAccess}
                 placeholder={t("Agent.agentRolePlaceholder")}
-                className="hover:bg-input placeholder:text-xs bg-secondary/40 w-44 max-w-full transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
+                className="w-full max-w-full border-transparent bg-secondary/40 placeholder:text-xs transition-colors hover:bg-input focus-visible:bg-input! ring-0! sm:w-44"
                 value={agent.instructions?.role || ""}
                 onChange={(e) =>
                   setAgent({
@@ -475,11 +483,14 @@ export default function EditAgent({
                 readOnly={!hasEditAccess}
               />
             )}
-            <span className="shrink-0">{t("Agent.expertIn")}</span>
+            <span className="text-muted-foreground">{t("Agent.expertIn")}</span>
           </div>
 
           <div className="flex gap-2 flex-col">
-            <Label htmlFor="agent-prompt" className="text-base">
+            <Label
+              htmlFor="agent-prompt"
+              className="text-xs font-medium text-muted-foreground"
+            >
               {t("Agent.agentInstructionsLabel")}
             </Label>
             {false ? (
@@ -507,7 +518,10 @@ export default function EditAgent({
           </div>
 
           <div className="flex gap-2 flex-col">
-            <Label htmlFor="agent-tool-bindings" className="text-base">
+            <Label
+              htmlFor="agent-tool-bindings"
+              className="text-xs font-medium text-muted-foreground"
+            >
               {t("Agent.agentToolsLabel")}
             </Label>
             {false ? (

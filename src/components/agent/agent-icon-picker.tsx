@@ -63,7 +63,12 @@ export function AgentIconPicker({
           </Avatar>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="p-0 bg-transparent flex flex-col gap-2 border-none">
+      <DropdownMenuContent
+        align="center"
+        side="top"
+        sideOffset={8}
+        className="flex flex-col gap-2 border-none bg-transparent p-0"
+      >
         <div className="flex gap-2 border rounded-xl p-4 bg-secondary">
           {BACKGROUND_COLORS.map((color, index) => (
             <div

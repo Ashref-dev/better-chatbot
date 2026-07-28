@@ -86,7 +86,7 @@ export function StarsBackground({
   factor = 0.05,
   speed = 50,
   transition = { stiffness: 50, damping: 20 },
-  starColor = "#fff",
+  starColor = "currentColor",
   performance = false,
   ...props
 }: StarsBackgroundProps) {
@@ -95,15 +95,33 @@ export function StarsBackground({
   const springX = useSpring(offsetX, transition);
   const springY = useSpring(offsetY, transition);
 
-  const handleMouseMove = React.useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
+  const updateParallax = React.useCallback(
+    (clientX: number, clientY: number) => {
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
-      offsetX.set(-(event.clientX - centerX) * factor);
-      offsetY.set(-(event.clientY - centerY) * factor);
+      offsetX.set(-(clientX - centerX) * factor);
+      offsetY.set(-(clientY - centerY) * factor);
     },
     [factor, offsetX, offsetY],
   );
+
+  const handleMouseMove = React.useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      updateParallax(event.clientX, event.clientY);
+    },
+    [updateParallax],
+  );
+
+  React.useEffect(() => {
+    const handleWindowMouseMove = (event: MouseEvent) => {
+      updateParallax(event.clientX, event.clientY);
+    };
+
+    window.addEventListener("mousemove", handleWindowMouseMove, {
+      passive: true,
+    });
+    return () => window.removeEventListener("mousemove", handleWindowMouseMove);
+  }, [updateParallax]);
 
   const counts = performance ? [400, 150, 60] : [1000, 400, 200];
 

@@ -359,13 +359,13 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
             )}
 
             <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
-              <div className="w-full h-full bg-linear-to-t from-background to-50% to-transparent z-20" />
+              <div className="pointer-events-none w-full h-full bg-linear-to-t from-background to-50% to-transparent z-20" />
             </div>
             <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
-              <div className="w-full h-full bg-linear-to-l from-background to-20% to-transparent z-20" />
+              <div className="pointer-events-none w-full h-full bg-linear-to-l from-background to-20% to-transparent z-20" />
             </div>
             <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden">
-              <div className="w-full h-full bg-linear-to-r from-background to-20% to-transparent z-20" />
+              <div className="pointer-events-none w-full h-full bg-linear-to-r from-background to-20% to-transparent z-20" />
             </div>
           </motion.div>
         )}

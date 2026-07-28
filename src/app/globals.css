@@ -1579,15 +1579,37 @@ body:hover::-webkit-scrollbar-thumb,
 
 /* Keep the mobile sidebar quick and smooth without changing other sheets. */
 .sidebar-mobile-sheet {
-  --tw-duration: 280ms !important;
-  --tw-ease: cubic-bezier(0.16, 1, 0.3, 1) !important;
-  animation-timing-function: var(--tw-ease) !important;
-  transition-timing-function: var(--tw-ease) !important;
+  --sidebar-motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-timing-function: var(--sidebar-motion-ease) !important;
+  transition-timing-function: var(--sidebar-motion-ease) !important;
   will-change: transform;
 }
 
+.sidebar-mobile-sheet[data-state="open"] {
+  animation-duration: 280ms !important;
+  transition-duration: 280ms !important;
+}
+
 .sidebar-mobile-sheet[data-state="closed"] {
-  --tw-duration: 220ms !important;
+  animation-duration: 220ms !important;
+  transition-duration: 220ms !important;
+}
+
+.sidebar-mobile-overlay {
+  --sidebar-motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-timing-function: var(--sidebar-motion-ease) !important;
+  transition-timing-function: var(--sidebar-motion-ease) !important;
+  will-change: opacity;
+}
+
+.sidebar-mobile-overlay[data-state="open"] {
+  animation-duration: 280ms !important;
+  transition-duration: 280ms !important;
+}
+
+.sidebar-mobile-overlay[data-state="closed"] {
+  animation-duration: 220ms !important;
+  transition-duration: 220ms !important;
 }
 
 html:hover::-webkit-scrollbar-thumb,

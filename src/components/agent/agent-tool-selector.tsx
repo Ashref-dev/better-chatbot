@@ -127,12 +127,12 @@ export function AgentToolSelector({
     >
       <div
         className={cn(
-          "w-full justify-start flex items-center gap-2 px-3 py-4 rounded-md bg-secondary",
+          "w-full min-w-0 justify-start flex items-center gap-2 px-3 py-4 rounded-md bg-secondary",
           hasEditAccess && !disabled && "hover:bg-input cursor-pointer",
         )}
         ref={triggerRef}
       >
-        <div className="flex gap-2 items-center flex-wrap mr-auto">
+        <div className="flex min-w-0 gap-2 items-center flex-wrap mr-auto">
           {isLoading ? (
             <span className="text-sm text-muted-foreground">
               {t("Agent.loadingTools")}

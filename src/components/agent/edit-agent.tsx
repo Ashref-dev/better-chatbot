@@ -316,8 +316,8 @@ export default function EditAgent({
   return (
     <ScrollArea className="h-full w-full relative">
       <div className="w-full h-8 absolute bottom-0 left-0 bg-gradient-to-t from-background to-transparent z-20 pointer-events-none" />
-      <div className="z-10 relative flex flex-col gap-4 px-8 pt-8 pb-14 max-w-3xl h-full mx-auto">
-        <div className="sticky top-0 bg-background z-10 flex items-center justify-between pb-4 gap-2">
+      <div className="z-10 relative flex min-w-0 flex-col gap-4 px-4 pt-8 pb-14 sm:px-8 max-w-3xl h-full mx-auto">
+        <div className="sticky top-0 bg-background z-10 flex flex-col items-stretch pb-4 gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
           <div className="w-full h-8 absolute top-[100%] left-0 bg-gradient-to-b from-background to-transparent z-20 pointer-events-none" />
           {isGenerating ? (
             <TextShimmer className="w-full text-2xl font-bold">
@@ -327,13 +327,14 @@ export default function EditAgent({
             <p className="w-full text-2xl font-bold">{t("Agent.title")}</p>
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
             {hasEditAccess && !initialAgent && (
               <>
                 <Button
                   variant="ghost"
                   disabled={isLoading}
                   onClick={() => setOpenGenerateAgentDialog(true)}
+                  className="w-full sm:w-auto"
                   data-testid="agent-generate-with-ai-button"
                 >
                   <WandSparklesIcon className="size-3" />
@@ -392,8 +393,8 @@ export default function EditAgent({
           </div>
         </div>
 
-        <div className="flex gap-4 mt-4">
-          <div className="flex flex-col justify-between gap-2 flex-1">
+        <div className="flex min-w-0 gap-4 mt-4">
+          <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
             <Label htmlFor="agent-name">
               {t("Agent.agentNameAndIconLabel")}
             </Label>
@@ -450,9 +451,9 @@ export default function EditAgent({
           </p>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <div className="flex gap-2 items-center">
-            <span>{t("Agent.thisAgentIs")}</span>
+        <div className="flex min-w-0 flex-col gap-6">
+          <div className="flex min-w-0 flex-wrap gap-2 items-center">
+            <span className="shrink-0">{t("Agent.thisAgentIs")}</span>
             {false ? (
               <Skeleton className="w-44 h-10" />
             ) : (
@@ -461,7 +462,7 @@ export default function EditAgent({
                 data-testid="agent-role-input"
                 disabled={isLoading || !hasEditAccess}
                 placeholder={t("Agent.agentRolePlaceholder")}
-                className="hover:bg-input placeholder:text-xs bg-secondary/40 w-44 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
+                className="hover:bg-input placeholder:text-xs bg-secondary/40 w-44 max-w-full transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
                 value={agent.instructions?.role || ""}
                 onChange={(e) =>
                   setAgent({
@@ -474,7 +475,7 @@ export default function EditAgent({
                 readOnly={!hasEditAccess}
               />
             )}
-            <span>{t("Agent.expertIn")}</span>
+            <span className="shrink-0">{t("Agent.expertIn")}</span>
           </div>
 
           <div className="flex gap-2 flex-col">

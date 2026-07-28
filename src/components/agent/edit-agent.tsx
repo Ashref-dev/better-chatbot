@@ -327,14 +327,14 @@ export default function EditAgent({
             <p className="w-full text-2xl font-bold">{t("Agent.title")}</p>
           )}
 
-          <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
             {hasEditAccess && !initialAgent && (
               <>
                 <Button
                   variant="ghost"
                   disabled={isLoading}
                   onClick={() => setOpenGenerateAgentDialog(true)}
-                  className="w-full sm:w-auto"
+                  className="h-8 min-w-0 gap-1.5 px-2 text-[11px] sm:w-auto sm:px-3 sm:text-sm"
                   data-testid="agent-generate-with-ai-button"
                 >
                   <WandSparklesIcon className="size-3" />
@@ -344,7 +344,7 @@ export default function EditAgent({
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
-                      className="justify-between data-[state=open]:bg-input"
+                      className="h-8 w-full min-w-0 justify-between gap-1.5 px-2 text-[11px] data-[state=open]:bg-input sm:w-auto sm:px-3 sm:text-sm"
                       disabled={isLoading}
                       data-testid="agent-create-with-example-button"
                     >
@@ -393,48 +393,64 @@ export default function EditAgent({
           </div>
         </div>
 
-        <div className="mt-4 flex min-w-0 flex-col gap-2 sm:flex-row sm:gap-4">
-          <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
+        <div className="mt-4 flex min-w-0 flex-col gap-2">
+          <div className="flex flex-col gap-1">
             <Label
               htmlFor="agent-name"
-              className="text-xs font-medium text-muted-foreground"
+              className="text-sm font-medium text-foreground"
+            >
+              {t("Agent.agentNameLabel")}
+            </Label>
+            <p
+              id="agent-name-help"
+              className="text-xs leading-relaxed text-muted-foreground"
             >
               {t("Agent.agentNameAndIconLabel")}
-            </Label>
+            </p>
+          </div>
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+            <div className="min-w-0 flex-1">
+              {false ? (
+                <Skeleton className="w-full h-10" />
+              ) : (
+                <Input
+                  value={agent.name || ""}
+                  onChange={(e) => setAgent({ name: e.target.value })}
+                  autoFocus
+                  aria-describedby="agent-name-help"
+                  disabled={isLoading || !hasEditAccess}
+                  className="hover:bg-input bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
+                  id="agent-name"
+                  data-testid="agent-name-input"
+                  placeholder={t("Agent.agentNamePlaceholder")}
+                  readOnly={!hasEditAccess}
+                />
+              )}
+            </div>
             {false ? (
-              <Skeleton className="w-full h-10" />
+              <Skeleton className="size-16 shrink-0" />
             ) : (
-              <Input
-                value={agent.name || ""}
-                onChange={(e) => setAgent({ name: e.target.value })}
-                autoFocus
-                disabled={isLoading || !hasEditAccess}
-                className="hover:bg-input bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
-                id="agent-name"
-                data-testid="agent-name-input"
-                placeholder={t("Agent.agentNamePlaceholder")}
-                readOnly={!hasEditAccess}
+              <AgentIconPicker
+                icon={agent.icon}
+                disabled={!hasEditAccess}
+                onChange={(icon) => setAgent({ icon })}
               />
             )}
           </div>
-          {false ? (
-            <Skeleton className="w-16 h-16" />
-          ) : (
-            <AgentIconPicker
-              icon={agent.icon}
-              disabled={!hasEditAccess}
-              onChange={(icon) => setAgent({ icon })}
-            />
-          )}
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label
-            htmlFor="agent-description"
-            className="text-xs font-medium text-muted-foreground"
-          >
-            {t("Agent.agentDescriptionLabel")}
-          </Label>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="agent-description">
+              {t("Agent.agentDescriptionTitle")}
+            </Label>
+            <p
+              id="agent-description-help"
+              className="text-xs leading-relaxed text-muted-foreground"
+            >
+              {t("Agent.agentDescriptionLabel")}
+            </p>
+          </div>
           {false ? (
             <Skeleton className="w-full h-10" />
           ) : (
@@ -442,6 +458,7 @@ export default function EditAgent({
               id="agent-description"
               data-testid="agent-description-input"
               disabled={isLoading || !hasEditAccess}
+              aria-describedby="agent-description-help"
               placeholder={t("Agent.agentDescriptionPlaceholder")}
               className="hover:bg-input placeholder:text-xs bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
               value={agent.description || ""}
@@ -451,17 +468,26 @@ export default function EditAgent({
           )}
         </div>
 
-        <div className="mt-8 flex items-center gap-2 border-t border-border/60 pt-5">
-          <p className="text-xs text-muted-foreground">
+        <div className="mt-6 flex flex-col gap-1 border-t border-border/60 pt-5">
+          <p className="text-sm font-medium text-foreground">
+            {t("Agent.agentSettingsTitle")}
+          </p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
             {t("Agent.agentSettingsDescription")}
           </p>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-5">
-          <div className="grid min-w-0 gap-2 text-sm sm:flex sm:flex-wrap sm:items-center">
-            <span className="text-muted-foreground">
-              {t("Agent.thisAgentIs")}
-            </span>
+        <div className="flex min-w-0 flex-col gap-6">
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="agent-role">{t("Agent.agentRoleLabel")}</Label>
+              <p
+                id="agent-role-help"
+                className="text-xs leading-relaxed text-muted-foreground"
+              >
+                {t("Agent.thisAgentIs")} {t("Agent.expertIn")}
+              </p>
+            </div>
             {false ? (
               <Skeleton className="w-44 h-10" />
             ) : (
@@ -469,8 +495,9 @@ export default function EditAgent({
                 id="agent-role"
                 data-testid="agent-role-input"
                 disabled={isLoading || !hasEditAccess}
+                aria-describedby="agent-role-help"
                 placeholder={t("Agent.agentRolePlaceholder")}
-                className="w-full max-w-full border-transparent bg-secondary/40 placeholder:text-xs transition-colors hover:bg-input focus-visible:bg-input! ring-0! sm:w-44"
+                className="w-full max-w-full border-transparent bg-secondary/40 placeholder:text-xs transition-colors hover:bg-input focus-visible:bg-input! ring-0!"
                 value={agent.instructions?.role || ""}
                 onChange={(e) =>
                   setAgent({
@@ -483,16 +510,20 @@ export default function EditAgent({
                 readOnly={!hasEditAccess}
               />
             )}
-            <span className="text-muted-foreground">{t("Agent.expertIn")}</span>
           </div>
 
-          <div className="flex gap-2 flex-col">
-            <Label
-              htmlFor="agent-prompt"
-              className="text-xs font-medium text-muted-foreground"
-            >
-              {t("Agent.agentInstructionsLabel")}
-            </Label>
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="agent-prompt">
+                {t("Agent.agentInstructionsTitle")}
+              </Label>
+              <p
+                id="agent-prompt-help"
+                className="text-xs leading-relaxed text-muted-foreground"
+              >
+                {t("Agent.agentInstructionsLabel")}
+              </p>
+            </div>
             {false ? (
               <Skeleton className="w-full h-48" />
             ) : (
@@ -501,8 +532,9 @@ export default function EditAgent({
                 data-testid="agent-prompt-textarea"
                 ref={textareaRef}
                 disabled={isLoading || !hasEditAccess}
+                aria-describedby="agent-prompt-help"
                 placeholder={t("Agent.agentInstructionsPlaceholder")}
-                className="p-6 hover:bg-input min-h-48 max-h-96 overflow-y-auto resize-none placeholder:text-xs bg-secondary/40 transition-colors border-transparent border-none! focus-visible:bg-input! ring-0!"
+                className="min-h-48 max-h-96 resize-none overflow-y-auto border-transparent bg-secondary/40 p-4 placeholder:text-xs transition-colors hover:bg-input focus-visible:bg-input! ring-0! sm:p-6"
                 value={agent.instructions?.systemPrompt || ""}
                 onChange={(e) =>
                   setAgent({
@@ -517,13 +549,18 @@ export default function EditAgent({
             )}
           </div>
 
-          <div className="flex gap-2 flex-col">
-            <Label
-              htmlFor="agent-tool-bindings"
-              className="text-xs font-medium text-muted-foreground"
-            >
-              {t("Agent.agentToolsLabel")}
-            </Label>
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="agent-tool-bindings">
+                {t("Agent.agentToolsTitle")}
+              </Label>
+              <p
+                id="agent-tools-help"
+                className="text-xs leading-relaxed text-muted-foreground"
+              >
+                {t("Agent.agentToolsLabel")}
+              </p>
+            </div>
             {false ? (
               <Skeleton className="w-full h-12" />
             ) : (

@@ -12,12 +12,43 @@ import { DefaultToolIcon } from "@/components/default-tool-icon";
 import { MCPIcon } from "ui/mcp-icon";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
+const MAX_VISIBLE_TOOLS = 6;
+
 interface AgentToolSelectorProps {
   mentions: ChatMention[];
   isLoading?: boolean;
   disabled?: boolean;
   hasEditAccess?: boolean;
   onChange: (mentions: ChatMention[]) => void;
+}
+
+function MentionIcon({ mention }: { mention: ChatMention }) {
+  if (mention.type === "defaultTool") {
+    return (
+      <DefaultToolIcon
+        name={mention.name as DefaultToolName}
+        className="size-3.5"
+      />
+    );
+  }
+
+  if (mention.type === "mcpServer" || mention.type === "mcpTool") {
+    return <MCPIcon className="size-3.5" />;
+  }
+
+  if (mention.type === "workflow") {
+    return (
+      <Avatar
+        style={mention.icon?.style}
+        className="size-4 rounded-full ring-1 ring-input"
+      >
+        <AvatarImage src={mention.icon?.value} />
+        <AvatarFallback>{mention.name.slice(0, 1)}</AvatarFallback>
+      </Avatar>
+    );
+  }
+
+  return <HammerIcon className="size-3.5" />;
 }
 
 export function AgentToolSelector({
@@ -64,52 +95,57 @@ export function AgentToolSelector({
   }, [mentions]);
 
   const selectedMentions = useMemo(() => {
-    return mentions.map((m, i) => (
+    const visibleMentions = mentions.slice(0, MAX_VISIBLE_TOOLS);
+    const overflowCount = mentions.length - visibleMentions.length;
+
+    return (
       <div
-        key={i}
-        className={cn(
-          "text-xs flex items-center gap-1 px-2 py-1 rounded-sm bg-background",
-          hasEditAccess &&
-            "hover:ring hover:ring-destructive group cursor-pointer",
-        )}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (hasEditAccess) {
-            handleDeleteMention(m);
-          }
-        }}
+        className="flex min-w-0 items-center -space-x-2 py-0.5"
+        aria-label={`${mentions.length} selected`}
       >
-        <div className="p-0.5">
-          {m.type === "defaultTool" ? (
-            <DefaultToolIcon
-              name={m.name as DefaultToolName}
-              className="size-3"
-            />
-          ) : m.type === "mcpServer" ? (
-            <MCPIcon className="size-3" />
-          ) : m.type === "workflow" ? (
-            <Avatar
-              style={m.icon?.style}
-              className="size-3 ring-[1px] ring-input rounded-full"
+        {visibleMentions.map((mention) => {
+          const key = JSON.stringify(mention);
+          const chipClassName = cn(
+            "relative flex size-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-background/80 text-foreground shadow-sm backdrop-blur-sm transition-[transform,border-color,background-color]",
+            hasEditAccess &&
+              "group cursor-pointer hover:z-10 hover:scale-105 hover:border-destructive/50 hover:bg-background focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          );
+
+          if (!hasEditAccess) {
+            return (
+              <span key={key} className={chipClassName} title={mention.name}>
+                <MentionIcon mention={mention} />
+              </span>
+            );
+          }
+
+          return (
+            <button
+              key={key}
+              type="button"
+              className={chipClassName}
+              title={mention.name}
+              aria-label={`${t("Common.delete")} ${mention.name}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleDeleteMention(mention);
+              }}
             >
-              <AvatarImage src={m.icon?.value} />
-              <AvatarFallback>{m.name.slice(0, 1)}</AvatarFallback>
-            </Avatar>
-          ) : (
-            <HammerIcon className="size-3" />
-          )}
-        </div>
-
-        {m.name}
-
-        {hasEditAccess && (
-          <span className="ml-2">
-            <XIcon className="size-2.5 text-muted-foreground group-hover:text-destructive" />
+              <MentionIcon mention={mention} />
+              <span className="absolute -right-0.5 -top-0.5 flex size-3 items-center justify-center rounded-full border border-border bg-background text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 max-sm:opacity-100">
+                <XIcon className="size-2" />
+              </span>
+            </button>
+          );
+        })}
+        {overflowCount > 0 && (
+          <span className="relative z-10 flex h-8 min-w-8 items-center justify-center rounded-full border border-border/70 bg-muted px-1.5 text-[10px] font-medium text-muted-foreground shadow-sm tabular-nums">
+            +{overflowCount}
           </span>
         )}
       </div>
-    ));
-  }, [mentions, hasEditAccess, handleDeleteMention]);
+    );
+  }, [mentions, hasEditAccess, handleDeleteMention, t]);
 
   return (
     <ChatMentionInputSuggestion
@@ -127,17 +163,19 @@ export function AgentToolSelector({
     >
       <div
         className={cn(
-          "w-full min-w-0 justify-start flex items-center gap-2 px-3 py-4 rounded-md bg-secondary",
+          "flex min-h-14 w-full min-w-0 items-center justify-start gap-3 rounded-md bg-secondary px-3 py-2.5 transition-colors",
           hasEditAccess && !disabled && "hover:bg-input cursor-pointer",
         )}
         ref={triggerRef}
+        id="agent-tool-bindings"
+        aria-describedby="agent-tools-help"
       >
-        <div className="flex min-w-0 gap-2 items-center flex-wrap mr-auto">
+        <div className="mr-auto flex min-w-0 items-center">
           {isLoading ? (
             <span className="text-sm text-muted-foreground">
               {t("Agent.loadingTools")}
             </span>
-          ) : selectedMentions.length === 0 ? (
+          ) : mentions.length === 0 ? (
             <span className="text-sm text-muted-foreground">
               {t("Agent.addTools")}
             </span>

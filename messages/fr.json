@@ -269,6 +269,12 @@
   "Agent": {
     "title": "Agent",
     "generatingAgent": "Génération de l'Agent...",
+    "agentNameLabel": "Nom et icône",
+    "agentDescriptionTitle": "Description",
+    "agentSettingsTitle": "Comportement",
+    "agentRoleLabel": "Expertise",
+    "agentInstructionsTitle": "Instructions",
+    "agentToolsTitle": "Outils",
     "agentNameAndIconLabel": "Donnez un nom et une icône à votre agent.",
     "agentDescriptionLabel": "Ajoutez une brève description de ce que fait cet agent.",
     "agentDescriptionPlaceholder": "Ceci n'est qu'une description de l'agent, ce n'est pas critique.",

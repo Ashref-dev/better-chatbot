@@ -283,6 +283,12 @@
   "Agent": {
     "title": "에이전트",
     "generatingAgent": "에이전트 생성 중...",
+    "agentNameLabel": "이름 및 아이콘",
+    "agentDescriptionTitle": "설명",
+    "agentSettingsTitle": "동작",
+    "agentRoleLabel": "전문 분야",
+    "agentInstructionsTitle": "지침",
+    "agentToolsTitle": "도구",
     "agentNameAndIconLabel": "에이전트에게 이름과 아이콘을 붙여주세요.",
     "agentDescriptionLabel": "이 에이전트의 용도에 대한 짧은 설명을 추가해주세요.",
     "agentDescriptionPlaceholder": "이 내용은 에이전트에 대한 설명일 뿐, 중요하지 않아요.",

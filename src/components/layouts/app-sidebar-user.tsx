@@ -40,7 +40,12 @@ import {
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { GithubIcon } from "ui/github-icon";
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "ui/sidebar";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "ui/sidebar";
 import { Skeleton } from "ui/skeleton";
 
 export function AppSidebarUserInner(props: {
@@ -61,6 +66,7 @@ export function AppSidebarUserInner(props: {
     refreshInterval: 1000 * 60 * 10,
   });
   const appStoreMutate = appStore((state) => state.mutate);
+  const { isMobile, setOpenMobile } = useSidebar();
   const t = useTranslations("Layout");
 
   useEffect(() => {
@@ -107,11 +113,21 @@ export function AppSidebarUserInner(props: {
             side="top"
             className="bg-background w-[--radix-dropdown-menu-trigger-width] min-w-60 rounded-lg"
             align="center"
-            onCloseAutoFocus={() => {
+            onCloseAutoFocus={(event) => {
               const pendingPopup = pendingPopupRef.current;
               if (!pendingPopup) return;
 
               pendingPopupRef.current = null;
+              if (isMobile) {
+                event.preventDefault();
+                setOpenMobile(false);
+                appStoreMutate(
+                  pendingPopup === "chatPreferences"
+                    ? { openChatPreferences: true }
+                    : { openUserSettings: true },
+                );
+                return;
+              }
               pendingPopupTimerRef.current = setTimeout(() => {
                 pendingPopupTimerRef.current = null;
                 appStoreMutate(
@@ -150,6 +166,7 @@ export function AppSidebarUserInner(props: {
 
             <DropdownMenuItem
               className="cursor-pointer"
+              data-testid="chat-preferences-menu-item"
               onSelect={() => {
                 pendingPopupRef.current = "chatPreferences";
               }}

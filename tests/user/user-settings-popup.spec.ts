@@ -154,9 +154,7 @@ test.describe("User Settings Popup", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    const mobileSidebarToggle = page.getByTestId(
-      "sidebar-header-toggle-mobile",
-    );
+    const mobileSidebarToggle = page.getByTestId("sidebar-toggle");
     await mobileSidebarToggle.click();
     await expect(
       page.locator('[data-sidebar="sidebar"][data-mobile="true"]'),
@@ -170,9 +168,43 @@ test.describe("User Settings Popup", () => {
     await drawer.getByRole("button").first().click();
     await expect(drawer).not.toBeVisible();
 
-    await mobileSidebarToggle.click();
     await expect(
       page.locator('[data-sidebar="sidebar"][data-mobile="true"]'),
     ).not.toBeVisible();
+
+    await mobileSidebarToggle.click();
+    await expect(
+      page.locator('[data-sidebar="sidebar"][data-mobile="true"]'),
+    ).toBeVisible();
+    await page.getByTestId("sidebar-header-toggle-mobile").click();
+    await expect(
+      page.locator('[data-sidebar="sidebar"][data-mobile="true"]'),
+    ).not.toBeVisible();
+  });
+
+  test("keeps the mobile page interactive after closing chat preferences", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    const mobileSidebarToggle = page.getByTestId("sidebar-toggle");
+    await mobileSidebarToggle.click();
+    await page.getByTestId("sidebar-user-button").click();
+    await page.getByTestId("chat-preferences-menu-item").click();
+
+    const drawer = page.getByRole("dialog", { name: "Chat Preferences" });
+    await expect(drawer).toBeVisible();
+    await drawer.getByRole("button").first().click();
+    await expect(drawer).not.toBeVisible();
+
+    await expect(
+      page.locator('[data-sidebar="sidebar"][data-mobile="true"]'),
+    ).not.toBeVisible();
+    await mobileSidebarToggle.click();
+    await expect(
+      page.locator('[data-sidebar="sidebar"][data-mobile="true"]'),
+    ).toBeVisible();
   });
 });

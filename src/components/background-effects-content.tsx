@@ -142,9 +142,7 @@ export function BackgroundEffectsContent() {
             size="sm"
             onClick={() => {
               effectPreferencesManager.reset();
-              toast.success(
-                "Reset to defaults — Light Rays, Magic Rays, Plasma & Stars enabled",
-              );
+              toast.success("Reset to defaults — Isometric Wave enabled");
             }}
           >
             <RotateCcw className="w-3.5 h-3.5 mr-1.5" />

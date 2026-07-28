@@ -15,6 +15,21 @@ const LEGACY_OPENROUTER_MODEL_IDS: Record<string, string> = {
 };
 
 export const useChatModels = (options?: SWRConfiguration) => {
+  const [isStoreHydrated, setIsStoreHydrated] = useState(() =>
+    appStore.persist.hasHydrated(),
+  );
+
+  useEffect(() => {
+    if (appStore.persist.hasHydrated()) {
+      setIsStoreHydrated(true);
+      return;
+    }
+
+    return appStore.persist.onFinishHydration(() => {
+      setIsStoreHydrated(true);
+    });
+  }, []);
+
   // Fetch custom models from DB API
   const { data: customModelsData } = useSWR<CustomModelEntry[]>(
     "/api/user/custom-models",
@@ -56,42 +71,47 @@ export const useChatModels = (options?: SWRConfiguration) => {
     dedupingInterval: 60_000 * 5,
     revalidateOnFocus: false,
     fallbackData: [],
-    onSuccess: (data) => {
-      const status = appStore.getState();
-      const selectedModel = status.chatModel
-        ? {
-            ...status.chatModel,
-            model:
-              status.chatModel.provider === "openRouter"
-                ? (LEGACY_OPENROUTER_MODEL_IDS[status.chatModel.model] ??
-                  status.chatModel.model)
-                : status.chatModel.model,
-          }
-        : undefined;
-      const selectedModelIsAvailable = data.some(
-        (provider) =>
-          provider.provider === selectedModel?.provider &&
-          provider.models.some((model) => model.name === selectedModel?.model),
-      );
-      const firstProvider = data.find((provider) => provider.models.length > 0);
-
-      if (
-        selectedModel &&
-        selectedModelIsAvailable &&
-        selectedModel.model !== status.chatModel?.model
-      ) {
-        appStore.setState({ chatModel: selectedModel });
-      } else if (!selectedModelIsAvailable && firstProvider) {
-        appStore.setState({
-          chatModel: {
-            provider: firstProvider.provider,
-            model: firstProvider.models[0].name,
-          },
-        });
-      }
-    },
     ...options,
   });
+
+  useEffect(() => {
+    if (!isStoreHydrated || !result.data?.length) return;
+
+    const status = appStore.getState();
+    const selectedModel = status.chatModel
+      ? {
+          ...status.chatModel,
+          model:
+            status.chatModel.provider === "openRouter"
+              ? (LEGACY_OPENROUTER_MODEL_IDS[status.chatModel.model] ??
+                status.chatModel.model)
+              : status.chatModel.model,
+        }
+      : undefined;
+    const selectedModelIsAvailable = result.data.some(
+      (provider) =>
+        provider.provider === selectedModel?.provider &&
+        provider.models.some((model) => model.name === selectedModel?.model),
+    );
+    const firstProvider = result.data.find(
+      (provider) => provider.models.length > 0,
+    );
+
+    if (
+      selectedModel &&
+      selectedModelIsAvailable &&
+      selectedModel.model !== status.chatModel?.model
+    ) {
+      appStore.setState({ chatModel: selectedModel });
+    } else if (!selectedModelIsAvailable && firstProvider) {
+      appStore.setState({
+        chatModel: {
+          provider: firstProvider.provider,
+          model: firstProvider.models[0].name,
+        },
+      });
+    }
+  }, [isStoreHydrated, result.data]);
 
   // Merge custom models into their respective providers
   const dataWithCustomModels = result.data?.map((providerInfo) => {

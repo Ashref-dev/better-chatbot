@@ -122,6 +122,7 @@ export function GenerateAgentDialog({
             />
             <div className="flex justify-end items-center gap-2">
               <SelectModel
+                align="center"
                 showProvider
                 popoverClassName="z-[12001]"
                 onSelect={(model) => setGenerateModel(model)}

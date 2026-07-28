@@ -32,7 +32,7 @@ import { ManageOpenRouterModelsDialog } from "./manage-openrouter-models-dialog"
 
 interface SelectModelProps {
   onSelect: (model: ChatModel) => void;
-  align?: "start" | "end";
+  align?: "start" | "center" | "end";
   currentModel?: ChatModel;
   showProvider?: boolean;
   popoverClassName?: string;

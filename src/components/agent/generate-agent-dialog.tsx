@@ -80,7 +80,7 @@ export function GenerateAgentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="xl:max-w-[40vw] w-full max-w-full">
+      <DialogContent className="w-full max-w-full xl:max-w-[40vw] max-sm:top-2 max-sm:left-2 max-sm:h-[calc(100dvh-1rem)] max-sm:w-[calc(100vw-1rem)] max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Generate Agent</DialogTitle>
           <DialogDescription className="sr-only">

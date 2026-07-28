@@ -25,7 +25,7 @@ export function AgentIconPicker({
   disabled = false,
   onChange,
 }: AgentIconPickerProps) {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   const handleColorChange = (color: string) => {
     onChange({
@@ -50,11 +50,11 @@ export function AgentIconPicker({
             backgroundColor: icon?.style?.backgroundColor,
           }}
           className={cn(
-            "transition-colors group items-center justify-center flex size-[5.5rem] shrink-0 rounded-xl ring ring-background",
+            "transition-colors group items-center justify-center flex size-[5.25rem] shrink-0 rounded-xl ring ring-background",
             !disabled && "hover:bg-secondary! cursor-pointer hover:ring-ring",
           )}
         >
-          <Avatar className="size-14">
+          <Avatar className="size-[3.25rem]">
             <AvatarImage
               src={icon?.value}
               className="group-hover:scale-110 transition-transform"
@@ -97,7 +97,7 @@ export function AgentIconPicker({
           lazyLoadEmojis
           open
           className="fade-300"
-          theme={theme === "dark" ? Theme.DARK : Theme.LIGHT}
+          theme={resolvedTheme === "dark" ? Theme.DARK : Theme.LIGHT}
           onEmojiClick={handleEmojiSelect}
         />
       </DropdownMenuContent>

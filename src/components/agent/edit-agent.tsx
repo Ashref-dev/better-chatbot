@@ -418,7 +418,7 @@ export default function EditAgent({
             )}
           </div>
           {false ? (
-            <Skeleton className="size-[5.5rem] shrink-0" />
+            <Skeleton className="size-[5.25rem] shrink-0" />
           ) : (
             <AgentIconPicker
               icon={agent.icon}

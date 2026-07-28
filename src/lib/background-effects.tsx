@@ -133,6 +133,39 @@ const GalaxyEffect: BackgroundEffect = {
   ),
 };
 
+const StarsEffect: BackgroundEffect = {
+  name: "stars",
+  component: dynamic(
+    () =>
+      import("ui/stars-background").then((mod) => {
+        const StarsWrapper = () => {
+          const [performanceMode, setPerformanceMode] = React.useState(false);
+
+          React.useEffect(() => {
+            const updateMode = () => {
+              setPerformanceMode(
+                effectPreferencesManager.getQualityMode() === "performance",
+              );
+            };
+            updateMode();
+
+            window.addEventListener(EFFECT_PREFS_CHANGED_EVENT, updateMode);
+            return () =>
+              window.removeEventListener(
+                EFFECT_PREFS_CHANGED_EVENT,
+                updateMode,
+              );
+          }, []);
+
+          return <mod.StarsBackground performance={performanceMode} />;
+        };
+
+        return { default: StarsWrapper };
+      }),
+    { ssr: false },
+  ),
+};
+
 const IsometricWaveEffect: BackgroundEffect = {
   name: "iso-wave",
   component: dynamic(() => import("ui/isometric-wave-grid"), { ssr: false }),
@@ -183,6 +216,7 @@ const effects: BackgroundEffect[] = [
   PlasmaEffect,
   PlasmaV2Effect,
   DottedSurfaceEffect,
+  StarsEffect,
   IsometricWaveEffect,
   DitheringWaveEffect,
   MagicRaysEffect,

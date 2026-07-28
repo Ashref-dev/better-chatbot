@@ -21,6 +21,7 @@ const EFFECT_DESCRIPTIONS: Record<string, string> = {
   "dither-wave": "Retro dithered sine wave shader",
   "magic-rays": "Soft animated light beams (CSS)",
   galaxy: "Starfield with twinkling and rotation",
+  stars: "Layered drifting star field with mouse parallax",
 };
 
 export function BackgroundEffectsContent() {
@@ -142,7 +143,7 @@ export function BackgroundEffectsContent() {
             onClick={() => {
               effectPreferencesManager.reset();
               toast.success(
-                "Reset to defaults — Light Rays, Magic Rays & Plasma enabled",
+                "Reset to defaults — Light Rays, Magic Rays, Plasma & Stars enabled",
               );
             }}
           >

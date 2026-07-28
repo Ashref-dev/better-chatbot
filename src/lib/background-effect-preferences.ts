@@ -18,7 +18,12 @@ const emitChange = () => {
   window.dispatchEvent(new Event(EFFECT_PREFS_CHANGED_EVENT));
 };
 
-const DEFAULT_ENABLED = new Set(["light-rays", "magic-rays", "plasma"]);
+const DEFAULT_ENABLED = new Set([
+  "light-rays",
+  "magic-rays",
+  "plasma",
+  "stars",
+]);
 
 const DEBUG_KEY = "BACKGROUND_EFFECT_DEBUG_V1";
 const debugStorage = getStorageManager<boolean>(DEBUG_KEY);

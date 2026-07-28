@@ -50,11 +50,11 @@ export function AgentIconPicker({
             backgroundColor: icon?.style?.backgroundColor,
           }}
           className={cn(
-            "transition-colors group items-center justify-center flex size-20 shrink-0 rounded-xl ring ring-background",
+            "transition-colors group items-center justify-center flex size-[5.5rem] shrink-0 rounded-xl ring ring-background",
             !disabled && "hover:bg-secondary! cursor-pointer hover:ring-ring",
           )}
         >
-          <Avatar className="size-12">
+          <Avatar className="size-14">
             <AvatarImage
               src={icon?.value}
               className="group-hover:scale-110 transition-transform"

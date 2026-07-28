@@ -88,6 +88,7 @@ export function StarsBackground({
   transition = { stiffness: 50, damping: 20 },
   starColor = "currentColor",
   performance = false,
+  style,
   ...props
 }: StarsBackgroundProps) {
   const offsetX = useMotionValue(1);
@@ -129,9 +130,14 @@ export function StarsBackground({
     <div
       data-slot="stars-background"
       className={cn(
-        "relative size-full overflow-hidden bg-background text-foreground",
+        "relative size-full overflow-hidden text-foreground",
         className,
       )}
+      style={{
+        background:
+          "radial-gradient(ellipse at bottom, color-mix(in srgb, var(--foreground) 12%, var(--background)) 0%, var(--background) 100%)",
+        ...style,
+      }}
       onMouseMove={handleMouseMove}
       {...props}
     >

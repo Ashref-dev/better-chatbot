@@ -111,7 +111,12 @@ export function AppSidebarUserInner(props: {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             side="top"
-            className="bg-background w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] min-w-60 rounded-lg sm:w-[--radix-dropdown-menu-trigger-width] sm:max-w-none"
+            className={cn(
+              "bg-background min-w-60 rounded-lg",
+              isMobile
+                ? "w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)]"
+                : "w-[--radix-dropdown-menu-trigger-width]",
+            )}
             align={isMobile ? "start" : "center"}
             onCloseAutoFocus={(event) => {
               const pendingPopup = pendingPopupRef.current;

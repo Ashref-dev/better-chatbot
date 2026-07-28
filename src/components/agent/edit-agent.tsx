@@ -457,48 +457,39 @@ export default function EditAgent({
           )}
         </div>
 
-        <div className="mt-6 flex flex-col gap-1 border-t border-border/60 pt-5">
-          <p className="text-sm font-medium text-foreground">
-            {t("Agent.agentSettingsTitle")}
-          </p>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            {t("Agent.agentSettingsDescription")}
-          </p>
-        </div>
-
-        <div className="flex min-w-0 flex-col gap-6">
+        <div className="mt-6 flex min-w-0 flex-col gap-6 border-t border-border/60 pt-5">
           <div className="flex min-w-0 flex-col gap-2">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="agent-role">{t("Agent.agentRoleLabel")}</Label>
+            <Label htmlFor="agent-role">{t("Agent.agentRoleLabel")}</Label>
+            <div className="flex min-w-0 items-center gap-2">
               <p
                 id="agent-role-help"
-                className="text-xs leading-relaxed text-muted-foreground"
+                className="min-w-0 flex-1 truncate text-xs text-muted-foreground"
               >
                 {t("Agent.thisAgentIs")} {t("Agent.expertIn")}
               </p>
+              {false ? (
+                <Skeleton className="h-10 min-w-0 flex-1" />
+              ) : (
+                <Input
+                  id="agent-role"
+                  data-testid="agent-role-input"
+                  disabled={isLoading || !hasEditAccess}
+                  aria-describedby="agent-role-help"
+                  placeholder={t("Agent.agentRolePlaceholder")}
+                  className="min-w-0 flex-1 border-transparent bg-secondary/40 placeholder:text-xs transition-colors hover:bg-input focus-visible:bg-input! ring-0!"
+                  value={agent.instructions?.role || ""}
+                  onChange={(e) =>
+                    setAgent({
+                      instructions: {
+                        ...agent.instructions,
+                        role: e.target.value || "",
+                      },
+                    })
+                  }
+                  readOnly={!hasEditAccess}
+                />
+              )}
             </div>
-            {false ? (
-              <Skeleton className="w-44 h-10" />
-            ) : (
-              <Input
-                id="agent-role"
-                data-testid="agent-role-input"
-                disabled={isLoading || !hasEditAccess}
-                aria-describedby="agent-role-help"
-                placeholder={t("Agent.agentRolePlaceholder")}
-                className="w-full max-w-full border-transparent bg-secondary/40 placeholder:text-xs transition-colors hover:bg-input focus-visible:bg-input! ring-0!"
-                value={agent.instructions?.role || ""}
-                onChange={(e) =>
-                  setAgent({
-                    instructions: {
-                      ...agent.instructions,
-                      role: e.target.value || "",
-                    },
-                  })
-                }
-                readOnly={!hasEditAccess}
-              />
-            )}
           </div>
 
           <div className="flex flex-col gap-2">

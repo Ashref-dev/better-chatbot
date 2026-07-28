@@ -460,7 +460,7 @@ export default function EditAgent({
         <div className="mt-6 flex min-w-0 flex-col gap-6 border-t border-border/60 pt-5">
           <div className="flex min-w-0 flex-col gap-2">
             <Label htmlFor="agent-role">{t("Agent.agentRoleLabel")}</Label>
-            <div className="flex min-w-0 items-center gap-1">
+            <div className="flex min-w-0 items-center gap-2">
               <p
                 id="agent-role-help"
                 className="max-w-[55%] shrink-0 truncate text-xs text-muted-foreground"

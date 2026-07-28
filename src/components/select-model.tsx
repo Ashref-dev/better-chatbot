@@ -35,6 +35,7 @@ interface SelectModelProps {
   align?: "start" | "end";
   currentModel?: ChatModel;
   showProvider?: boolean;
+  popoverClassName?: string;
 }
 
 export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
@@ -115,7 +116,7 @@ export const SelectModel = (props: PropsWithChildren<SelectModelProps>) => {
           )}
         </PopoverTrigger>
         <PopoverContent
-          className="p-0 w-[280px]"
+          className={cn("p-0 w-[280px]", props.popoverClassName)}
           align={props.align || "end"}
           data-testid="model-selector-popover"
         >

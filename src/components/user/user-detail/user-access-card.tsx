@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
-import { Button } from "ui/button";
-import { Label } from "ui/label";
-import { Shield, Lock, UserCheck, AlertTriangle, Trash2 } from "lucide-react";
-import { BasicUserWithLastLogin } from "app-types/user";
-import { UserRoleBadges } from "./user-role-badges";
-import { UserStatusBadge } from "./user-status-badge";
-import { UserRoleSelector } from "./user-role-selection-dialog";
-import { UpdateUserPasswordDialog } from "./user-update-password-dialog";
-import { UserDeleteDialog } from "./user-delete-dialog";
 import { useProfileTranslations } from "@/hooks/use-profile-translations";
+import { BasicUserWithLastLogin } from "app-types/user";
+import { AlertTriangle, Lock, Shield, Trash2, UserCheck } from "lucide-react";
+import { useState } from "react";
+import { Button } from "ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "ui/card";
+import { Label } from "ui/label";
+import { UserDeleteDialog } from "./user-delete-dialog";
+import { UserRoleBadges } from "./user-role-badges";
+import { UserRoleSelector } from "./user-role-selection-dialog";
+import { UserStatusBadge } from "./user-status-badge";
+import { UpdateUserPasswordDialog } from "./user-update-password-dialog";
 
-const APP_VERSION = "1.26.1";
-const LAST_UPDATED = "2026-06-01";
+const APP_VERSION = "1.26.2";
+const LAST_UPDATED = "2026-07-31";
 
 interface UserAccessCardProps {
   user: BasicUserWithLastLogin;

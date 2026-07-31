@@ -1,10 +1,14 @@
 import { appStore } from "@/app/store";
-import { fetcher } from "lib/utils";
-import useSWR, { SWRConfiguration } from "swr";
-import { useEffect, useState } from "react";
 import { getStorageManager } from "@/lib/browser-stroage";
 import { CustomModelEntry } from "app-types/user";
-import type { ModelProviderPresentation } from "app-types/chat";
+import {
+  type ChatModelProvider,
+  mergeCustomModelsIntoProviders,
+  resolveAvailableChatModel,
+} from "lib/ai/model-selection";
+import { fetcher } from "lib/utils";
+import { useEffect, useMemo, useState } from "react";
+import useSWR, { SWRConfiguration } from "swr";
 
 const hiddenModelsStorage = getStorageManager<string[]>("hidden-models");
 
@@ -31,11 +35,12 @@ export const useChatModels = (options?: SWRConfiguration) => {
   }, []);
 
   // Fetch custom models from DB API
-  const { data: customModelsData } = useSWR<CustomModelEntry[]>(
-    "/api/user/custom-models",
-    fetcher,
-    { dedupingInterval: 60_000, revalidateOnFocus: false, fallbackData: [] },
-  );
+  const { data: customModelsData, isLoading: isCustomModelsLoading } = useSWR<
+    CustomModelEntry[]
+  >("/api/user/custom-models", fetcher, {
+    dedupingInterval: 60_000,
+    revalidateOnFocus: false,
+  });
   const customModels = customModelsData ?? [];
 
   const [hiddenModels, setHiddenModels] = useState<string[]>(
@@ -55,27 +60,22 @@ export const useChatModels = (options?: SWRConfiguration) => {
     };
   }, []);
 
-  const result = useSWR<
-    {
-      provider: string;
-      hasAPIKey: boolean;
-      presentation?: ModelProviderPresentation;
-      models: {
-        name: string;
-        isToolCallUnsupported: boolean;
-        isImageInputUnsupported: boolean;
-        supportedFileMimeTypes: string[];
-      }[];
-    }[]
-  >("/api/chat/models", fetcher, {
+  const result = useSWR<ChatModelProvider[]>("/api/chat/models", fetcher, {
     dedupingInterval: 60_000 * 5,
     revalidateOnFocus: false,
     fallbackData: [],
     ...options,
   });
 
+  const providersWithCustomModels = useMemo(
+    () => mergeCustomModelsIntoProviders(result.data ?? [], customModels),
+    [result.data, customModels],
+  );
+
   useEffect(() => {
-    if (!isStoreHydrated || !result.data?.length) return;
+    if (!isStoreHydrated || !result.data?.length || isCustomModelsLoading) {
+      return;
+    }
 
     const status = appStore.getState();
     const selectedModel = status.chatModel
@@ -88,57 +88,28 @@ export const useChatModels = (options?: SWRConfiguration) => {
               : status.chatModel.model,
         }
       : undefined;
-    const selectedModelIsAvailable = result.data.some(
-      (provider) =>
-        provider.provider === selectedModel?.provider &&
-        provider.models.some((model) => model.name === selectedModel?.model),
-    );
-    const firstProvider = result.data.find(
-      (provider) => provider.models.length > 0,
+    const resolvedModel = resolveAvailableChatModel(
+      selectedModel,
+      providersWithCustomModels,
     );
 
     if (
-      selectedModel &&
-      selectedModelIsAvailable &&
-      selectedModel.model !== status.chatModel?.model
+      resolvedModel &&
+      (resolvedModel.provider !== status.chatModel?.provider ||
+        resolvedModel.model !== status.chatModel?.model)
     ) {
-      appStore.setState({ chatModel: selectedModel });
-    } else if (!selectedModelIsAvailable && firstProvider) {
-      appStore.setState({
-        chatModel: {
-          provider: firstProvider.provider,
-          model: firstProvider.models[0].name,
-        },
-      });
+      appStore.setState({ chatModel: resolvedModel });
     }
-  }, [isStoreHydrated, result.data]);
+  }, [
+    isStoreHydrated,
+    isCustomModelsLoading,
+    providersWithCustomModels,
+    result.data,
+  ]);
 
   // Merge custom models into their respective providers
-  const dataWithCustomModels = result.data?.map((providerInfo) => {
-    const providerCustom = customModels.filter(
-      (m) => m.provider === providerInfo.provider,
-    );
-    const builtInModelIds = new Set(
-      providerInfo.models.map((model) => model.name),
-    );
-
-    const allModels =
-      providerCustom.length === 0
-        ? providerInfo.models
-        : [
-            ...providerInfo.models,
-            ...providerCustom
-              .filter((model) => !builtInModelIds.has(model.modelId))
-              .map((model) => ({
-                name: model.modelId,
-                isToolCallUnsupported: !model.supportsTools,
-                isImageInputUnsupported: true,
-                supportedFileMimeTypes: [] as string[],
-              })),
-          ];
-
-    // Filter out hidden models
-    const visibleModels = allModels.filter(
+  const dataWithCustomModels = providersWithCustomModels.map((providerInfo) => {
+    const visibleModels = providerInfo.models.filter(
       (m) => !hiddenModels.includes(`${providerInfo.provider}:${m.name}`),
     );
 

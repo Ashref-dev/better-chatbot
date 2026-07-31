@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Model Selection", () => {
   test.use({ storageState: "tests/.auth/admin.json" });
@@ -73,6 +73,68 @@ test.describe("Model Selection", () => {
       .textContent();
     expect(newModel).not.toBe(currentModel);
     expect(newModel).toBeTruthy();
+  });
+
+  test("should retain a custom model after refresh", async ({ page }) => {
+    const customModel = {
+      provider: "nvidia",
+      modelId: "acme/persistent-custom-model",
+      supportsTools: true,
+    };
+
+    await page.addInitScript(() => {
+      localStorage.removeItem("mc-app-store-v2.0.1");
+    });
+    await page.route("**/api/chat/models", async (route) => {
+      await route.fulfill({
+        json: [
+          {
+            provider: "hermesai",
+            hasAPIKey: true,
+            models: [
+              {
+                name: "solidrust/Hermes-3-Llama-3.1-8B-AWQ",
+                isToolCallUnsupported: false,
+                isImageInputUnsupported: true,
+                supportedFileMimeTypes: [],
+              },
+            ],
+          },
+          {
+            provider: "nvidia",
+            hasAPIKey: true,
+            models: [
+              {
+                name: "thinkingmachines/inkling",
+                isToolCallUnsupported: false,
+                isImageInputUnsupported: false,
+                supportedFileMimeTypes: [],
+              },
+            ],
+          },
+        ],
+      });
+    });
+    await page.route("**/api/user/custom-models", async (route) => {
+      await route.fulfill({ json: [customModel] });
+    });
+
+    await page.goto("/");
+    await expect(page.getByTestId("model-selector-button")).toBeVisible();
+    await page.getByTestId("model-selector-button").click();
+    await page
+      .getByTestId(
+        `model-option-${customModel.provider}-${customModel.modelId}`,
+      )
+      .click();
+    await expect(page.getByTestId("selected-model-name")).toHaveText(
+      "Persistent Custom Model",
+    );
+
+    await page.reload();
+    await expect(page.getByTestId("selected-model-name")).toHaveText(
+      "Persistent Custom Model",
+    );
   });
 
   test("should use selected model in agent creation", async ({ page }) => {

@@ -1578,38 +1578,31 @@ body:hover::-webkit-scrollbar-thumb,
 }
 
 /* Keep the mobile sidebar quick and smooth without changing other sheets. */
-.sidebar-mobile-sheet {
-  --sidebar-motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+.sidebar-mobile-sheet,
+.sidebar-mobile-overlay {
+  --sidebar-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
   animation-timing-function: var(--sidebar-motion-ease) !important;
   transition-timing-function: var(--sidebar-motion-ease) !important;
+}
+
+.sidebar-mobile-sheet {
   will-change: transform;
 }
 
-.sidebar-mobile-sheet[data-state="open"] {
-  animation-duration: 280ms !important;
-  transition-duration: 280ms !important;
-}
-
-.sidebar-mobile-sheet[data-state="closed"] {
-  animation-duration: 220ms !important;
-  transition-duration: 220ms !important;
-}
-
 .sidebar-mobile-overlay {
-  --sidebar-motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  animation-timing-function: var(--sidebar-motion-ease) !important;
-  transition-timing-function: var(--sidebar-motion-ease) !important;
   will-change: opacity;
 }
 
+.sidebar-mobile-sheet[data-state="open"],
 .sidebar-mobile-overlay[data-state="open"] {
-  animation-duration: 280ms !important;
-  transition-duration: 280ms !important;
+  animation-duration: 340ms !important;
+  transition-duration: 340ms !important;
 }
 
+.sidebar-mobile-sheet[data-state="closed"],
 .sidebar-mobile-overlay[data-state="closed"] {
-  animation-duration: 220ms !important;
-  transition-duration: 220ms !important;
+  animation-duration: 260ms !important;
+  transition-duration: 260ms !important;
 }
 
 html:hover::-webkit-scrollbar-thumb,

@@ -68,6 +68,7 @@ export function UpdateUserPasswordDialog({
   }, {});
   return (
     <AlertDialog
+      modal={view !== "user"}
       open={showResetPasswordDialog}
       onOpenChange={(open) => {
         setShowResetPasswordDialog(open);

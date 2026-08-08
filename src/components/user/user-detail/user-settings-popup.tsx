@@ -31,6 +31,7 @@ export function UserSettingsPopup({
       onOpenChange={(open) => appStoreMutate({ openUserSettings: open })}
     >
       <DrawerContent
+        data-user-settings-drawer
         style={{
           userSelect: "text",
         }}

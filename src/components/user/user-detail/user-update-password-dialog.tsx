@@ -66,20 +66,29 @@ export function UpdateUserPasswordDialog({
     }
     return result;
   }, {});
+  const [dialogContainer, setDialogContainer] = useState<HTMLElement | null>(
+    null,
+  );
   return (
     <AlertDialog
       open={showResetPasswordDialog}
       onOpenChange={(open) => {
         setShowResetPasswordDialog(open);
+        if (open && view === "user") {
+          setDialogContainer(
+            document.querySelector<HTMLElement>("[data-user-settings-drawer]"),
+          );
+        }
         if (!open) {
           setErrorMessage(null);
+          setDialogContainer(null);
         }
       }}
     >
       <AlertDialogTrigger asChild disabled={disabled}>
         {children}
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent container={dialogContainer}>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("updatePasswordTitle")}</AlertDialogTitle>
           <AlertDialogDescription>

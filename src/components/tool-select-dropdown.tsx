@@ -21,7 +21,6 @@ import {
   ShieldAlertIcon,
   Waypoints,
   Wrench,
-  WrenchIcon,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -32,6 +31,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { motion } from "framer-motion";
@@ -64,10 +64,12 @@ import { Switch } from "ui/switch";
 import { useShallow } from "zustand/shallow";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import { useWorkflowToolList } from "@/hooks/queries/use-workflow-tool-list";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { WorkflowSummary } from "app-types/workflow";
 import { WorkflowGreeting } from "./workflow/workflow-greeting";
 import { AppDefaultToolkit } from "lib/ai/tools";
+import { APP_DEFAULT_TOOL_KIT } from "lib/ai/tools/tool-kit";
 import { ChatMention } from "app-types/chat";
 import {
   MobileAwareSubmenu,
@@ -108,7 +110,12 @@ const calculateToolCount = (
     (acc, server) => acc + (server?.tools?.length ?? 0),
     0,
   );
-  return mcpToolCount + allowedAppDefaultToolkit.length;
+  const appToolCount = allowedAppDefaultToolkit.reduce(
+    (acc, toolkit) =>
+      acc + Object.keys(APP_DEFAULT_TOOL_KIT[toolkit] ?? {}).length,
+    0,
+  );
+  return mcpToolCount + appToolCount;
 };
 
 const APP_TOOLKIT_ICONS: Record<AppDefaultToolkit, LucideIcon> = {
@@ -122,7 +129,97 @@ type ToolPreview = {
   key: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
+  toolNames: string[];
 };
+
+const toolCountLabel = (count: number) =>
+  `${count} ${count === 1 ? "tool" : "tools"}`;
+
+const getToolCount = (tools: ToolPreview[]) =>
+  tools.reduce((total, tool) => total + tool.toolNames.length, 0);
+
+function ToolNamesTooltip({
+  children,
+  toolNames,
+}: {
+  children: ReactNode;
+  toolNames: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suppressClickRef = useRef(false);
+
+  const clearHoldTimeout = useCallback(() => {
+    if (holdTimeoutRef.current) {
+      clearTimeout(holdTimeoutRef.current);
+      holdTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => clearHoldTimeout, [clearHoldTimeout]);
+
+  if (toolNames.length <= 1) return <>{children}</>;
+
+  return (
+    <Tooltip open={open} onOpenChange={setOpen}>
+      <TooltipTrigger asChild>
+        <span
+          onPointerEnter={() => setOpen(true)}
+          onPointerLeave={() => setOpen(false)}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setOpen(false)}
+          onPointerDown={(event) => {
+            if (event.pointerType !== "touch") return;
+            clearHoldTimeout();
+            holdTimeoutRef.current = setTimeout(() => {
+              suppressClickRef.current = true;
+              setOpen(true);
+            }, 450);
+          }}
+          onPointerUp={() => {
+            clearHoldTimeout();
+            if (suppressClickRef.current) setOpen(false);
+          }}
+          onPointerCancel={() => {
+            clearHoldTimeout();
+            setOpen(false);
+            suppressClickRef.current = false;
+          }}
+          onClick={(event) => {
+            if (!suppressClickRef.current) return;
+            event.preventDefault();
+            event.stopPropagation();
+            suppressClickRef.current = false;
+          }}
+        >
+          {children}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent
+        side={isMobile ? "top" : "right"}
+        align="center"
+        sideOffset={isMobile ? 10 : 8}
+        collisionPadding={12}
+        className="max-w-72 space-y-1.5 p-2.5 [&>svg]:hidden"
+      >
+        <p className="text-[11px] font-medium text-muted-foreground">
+          {toolCountLabel(toolNames.length)}
+        </p>
+        <div className="flex flex-wrap gap-1">
+          {toolNames.map((toolName) => (
+            <span
+              key={toolName}
+              className="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[10px] text-foreground"
+            >
+              {toolName}
+            </span>
+          ))}
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 const MotionButton = motion.create(Button);
 
@@ -132,7 +229,7 @@ type SelectedToolsPreviewProps = {
 
 function SelectedToolsPreview({ tools }: SelectedToolsPreviewProps): ReactNode {
   const visibleTools = tools.slice(0, 3);
-  const overflowCount = tools.length - visibleTools.length;
+  const overflowCount = getToolCount(tools) - getToolCount(visibleTools);
 
   return (
     <span className="flex items-center gap-1.5 whitespace-nowrap max-sm:gap-1">
@@ -262,18 +359,28 @@ export function ToolSelectDropdown({
         key: `default:${toolkit}`,
         label: translate[toolkit],
         icon: APP_TOOLKIT_ICONS[toolkit],
+        toolNames: Object.keys(APP_DEFAULT_TOOL_KIT[toolkit] ?? {}),
       }));
 
-    const mcpIds = new Set(mcpList.map((server) => server.id));
-    const mcpTools = Object.entries(allowedMcpServers ?? {})
-      .filter(([serverId]) => mcpIds.has(serverId))
-      .flatMap(([serverId, server]) =>
-        server.tools.map((toolName) => ({
-          key: `mcp:${serverId}:${toolName}`,
-          label: toolName,
-          icon: MCPIcon,
-        })),
-      );
+    const mcpToolNamesByServer = new Map(
+      mcpList.map((server) => [
+        server.id,
+        new Set(server.toolInfo.map((tool) => tool.name)),
+      ]),
+    );
+    const mcpTools = Object.entries(allowedMcpServers ?? {}).flatMap(
+      ([serverId, server]) =>
+        server.tools
+          .filter((toolName) =>
+            mcpToolNamesByServer.get(serverId)?.has(toolName),
+          )
+          .map((toolName) => ({
+            key: `mcp:${serverId}:${toolName}`,
+            label: toolName,
+            icon: MCPIcon,
+            toolNames: [toolName],
+          })),
+    );
 
     return [...defaultTools, ...mcpTools];
   }, [
@@ -291,16 +398,15 @@ export function ToolSelectDropdown({
   }, [mentions, selectedToolPreviews]);
 
   const hasMention = (mentions?.length ?? 0) > 0;
+  const selectedToolCount = getToolCount(selectedToolPreviews);
   const showSelectedTools =
-    !agentMention && !hasMention && bindingTools.length > 0 && !isLoading;
+    !agentMention && !hasMention && selectedToolCount > 0 && !isLoading;
 
   const triggerButton = useMemo(() => {
     return (
       <MotionButton
         aria-label={
-          showSelectedTools
-            ? `${bindingTools.length} tools selected`
-            : undefined
+          showSelectedTools ? `${selectedToolCount} tools selected` : undefined
         }
         layout="size"
         transition={{
@@ -335,14 +441,15 @@ export function ToolSelectDropdown({
     isLoading,
     open,
     selectedToolPreviews,
+    selectedToolCount,
     showSelectedTools,
   ]);
 
   useEffect(() => {
-    if (bindingTools.length > 128) {
+    if (selectedToolCount > 128) {
       toast("Too many tools selected, please select less than 128 tools");
     }
-  }, [bindingTools.length > 128]);
+  }, [selectedToolCount > 128]);
 
   return (
     <DropdownMenu
@@ -355,21 +462,7 @@ export function ToolSelectDropdown({
       }}
     >
       <DropdownMenuTrigger asChild>
-        <div>
-          <Tooltip>
-            <TooltipTrigger asChild>{triggerButton}</TooltipTrigger>
-            <TooltipContent align={align} side={side} className="p-4 text-xs  ">
-              <div className="flex items-center gap-2">
-                <WrenchIcon className="size-3.5" />
-                <span className="text-sm">{t("toolsSetup")}</span>
-              </div>
-
-              <p className="text-muted-foreground mt-4 whitespace-pre-wrap">
-                {t("toolsSetupDescription")}
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+        <div>{triggerButton}</div>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="md:w-72" align={align} side={side}>
         <MobileSubmenuProvider
@@ -1004,10 +1097,12 @@ function AppDefaultToolKitSelector() {
       const label = raw[toolkit] || toolkit;
       const id = toolkit;
       const icon = APP_TOOLKIT_ICONS[toolkit];
+      const toolNames = Object.keys(APP_DEFAULT_TOOL_KIT[toolkit] ?? {});
       return {
         label,
         id,
         icon,
+        toolNames,
       };
     });
   }, []);
@@ -1019,7 +1114,7 @@ function AppDefaultToolKitSelector() {
           <MobileCompatibleMenuItem
             key={tool.id}
             className={cn(
-              "cursor-pointer font-semibold text-xs text-muted-foreground",
+              "group cursor-pointer font-semibold text-xs text-muted-foreground",
               allowedAppDefaultToolkit?.includes(tool.id) && "text-foreground",
             )}
             onClick={(e) => {
@@ -1027,14 +1122,23 @@ function AppDefaultToolKitSelector() {
               toggleAppDefaultToolkit(tool.id);
             }}
           >
-            <tool.icon
-              className={cn(
-                "size-3.5",
-                allowedAppDefaultToolkit?.includes(tool.id) &&
-                  "text-foreground",
-              )}
-            />
-            {tool.label}
+            <ToolNamesTooltip toolNames={tool.toolNames}>
+              <span className="inline-flex min-w-0 items-center gap-2">
+                <tool.icon
+                  className={cn(
+                    "size-3.5",
+                    allowedAppDefaultToolkit?.includes(tool.id) &&
+                      "text-foreground",
+                  )}
+                />
+                <span>{tool.label}</span>
+                {tool.toolNames.length > 1 && (
+                  <span className="font-normal text-[11px] text-muted-foreground/60 transition-colors group-hover:text-muted-foreground group-focus:text-muted-foreground">
+                    {toolCountLabel(tool.toolNames.length)}
+                  </span>
+                )}
+              </span>
+            </ToolNamesTooltip>
             <Switch
               className="ml-auto"
               checked={allowedAppDefaultToolkit?.includes(tool.id)}

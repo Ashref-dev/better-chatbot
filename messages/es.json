@@ -346,6 +346,7 @@
     "configuration": "Configuración",
     "availableTools": "Herramientas Disponibles",
     "noToolsAvailable": "No hay herramientas disponibles",
+    "noMatchingTools": "No hay herramientas coincidentes",
     "overviewTitle": "Conecta Tu Primer Servidor",
     "overviewDescription": "Agrega servidores MCP para desbloquear integraciones de IA poderosas",
     "searchTools": "Buscar herramientas",

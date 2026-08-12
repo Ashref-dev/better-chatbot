@@ -345,6 +345,7 @@
     "configuration": "配置",
     "availableTools": "可用工具",
     "noToolsAvailable": "无可用工具",
+    "noMatchingTools": "没有匹配的工具",
     "overviewTitle": "连接您的第一个服务器",
     "overviewDescription": "添加 MCP 服务器以解锁强大的 AI 集成",
     "searchTools": "搜索工具",

@@ -768,6 +768,7 @@
     "configuration": "Konfigurasjon",
     "availableTools": "Tilgjengelige verktøy",
     "noToolsAvailable": "Ingen verktøy tilgjengelig",
+    "noMatchingTools": "Ingen samsvarende verktøy",
     "overviewTitle": "Koble til din første server",
     "overviewDescription": "Legg til MCP-servere for å låse opp kraftige AI-integrasjoner",
     "mcpServers": "MCP-servere",

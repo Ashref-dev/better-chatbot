@@ -345,6 +345,7 @@
     "configuration": "設定",
     "availableTools": "利用可能なツール",
     "noToolsAvailable": "利用可能なツールがありません",
+    "noMatchingTools": "一致するツールがありません",
     "overviewTitle": "最初のサーバーに接続",
     "overviewDescription": "強力なAI統合を解放するためにMCPサーバーを追加してください",
     "searchTools": "ツールを検索",

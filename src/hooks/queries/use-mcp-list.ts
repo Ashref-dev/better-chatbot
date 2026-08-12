@@ -19,6 +19,11 @@ export function useMcpList(options?: SWRConfiguration) {
         allowedMcpServers: objectFlow(prev.allowedMcpServers || {}).filter(
           (_, key) => ids.includes(key),
         ),
+        mcpToolSelections: Object.fromEntries(
+          Object.entries(prev.mcpToolSelections || {}).filter(([key]) =>
+            ids.includes(key),
+          ),
+        ),
       }));
     },
     ...options,

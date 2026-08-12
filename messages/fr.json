@@ -346,6 +346,7 @@
     "configuration": "Configuration",
     "availableTools": "Outils Disponibles",
     "noToolsAvailable": "Aucun outil disponible",
+    "noMatchingTools": "Aucun outil correspondant",
     "overviewTitle": "Connectez Votre Premier Serveur",
     "overviewDescription": "Ajoutez des serveurs MCP pour débloquer de puissantes intégrations IA",
     "searchTools": "Rechercher des outils",

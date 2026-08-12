@@ -768,6 +768,7 @@
     "configuration": "Configuration",
     "availableTools": "Available Tools",
     "noToolsAvailable": "No tools available",
+    "noMatchingTools": "No matching tools",
     "overviewTitle": "Connect Your First Server",
     "overviewDescription": "Add MCP servers to unlock powerful AI integrations",
     "mcpServers": "MCP Servers",

@@ -1,10 +1,10 @@
 "use client";
 import {
-  ChevronRight,
   FlaskConical,
   ShieldAlertIcon,
   Loader,
   RotateCw,
+  Search,
   Settings,
   Settings2,
   Wrench,
@@ -12,6 +12,8 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { Button } from "ui/button";
 import { Card, CardContent, CardHeader } from "ui/card";
+import { Checkbox } from "ui/checkbox";
+import { Input } from "ui/input";
 import JsonView from "ui/json-view";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -34,10 +36,113 @@ import { useTranslations } from "next-intl";
 import { Separator } from "ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { appStore } from "@/app/store";
-import { isString } from "lib/utils";
+import { cn, isString } from "lib/utils";
 import { redriectMcpOauth } from "lib/ai/mcp/oauth-redirect";
 import { BasicUser } from "app-types/user";
 import { canChangeVisibilityMCP } from "lib/auth/client-permissions";
+
+function useMcpToolSelection(tools: MCPToolInfo[], serverId: string) {
+  const appStoreMutate = appStore((state) => state.mutate);
+  const allowedMcpServers = appStore((state) => state.allowedMcpServers);
+  const mcpToolSelections = appStore((state) => state.mcpToolSelections);
+
+  const availableToolNames = useMemo(
+    () => tools.map((tool) => tool.name),
+    [tools],
+  );
+  const availableToolNamesSet = useMemo(
+    () => new Set(availableToolNames),
+    [availableToolNames],
+  );
+
+  const selectedToolNames = useMemo(() => {
+    const configuredTools =
+      mcpToolSelections?.[serverId] ?? allowedMcpServers?.[serverId]?.tools;
+
+    return new Set(
+      (configuredTools ?? availableToolNames).filter((toolName) =>
+        availableToolNamesSet.has(toolName),
+      ),
+    );
+  }, [
+    allowedMcpServers,
+    availableToolNames,
+    availableToolNamesSet,
+    mcpToolSelections,
+    serverId,
+  ]);
+
+  const updateToolNames = useCallback(
+    (update: (currentTools: string[]) => string[]) => {
+      appStoreMutate((prev) => {
+        const configuredTools =
+          prev.mcpToolSelections?.[serverId] ??
+          prev.allowedMcpServers?.[serverId]?.tools;
+        const currentTools = (configuredTools ?? availableToolNames).filter(
+          (toolName) => availableToolNamesSet.has(toolName),
+        );
+        const nextTools = update(currentTools).filter(
+          (toolName, index, list) =>
+            availableToolNamesSet.has(toolName) &&
+            list.indexOf(toolName) === index,
+        );
+
+        const currentAllowedServer = prev.allowedMcpServers?.[serverId];
+
+        return {
+          mcpToolSelections: {
+            ...(prev.mcpToolSelections ?? {}),
+            [serverId]: nextTools,
+          },
+          ...(currentAllowedServer
+            ? {
+                allowedMcpServers: {
+                  ...prev.allowedMcpServers,
+                  [serverId]: {
+                    ...currentAllowedServer,
+                    tools: nextTools,
+                  },
+                },
+              }
+            : {}),
+        };
+      });
+    },
+    [appStoreMutate, availableToolNames, availableToolNamesSet, serverId],
+  );
+
+  const toggleTool = useCallback(
+    (toolName: string) => {
+      updateToolNames((currentTools) =>
+        currentTools.includes(toolName)
+          ? currentTools.filter((name) => name !== toolName)
+          : [...currentTools, toolName],
+      );
+    },
+    [updateToolNames],
+  );
+
+  const toggleAllTools = useCallback(
+    (enabled: boolean) => {
+      updateToolNames(() => (enabled ? availableToolNames : []));
+    },
+    [availableToolNames, updateToolNames],
+  );
+
+  const allToolsSelected =
+    tools.length > 0 && tools.every((tool) => selectedToolNames.has(tool.name));
+  const noToolsSelected =
+    tools.length > 0 &&
+    tools.every((tool) => !selectedToolNames.has(tool.name));
+
+  return {
+    allToolsSelected,
+    noToolsSelected,
+    selectedToolNames,
+    toggleAllTools,
+    toggleTool,
+  };
+}
 
 // Main MCPCard component
 export const MCPCard = memo(function MCPCard({
@@ -56,6 +161,10 @@ export const MCPCard = memo(function MCPCard({
 }: MCPServerInfo & { user: BasicUser }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [visibilityChangeLoading, setVisibilityChangeLoading] = useState(false);
+  const [toolSearch, setToolSearch] = useState("");
+  const [collapsedSection, setCollapsedSection] = useState<
+    "configuration" | "tools" | null
+  >(null);
   const t = useTranslations("MCP");
   const appStoreMutate = appStore((state) => state.mutate);
   const { mutate } = useSWRConfig();
@@ -71,6 +180,45 @@ export const MCPCard = memo(function MCPCard({
 
   const needsAuthorization = status === "authorizing";
   const isDisabled = isLoading || needsAuthorization;
+  const hasConfiguration = isOwner && Boolean(config);
+  const activeCollapsedSection = hasConfiguration ? collapsedSection : null;
+  const isConfigurationExpanded = activeCollapsedSection !== "configuration";
+  const isToolsExpanded = activeCollapsedSection !== "tools";
+  const configurationFlexBasis = !hasConfiguration
+    ? "0%"
+    : activeCollapsedSection === "configuration"
+      ? "3rem"
+      : activeCollapsedSection === "tools"
+        ? "calc(100% - 3rem)"
+        : "50%";
+  const toolsFlexBasis = !hasConfiguration
+    ? "100%"
+    : activeCollapsedSection === "tools"
+      ? "3rem"
+      : activeCollapsedSection === "configuration"
+        ? "calc(100% - 3rem)"
+        : "50%";
+  const toolSelection = useMcpToolSelection(toolInfo, id);
+  const filteredTools = useMemo(() => {
+    const normalizedSearch = toolSearch.trim().toLowerCase();
+    if (!normalizedSearch) return toolInfo;
+
+    return toolInfo.filter(
+      (tool) =>
+        tool.name.toLowerCase().includes(normalizedSearch) ||
+        (tool.description ?? "").toLowerCase().includes(normalizedSearch),
+    );
+  }, [toolInfo, toolSearch]);
+
+  const toggleSection = useCallback(
+    (section: "configuration" | "tools") => {
+      if (!hasConfiguration) return;
+      setCollapsedSection((currentSection) =>
+        currentSection === section ? null : section,
+      );
+    },
+    [hasConfiguration],
+  );
 
   // Check permissions (kept for potential future use)
 
@@ -301,45 +449,206 @@ export const MCPCard = memo(function MCPCard({
         </div>
       )}
 
-      <div className="relative hidden sm:flex w-full">
-        <CardContent className="flex min-w-0 w-full flex-row text-sm max-h-[320px] overflow-hidden border-r-0">
+      <div className="relative hidden w-full sm:flex">
+        <CardContent className="flex min-h-0 min-w-0 w-full flex-row overflow-hidden border-r-0 text-sm max-h-[320px]">
           {/* Only show config to owners to prevent credential exposure */}
-          {isOwner && config && (
-            <div className="w-1/2 min-w-0 flex flex-col pr-2 border-r border-border">
-              <div className="flex items-center gap-2 mb-2 pt-2 pb-1 z-10">
-                <Settings size={14} className="text-muted-foreground" />
-                <h5 className="text-muted-foreground text-sm font-medium">
+          {hasConfiguration && (
+            <section
+              style={{ flexBasis: configurationFlexBasis }}
+              className={cn(
+                "flex min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-r border-border/80 transition-[flex-basis] duration-200 ease-out will-change-[flex-basis]",
+                isConfigurationExpanded ? "pr-3" : "px-1",
+              )}
+            >
+              <button
+                type="button"
+                className={cn(
+                  "flex min-h-8 w-full items-center gap-2 rounded-md px-1.5 py-1 text-left transition-colors hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  !isConfigurationExpanded && "justify-center",
+                )}
+                onClick={() => toggleSection("configuration")}
+                aria-controls={`mcp-configuration-${id}`}
+                aria-expanded={isConfigurationExpanded}
+                aria-label={t("configuration")}
+                title={t("configuration")}
+              >
+                <Settings
+                  size={14}
+                  className={cn(
+                    "shrink-0 transition-colors",
+                    isConfigurationExpanded
+                      ? "text-muted-foreground"
+                      : "text-muted-foreground/50",
+                  )}
+                />
+                <span
+                  className={cn(
+                    "max-w-[20rem] overflow-hidden truncate whitespace-nowrap text-sm font-medium text-muted-foreground",
+                    isConfigurationExpanded
+                      ? "opacity-100"
+                      : "pointer-events-none max-w-0 opacity-0",
+                  )}
+                >
                   {t("configuration")}
-                </h5>
-              </div>
-              <div className="flex-1 overflow-y-auto">
+                </span>
+              </button>
+              <div
+                id={`mcp-configuration-${id}`}
+                className={cn(
+                  "min-h-0 flex-1 overflow-y-auto pt-2",
+                  isConfigurationExpanded
+                    ? "opacity-100"
+                    : "pointer-events-none opacity-0",
+                )}
+                aria-hidden={!isConfigurationExpanded}
+              >
                 <JsonView data={config} />
               </div>
-            </div>
+            </section>
           )}
 
-          <div
-            className={`${isOwner && config ? "w-1/2" : "w-full"} min-w-0 flex flex-col ${isOwner && config ? "pl-4" : ""}`}
+          <section
+            style={{ flexBasis: toolsFlexBasis }}
+            className={cn(
+              "flex min-h-0 min-w-0 shrink-0 flex-col overflow-hidden transition-[flex-basis] duration-200 ease-out will-change-[flex-basis]",
+              hasConfiguration ? (isToolsExpanded ? "pl-4" : "px-1") : "p-0",
+            )}
           >
-            <div className="flex items-center gap-2 mb-4 pt-2 pb-1 z-10">
-              <Wrench size={14} className="text-muted-foreground" />
-              <h5 className="text-muted-foreground text-sm font-medium">
-                {t("availableTools")}
-              </h5>
+            <div
+              className={cn(
+                "z-10 mb-3 flex flex-col gap-2 pt-2 pb-1",
+                hasConfiguration ? (isToolsExpanded ? "pr-4" : "p-0") : "pr-2",
+              )}
+            >
+              <div className="flex items-center justify-between gap-2">
+                {hasConfiguration ? (
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex min-h-8 items-center gap-2 rounded-md px-1.5 py-1 text-left transition-colors hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      isToolsExpanded
+                        ? "min-w-0 flex-1"
+                        : "w-full justify-center",
+                    )}
+                    onClick={() => toggleSection("tools")}
+                    aria-controls={`mcp-tools-${id}`}
+                    aria-expanded={isToolsExpanded}
+                    aria-label={t("availableTools")}
+                    title={t("availableTools")}
+                  >
+                    <Wrench
+                      size={14}
+                      className={cn(
+                        "shrink-0 transition-colors",
+                        isToolsExpanded
+                          ? "text-muted-foreground"
+                          : "text-muted-foreground/50",
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "max-w-[20rem] overflow-hidden truncate whitespace-nowrap text-sm font-medium text-muted-foreground",
+                        isToolsExpanded
+                          ? "opacity-100"
+                          : "pointer-events-none max-w-0 opacity-0",
+                      )}
+                    >
+                      {t("availableTools")}
+                    </span>
+                  </button>
+                ) : (
+                  <div className="flex min-w-0 flex-1 items-center gap-2 px-1.5 py-1">
+                    <Wrench
+                      size={14}
+                      className="shrink-0 text-muted-foreground"
+                    />
+                    <span className="truncate text-sm font-medium text-muted-foreground">
+                      {t("availableTools")}
+                    </span>
+                  </div>
+                )}
+
+                {isToolsExpanded && toolInfo.length > 0 && (
+                  <div className="flex shrink-0 items-center gap-1 text-[11px] font-medium">
+                    <button
+                      type="button"
+                      className={cn(
+                        "transition-colors",
+                        toolSelection.allToolsSelected
+                          ? "text-foreground"
+                          : "text-muted-foreground/50 hover:text-muted-foreground",
+                      )}
+                      onClick={() => toolSelection.toggleAllTools(true)}
+                      aria-pressed={toolSelection.allToolsSelected}
+                    >
+                      On
+                    </button>
+                    <span className="text-muted-foreground/30">/</span>
+                    <button
+                      type="button"
+                      className={cn(
+                        "transition-colors",
+                        toolSelection.noToolsSelected
+                          ? "text-foreground"
+                          : "text-muted-foreground/50 hover:text-muted-foreground",
+                      )}
+                      onClick={() => toolSelection.toggleAllTools(false)}
+                      aria-pressed={toolSelection.noToolsSelected}
+                    >
+                      Off
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {toolInfo.length > 0 && (
+                <div
+                  className={cn(
+                    "relative w-full overflow-hidden",
+                    isToolsExpanded
+                      ? "max-h-10 opacity-100"
+                      : "pointer-events-none max-h-0 opacity-0",
+                  )}
+                >
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={toolSearch}
+                    onChange={(event) => setToolSearch(event.target.value)}
+                    placeholder={t("searchTools")}
+                    className="h-8 w-full pl-8 text-xs"
+                  />
+                </div>
+              )}
             </div>
 
-            <div className="flex-1 overflow-y-auto">
-              {toolInfo.length > 0 ? (
-                <ToolsList tools={toolInfo} serverId={id} />
+            <div
+              id={`mcp-tools-${id}`}
+              className={cn(
+                "min-h-0 flex-1 overflow-y-auto",
+                isToolsExpanded
+                  ? "opacity-100"
+                  : "pointer-events-none opacity-0",
+              )}
+              aria-hidden={!isToolsExpanded}
+            >
+              {filteredTools.length > 0 ? (
+                <ToolsList
+                  tools={filteredTools}
+                  serverId={id}
+                  selectedToolNames={toolSelection.selectedToolNames}
+                  onToggleTool={toolSelection.toggleTool}
+                />
               ) : (
                 <div className="bg-secondary/30 rounded-md p-3 text-center">
                   <p className="text-sm text-muted-foreground">
-                    {t("noToolsAvailable")}
+                    {toolSearch.trim()
+                      ? t("noMatchingTools")
+                      : t("noToolsAvailable")}
                   </p>
                 </div>
               )}
             </div>
-          </div>
+          </section>
         </CardContent>
       </div>
     </Card>
@@ -347,31 +656,44 @@ export const MCPCard = memo(function MCPCard({
 });
 
 // Tools list component
-const ToolsList = memo(
-  ({ tools, serverId }: { tools: MCPToolInfo[]; serverId: string }) => (
+const ToolsList = memo(function ToolsList({
+  tools,
+  serverId,
+  selectedToolNames,
+  onToggleTool,
+}: {
+  tools: MCPToolInfo[];
+  serverId: string;
+  selectedToolNames: Set<string>;
+  onToggleTool: (toolName: string) => void;
+}) {
+  return (
     <div className="space-y-2 pr-2">
       {tools.map((tool) => (
         <div
           key={tool.name}
-          className="flex items-start gap-2 bg-secondary rounded-md p-2 hover:bg-input transition-colors"
+          className="flex items-start gap-2 rounded-md bg-secondary p-2 transition-colors hover:bg-input"
         >
           <ToolDetailPopup tool={tool} serverId={serverId}>
-            <div className="flex-1 min-w-0 cursor-pointer">
-              <p className="font-medium text-sm mb-1 truncate">{tool.name}</p>
-              <p className="text-xs text-muted-foreground line-clamp-1">
+            <div className="min-w-0 flex-1 cursor-pointer">
+              <p className="mb-1 truncate text-sm font-medium">{tool.name}</p>
+              <p className="line-clamp-1 text-xs text-muted-foreground">
                 {tool.description}
               </p>
             </div>
           </ToolDetailPopup>
 
-          <div className="flex items-center px-1 justify-center self-stretch">
-            <ChevronRight size={16} />
-          </div>
+          <Checkbox
+            checked={selectedToolNames.has(tool.name)}
+            onCheckedChange={() => onToggleTool(tool.name)}
+            aria-label={`${tool.name}: ${selectedToolNames.has(tool.name) ? "enabled" : "disabled"}`}
+            className="mt-0.5"
+          />
         </div>
       ))}
     </div>
-  ),
-);
+  );
+});
 
 ToolsList.displayName = "ToolsList";
 

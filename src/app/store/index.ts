@@ -34,6 +34,7 @@ export interface AppState {
   currentThreadId: ChatThread["id"] | null;
   toolChoice: "auto" | "none" | "manual";
   allowedMcpServers?: Record<string, AllowedMCPServer>;
+  mcpToolSelections: Record<string, string[]>;
   allowedAppDefaultToolkit?: AppDefaultToolkit[];
   generatingTitleThreadIds: string[];
   archiveList: ArchiveWithItemCount[];
@@ -92,6 +93,7 @@ const initialState: AppState = {
   currentThreadId: null,
   toolChoice: "auto",
   allowedMcpServers: undefined,
+  mcpToolSelections: {},
   openUserSettings: false,
   allowedAppDefaultToolkit: [
     AppDefaultToolkit.Code,
@@ -133,6 +135,8 @@ export const appStore = create<AppState & AppDispatch>()(
         toolChoice: state.toolChoice || initialState.toolChoice,
         allowedMcpServers:
           state.allowedMcpServers || initialState.allowedMcpServers,
+        mcpToolSelections:
+          state.mcpToolSelections || initialState.mcpToolSelections,
         allowedAppDefaultToolkit: (
           state.allowedAppDefaultToolkit ??
           initialState.allowedAppDefaultToolkit

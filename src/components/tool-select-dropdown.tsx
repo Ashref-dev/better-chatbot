@@ -38,7 +38,6 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
-import { Checkbox } from "ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -56,7 +55,6 @@ import {
   DropdownMenuTrigger,
 } from "ui/dropdown-menu";
 import { Input } from "ui/input";
-import { MCPIcon } from "ui/mcp-icon";
 
 import { useTranslations } from "next-intl";
 
@@ -80,8 +78,8 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { AgentSummary } from "app-types/agent";
 import { authClient } from "auth/client";
+import { resolveMcpIcon } from "lib/mcp-icon-resolver";
 
-import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { safe } from "ts-safe";
 import { mutate } from "swr";
 import { handleErrorWithToast } from "ui/shared-toast";
@@ -106,16 +104,16 @@ const calculateToolCount = (
   allowedMcpServers: Record<string, AllowedMCPServer> = {},
   allowedAppDefaultToolkit: AppDefaultToolkit[] = [],
 ) => {
-  const mcpToolCount = Object.values(allowedMcpServers).reduce(
-    (acc, server) => acc + (server?.tools?.length ?? 0),
-    0,
-  );
-  const appToolCount = allowedAppDefaultToolkit.reduce(
-    (acc, toolkit) =>
-      acc + Object.keys(APP_DEFAULT_TOOL_KIT[toolkit] ?? {}).length,
-    0,
-  );
-  return mcpToolCount + appToolCount;
+  const mcpServerCount = Object.values(allowedMcpServers).filter(
+    (server) => (server?.tools?.length ?? 0) > 0,
+  ).length;
+  const appToolkitCount = new Set(
+    allowedAppDefaultToolkit.filter(
+      (toolkit) => Object.keys(APP_DEFAULT_TOOL_KIT[toolkit] ?? {}).length > 0,
+    ),
+  ).size;
+
+  return mcpServerCount + appToolkitCount;
 };
 
 const APP_TOOLKIT_ICONS: Record<AppDefaultToolkit, LucideIcon> = {
@@ -134,9 +132,6 @@ type ToolPreview = {
 
 const toolCountLabel = (count: number) =>
   `${count} ${count === 1 ? "tool" : "tools"}`;
-
-const getToolCount = (tools: ToolPreview[]) =>
-  tools.reduce((total, tool) => total + tool.toolNames.length, 0);
 
 function ToolNamesTooltip({
   children,
@@ -229,7 +224,7 @@ type SelectedToolsPreviewProps = {
 
 function SelectedToolsPreview({ tools }: SelectedToolsPreviewProps): ReactNode {
   const visibleTools = tools.slice(0, 3);
-  const overflowCount = getToolCount(tools) - getToolCount(visibleTools);
+  const overflowCount = tools.length - visibleTools.length;
 
   return (
     <span className="flex items-center gap-1.5 whitespace-nowrap max-sm:gap-1">
@@ -362,24 +357,35 @@ export function ToolSelectDropdown({
         toolNames: Object.keys(APP_DEFAULT_TOOL_KIT[toolkit] ?? {}),
       }));
 
-    const mcpToolNamesByServer = new Map(
-      mcpList.map((server) => [
-        server.id,
-        new Set(server.toolInfo.map((tool) => tool.name)),
-      ]),
-    );
     const mcpTools = Object.entries(allowedMcpServers ?? {}).flatMap(
-      ([serverId, server]) =>
-        server.tools
-          .filter((toolName) =>
-            mcpToolNamesByServer.get(serverId)?.has(toolName),
-          )
-          .map((toolName) => ({
-            key: `mcp:${serverId}:${toolName}`,
-            label: toolName,
-            icon: MCPIcon,
-            toolNames: [toolName],
-          })),
+      ([serverId, server]) => {
+        const serverInfo = mcpList.find((server) => server.id === serverId);
+        if (!serverInfo || !server?.tools?.length) return [];
+
+        const availableTools = new Set(
+          serverInfo.toolInfo.map((tool) => tool.name),
+        );
+        const toolNames = server.tools.filter((toolName) =>
+          availableTools.has(toolName),
+        );
+        if (toolNames.length === 0) return [];
+
+        const toolDescriptions = serverInfo.toolInfo
+          .filter((tool) => toolNames.includes(tool.name))
+          .map((tool) => tool.description ?? "");
+
+        return [
+          {
+            key: `mcp:${serverId}`,
+            label: serverInfo.name,
+            icon: resolveMcpIcon(serverInfo.name, [
+              ...toolNames,
+              ...toolDescriptions,
+            ]),
+            toolNames,
+          },
+        ];
+      },
     );
 
     return [...defaultTools, ...mcpTools];
@@ -398,7 +404,7 @@ export function ToolSelectDropdown({
   }, [mentions, selectedToolPreviews]);
 
   const hasMention = (mentions?.length ?? 0) > 0;
-  const selectedToolCount = getToolCount(selectedToolPreviews);
+  const selectedToolCount = selectedToolPreviews.length;
   const showSelectedTools =
     !agentMention && !hasMention && selectedToolCount > 0 && !isLoading;
 
@@ -406,7 +412,9 @@ export function ToolSelectDropdown({
     return (
       <MotionButton
         aria-label={
-          showSelectedTools ? `${selectedToolCount} tools selected` : undefined
+          showSelectedTools
+            ? `${selectedToolCount} ${selectedToolCount === 1 ? "tool" : "tools"} selected`
+            : undefined
         }
         layout="size"
         transition={{
@@ -562,10 +570,20 @@ function ToolPresets() {
   }, []);
 
   const applyPreset = useCallback((preset: (typeof presets)[number]) => {
-    appStoreMutate({
+    const selectedTools = Object.fromEntries(
+      Object.entries(preset.allowedMcpServers ?? {}).map(
+        ([serverId, server]) => [serverId, server.tools],
+      ),
+    );
+
+    appStoreMutate((prev) => ({
       allowedMcpServers: preset.allowedMcpServers,
       allowedAppDefaultToolkit: preset.allowedAppDefaultToolkit,
-    });
+      mcpToolSelections: {
+        ...prev.mcpToolSelections,
+        ...selectedTools,
+      },
+    }));
     toast.success(`Preset "${preset.name}" applied`);
   }, []);
 
@@ -836,27 +854,51 @@ function McpServerSelector() {
           id: server.id,
           serverName: server.name,
           checked: allowedTools.length > 0,
-          tools: server.toolInfo.map((tool) => ({
-            name: tool.name,
-            checked: allowedTools.includes(tool.name),
-            description: tool.description,
-          })),
+          tools: server.toolInfo.map((tool) => tool.name),
           error: server.error,
           status: server.status,
         };
       });
   }, [mcpServerList, allowedMcpServers]);
 
-  const setMcpServerTool = useCallback(
-    (serverId: string, toolNames: string[]) => {
+  const handleAuthorize = useCallback((serverId: string) => {
+    safe(() => redriectMcpOauth(serverId))
+      .ifOk(() => mutate("/api/mcp/list"))
+      .ifFail(handleErrorWithToast);
+  }, []);
+
+  const toggleMcpServer = useCallback(
+    (serverId: string, availableToolNames: string[]) => {
       appStoreMutate((prev) => {
+        const currentTools = prev.allowedMcpServers?.[serverId]?.tools;
+        const configuredTools =
+          prev.mcpToolSelections?.[serverId] ??
+          currentTools ??
+          availableToolNames;
+        const shouldEnable = !currentTools?.length;
+        const toolsToUse =
+          shouldEnable && configuredTools.length === 0
+            ? availableToolNames
+            : configuredTools;
+
+        const nextAllowedMcpServers = { ...(prev.allowedMcpServers ?? {}) };
+        if (shouldEnable) {
+          nextAllowedMcpServers[serverId] = {
+            ...(nextAllowedMcpServers[serverId] ?? {}),
+            tools: toolsToUse,
+          };
+        } else {
+          delete nextAllowedMcpServers[serverId];
+        }
+
         return {
-          allowedMcpServers: {
-            ...prev.allowedMcpServers,
-            [serverId]: {
-              ...(prev.allowedMcpServers?.[serverId] ?? {}),
-              tools: toolNames,
-            },
+          allowedMcpServers:
+            Object.keys(nextAllowedMcpServers).length > 0
+              ? nextAllowedMcpServers
+              : undefined,
+          mcpToolSelections: {
+            ...(prev.mcpToolSelections ?? {}),
+            [serverId]: toolsToUse,
           },
         };
       });
@@ -878,194 +920,58 @@ function McpServerSelector() {
           </Link>
         </div>
       ) : (
-        selectedMcpServerList.map((server) => (
-          <MobileAwareSubmenu
-            key={server.id}
-            trigger={
-              <>
-                <div className="flex items-center justify-center p-1 rounded bg-input/40 border">
-                  <MCPIcon className="fill-foreground size-2.5" />
-                </div>
-                <span
-                  className={cn("truncate", !server.checked && "opacity-30")}
-                >
-                  {server.serverName}
-                </span>
-                {Boolean(server.error) ? (
-                  <span
-                    className={cn("text-xs text-destructive ml-1 p-1 rounded")}
-                  >
-                    error
-                  </span>
-                ) : null}
-              </>
-            }
-            triggerClassName="flex items-center gap-2 font-semibold cursor-pointer"
-            contentClassName="w-80 relative"
-            icon={
-              server.status === "authorizing" ? (
-                <ShieldAlertIcon className="size-3 text-muted-foreground" />
-              ) : server.tools.filter((t) => t.checked).length > 0 ? (
-                <span className="w-5 h-5 items-center justify-center flex text-[8px] text-muted-foreground font-semibold">
-                  {server.tools.filter((t) => t.checked).length}
-                </span>
-              ) : null
-            }
-            onTriggerClick={(e) => {
-              e.preventDefault();
-              setMcpServerTool(
-                server.id,
-                server.checked ? [] : server.tools.map((t) => t.name),
-              );
-            }}
-          >
-            <McpServerToolSelector
-              tools={server.tools}
-              isAuthorizing={server.status === "authorizing"}
-              checked={server.checked}
-              serverId={server.id}
-              onClickAllChecked={(checked) => {
-                setMcpServerTool(
-                  server.id,
-                  checked ? server.tools.map((t) => t.name) : [],
-                );
-              }}
-              onToolClick={(toolName, checked) => {
-                const currentTools = server.tools
-                  .filter((v) => v.checked)
-                  .map((v) => v.name);
+        selectedMcpServerList.map((server) => {
+          const ServerIcon = resolveMcpIcon(server.serverName, server.tools);
 
-                setMcpServerTool(
-                  server.id,
-                  checked
-                    ? currentTools.concat(toolName)
-                    : currentTools.filter((v) => v !== toolName),
-                );
-              }}
-            />
-          </MobileAwareSubmenu>
-        ))
-      )}
-    </DropdownMenuGroup>
-  );
-}
-
-interface McpServerToolSelectorProps {
-  tools: {
-    name: string;
-    checked: boolean;
-    description: string;
-  }[];
-  isAuthorizing: boolean;
-  serverId: string;
-  onClickAllChecked: (checked: boolean) => void;
-  checked: boolean;
-  onToolClick: (toolName: string, checked: boolean) => void;
-}
-function McpServerToolSelector({
-  tools,
-  serverId,
-  onClickAllChecked,
-  isAuthorizing,
-  checked,
-  onToolClick,
-}: McpServerToolSelectorProps) {
-  const t = useTranslations("Common");
-  const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
-  const filteredTools = useMemo(() => {
-    return tools.filter((tool) =>
-      tool.name.toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [tools, search]);
-
-  const handleAuthorize = useCallback(
-    () =>
-      safe(() => setLoading(true))
-        .map(() => redriectMcpOauth(serverId))
-        .ifOk(() => mutate("/api/mcp/list"))
-        .ifFail(handleErrorWithToast)
-        .watch(() => setLoading(false)),
-
-    [serverId],
-  );
-
-  if (isAuthorizing) {
-    return (
-      <Alert
-        className="cursor-pointer hover:bg-accent/10 transition-colors border-none"
-        onClick={handleAuthorize}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleAuthorize();
-          }
-        }}
-      >
-        {loading ? <Loader className="animate-spin" /> : <ShieldAlertIcon />}
-
-        <AlertTitle>Authorization Required</AlertTitle>
-        <AlertDescription>
-          Click here to authorize this MCP server and access its tools.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-  return (
-    <div>
-      <DropdownMenuLabel
-        className="text-muted-foreground flex items-center gap-2"
-        onClick={(e) => {
-          e.preventDefault();
-          onClickAllChecked(!checked);
-        }}
-      >
-        <input
-          autoFocus
-          placeholder={t("search")}
-          value={search}
-          onKeyDown={(e) => {
-            e.stopPropagation();
-          }}
-          onChange={(e) => setSearch(e.target.value)}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          className="placeholder:text-muted-foreground flex w-full text-xs   outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
-        />
-        <div className="flex-1" />
-        <Switch checked={checked} />
-      </DropdownMenuLabel>
-      <DropdownMenuSeparator />
-      <div className="max-h-96 overflow-y-auto">
-        {filteredTools.length === 0 ? (
-          <div className="text-sm text-muted-foreground w-full h-full flex items-center justify-center py-6">
-            {t("noResults")}
-          </div>
-        ) : (
-          filteredTools.map((tool) => (
+          return (
             <MobileCompatibleMenuItem
-              key={tool.name}
-              className="flex items-center gap-2 cursor-pointer mb-1"
+              key={server.id}
+              disabled={
+                server.status === "loading" || server.tools.length === 0
+              }
+              className={cn(
+                "group cursor-pointer font-semibold text-xs text-muted-foreground",
+                server.checked && "text-foreground",
+              )}
               onClick={(e) => {
                 e.preventDefault();
-                onToolClick(tool.name, !tool.checked);
+                if (server.status === "authorizing") {
+                  handleAuthorize(server.id);
+                  return;
+                }
+                toggleMcpServer(server.id, server.tools);
               }}
             >
-              <div className="mx-1 flex-1 min-w-0">
-                <p className="font-medium text-xs mb-1 truncate">{tool.name}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {tool.description}
-                </p>
-              </div>
-              <Checkbox checked={tool.checked} className="ml-auto" />
+              <ServerIcon className="size-3.5" />
+              <span className="min-w-0 flex-1 truncate">
+                {server.serverName}
+              </span>
+              {Boolean(server.error) ? (
+                <span className="ml-1 rounded p-1 text-xs text-destructive">
+                  error
+                </span>
+              ) : null}
+              {server.status === "authorizing" ? (
+                <ShieldAlertIcon className="size-3 text-muted-foreground" />
+              ) : (
+                <Switch
+                  className="ml-auto"
+                  checked={server.checked}
+                  disabled={
+                    server.status === "loading" || server.tools.length === 0
+                  }
+                  onCheckedChange={() =>
+                    toggleMcpServer(server.id, server.tools)
+                  }
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={`${server.serverName}: ${server.checked ? "enabled" : "disabled"}`}
+                />
+              )}
             </MobileCompatibleMenuItem>
-          ))
-        )}
-      </div>
-    </div>
+          );
+        })
+      )}
+    </DropdownMenuGroup>
   );
 }
 
@@ -1132,11 +1038,6 @@ function AppDefaultToolKitSelector() {
                   )}
                 />
                 <span>{tool.label}</span>
-                {tool.toolNames.length > 1 && (
-                  <span className="font-normal text-[11px] text-muted-foreground/60 transition-colors group-hover:text-muted-foreground group-focus:text-muted-foreground">
-                    {toolCountLabel(tool.toolNames.length)}
-                  </span>
-                )}
               </span>
             </ToolNamesTooltip>
             <Switch

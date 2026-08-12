@@ -7,6 +7,7 @@ import { codeToHast } from "shiki/bundle/web";
 import { safe } from "ts-safe";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { cn } from "lib/utils";
+import { getCodeTheme } from "lib/code-theme";
 
 export function CodeBlock({
   code,
@@ -21,7 +22,8 @@ export function CodeBlock({
   className?: string;
   showLineNumbers?: boolean;
 }) {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
+  const codeTheme = getCodeTheme(resolvedTheme);
 
   const [component, setComponent] = useState<JSX.Element | null>(null);
 
@@ -30,37 +32,45 @@ export function CodeBlock({
       .map(async () => {
         const out = await codeToHast(code || "", {
           lang: lang,
-          theme: theme == "dark" ? "github-dark" : "github-light",
+          theme: codeTheme,
         });
         return toJsxRuntime(out, {
           Fragment,
           jsx,
           jsxs,
           components: {
-            pre: (props) => (
-              <pre
-                {...props}
-                lang={lang}
-                style={undefined}
-                className={cn(props.className, className)}
-              >
-                <div className={cn(showLineNumbers && "pl-12 relative")}>
-                  {showLineNumbers && (
-                    <div className="absolute left-0 top-0 w-6 flex flex-col select-none text-right text-muted-foreground">
-                      {code?.split("\n").map((_, index) => (
-                        <span key={index}>{index + 1}</span>
-                      ))}
-                    </div>
+            pre: (props) => {
+              const { style, ...preProps } = props;
+
+              return (
+                <pre
+                  {...preProps}
+                  style={{ ...style, backgroundColor: "transparent" }}
+                  lang={lang}
+                  className={cn(
+                    "min-w-0 overflow-x-auto bg-secondary/40 font-mono text-[0.85rem] leading-6",
+                    props.className,
+                    className,
                   )}
-                  {props.children}
-                </div>
-              </pre>
-            ),
+                >
+                  <div className={cn(showLineNumbers && "pl-12 relative")}>
+                    {showLineNumbers && (
+                      <div className="absolute left-0 top-0 w-6 flex flex-col select-none text-right text-muted-foreground">
+                        {code?.split("\n").map((_, index) => (
+                          <span key={index}>{index + 1}</span>
+                        ))}
+                      </div>
+                    )}
+                    {props.children}
+                  </div>
+                </pre>
+              );
+            },
           },
         }) as JSX.Element;
       })
       .ifOk(setComponent);
-  }, [theme, lang, code]);
+  }, [codeTheme, lang, code]);
 
   if (!code) return fallback;
 

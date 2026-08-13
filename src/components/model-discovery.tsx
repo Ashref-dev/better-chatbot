@@ -227,7 +227,7 @@ export function ModelDiscovery({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent className="pointer-events-auto isolate z-[11001] flex h-[calc(100dvh-1rem)] max-h-[860px] w-[calc(100vw-1rem)] max-w-5xl! flex-col gap-0 overflow-hidden p-0 sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)]">
         <DialogHeader className="shrink-0 border-b px-5 py-5 pr-12 sm:px-6">
           <DialogTitle>Discover {providerLabel} models</DialogTitle>

@@ -97,6 +97,42 @@ describe("customModelProvider file support metadata", () => {
     ]);
   });
 
+  it("attaches mimicked OpenCode client headers with a sticky session", () => {
+    const { customModelProvider, createOpenCodeSessionId } = modelsModule;
+    const sessionId = createOpenCodeSessionId("thread-123");
+    const model = customModelProvider.getModel(
+      { provider: "openCode", model: "big-pickle" },
+      undefined,
+      undefined,
+      sessionId,
+    ) as unknown as {
+      config: { headers: () => Record<string, string | undefined> };
+    };
+
+    const headers = model.config.headers();
+    expect(headers["x-opencode-client"]).toBe("vscode-copilot-chat");
+    // Header keys are normalized to lowercase by the SDK's Headers handling;
+    // the real client UA is preserved as the prefix.
+    expect(headers["user-agent"]).toMatch(
+      /^opencode-copilot-chat\/\d+\.\d+\.\d+ VSCode/,
+    );
+    expect(headers["x-opencode-session"]).toBe(sessionId);
+    expect(headers["x-opencode-request"]).toMatch(/^req-[0-9a-f]{8}$/);
+  });
+
+  it("derives a stable session id per thread", () => {
+    const { createOpenCodeSessionId } = modelsModule;
+    expect(createOpenCodeSessionId("thread-123")).toBe(
+      createOpenCodeSessionId("thread-123"),
+    );
+    expect(createOpenCodeSessionId("thread-123")).not.toBe(
+      createOpenCodeSessionId("thread-456"),
+    );
+    expect(createOpenCodeSessionId("thread-123")).toMatch(
+      /^vscode-[0-9a-f]{8}$/,
+    );
+  });
+
   it("includes default file support for OpenAI gpt-5.6-sol", () => {
     const { customModelProvider, getFilePartSupportedMimeTypes } = modelsModule;
     const model = customModelProvider.getModel({
@@ -119,11 +155,11 @@ describe("customModelProvider file support metadata", () => {
     );
   });
 
-  it("adds rich support for anthropic sonnet-4.6", () => {
+  it("adds rich support for anthropic claude-sonnet-5", () => {
     const { customModelProvider, getFilePartSupportedMimeTypes } = modelsModule;
     const model = customModelProvider.getModel({
       provider: "anthropic",
-      model: "sonnet-4.6",
+      model: "claude-sonnet-5",
     });
     expect(getFilePartSupportedMimeTypes(model)).toEqual(
       Array.from(ANTHROPIC_FILE_MIME_TYPES),

@@ -1,10 +1,10 @@
 "use client";
 
-import { CustomModelEntry } from "app-types/user";
-import { fetcher } from "lib/utils";
-import useSWR from "swr";
-import { useCallback, useEffect, useRef } from "react";
 import { customModelsManager } from "@/lib/ai/custom-models";
+import type { CustomModelEntry } from "app-types/user";
+import { fetcher } from "lib/utils";
+import { useCallback, useEffect, useRef } from "react";
+import useSWR from "swr";
 
 const API_URL = "/api/user/custom-models";
 const EVENT_NAME = "custom-models-changed";
@@ -85,6 +85,53 @@ export function useCustomModels() {
     [models, mutate],
   );
 
+  const addMany = useCallback(
+    async (entries: CustomModelEntry[]) => {
+      const next = [...models];
+      const additions: CustomModelEntry[] = [];
+
+      for (const entry of entries) {
+        const alreadyAdded = next.some(
+          (model) =>
+            model.provider === entry.provider &&
+            model.modelId === entry.modelId,
+        );
+        if (alreadyAdded) continue;
+
+        next.push(entry);
+        additions.push(entry);
+      }
+
+      if (additions.length === 0) return 0;
+
+      await mutate(
+        async () => {
+          const response = await fetch(API_URL, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(next),
+          });
+          if (!response.ok) {
+            throw new Error("Failed to save discovered models");
+          }
+          return next;
+        },
+        { optimisticData: next, rollbackOnError: true },
+      );
+
+      for (const entry of additions) {
+        customModelsManager.add(
+          entry.provider,
+          entry.modelId,
+          entry.supportsTools,
+        );
+      }
+      window.dispatchEvent(new Event(EVENT_NAME));
+      return additions.length;
+    },
+    [models, mutate],
+  );
+
   const remove = useCallback(
     async (provider: string, modelId: string) => {
       const next = models.filter(
@@ -124,5 +171,5 @@ export function useCustomModels() {
     [models],
   );
 
-  return { models, isLoading, error, add, remove, exists, mutate };
+  return { models, isLoading, error, add, addMany, remove, exists, mutate };
 }

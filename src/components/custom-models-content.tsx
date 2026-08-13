@@ -1,52 +1,49 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useCustomModels } from "@/hooks/use-custom-models";
 import { useApiKeys } from "@/hooks/use-api-keys";
+import { useCustomModels } from "@/hooks/use-custom-models";
 import { useHiddenModels } from "@/hooks/use-hidden-models";
-import useSWR from "swr";
+import { useModelLabelOverrides } from "@/hooks/use-model-label-overrides";
+import {
+  MODEL_DISCOVERY_PROVIDERS,
+  type ModelDiscoveryProvider,
+} from "@/lib/ai/model-discovery-types";
 import { modelLabelOverridesManager } from "@/lib/ai/model-label-overrides";
 import { resolveModelDisplay } from "@/lib/ai/model-labels";
-import { useModelLabelOverrides } from "@/hooks/use-model-label-overrides";
-import { Input } from "ui/input";
-import { Label } from "ui/label";
-import { Switch } from "ui/switch";
-import { Button } from "ui/button";
-import { ModelProviderIcon } from "ui/model-provider-icon";
+import type { ChatModelProvider } from "@/lib/ai/model-selection";
+import type { CustomModelEntry } from "app-types/user";
 import {
-  Trash2,
-  Plus,
   Boxes,
-  Loader,
-  Key,
+  Check,
   Eye,
   EyeOff,
-  RotateCcw,
-  Check,
-  X,
   Info,
+  Key,
+  Loader,
   Pencil,
+  Plus,
+  RotateCcw,
+  Search,
+  Trash2,
+  X,
 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
+import { Button } from "ui/button";
+import { Input } from "ui/input";
+import { Label } from "ui/label";
+import { ModelProviderIcon } from "ui/model-provider-icon";
+import { Switch } from "ui/switch";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "ui/tooltip";
-import { toast } from "sonner";
+import { ModelDiscovery } from "./model-discovery";
 
-const PROVIDERS = [
-  { key: "openRouter", label: "OpenRouter" },
-  { key: "openCode", label: "OpenCode" },
-  { key: "nvidia", label: "NVIDIA" },
-  { key: "groq", label: "Groq" },
-  { key: "openai", label: "OpenAI" },
-  { key: "google", label: "Google" },
-  { key: "anthropic", label: "Anthropic" },
-  { key: "xai", label: "xAI" },
-  { key: "ollama", label: "Ollama" },
-  { key: "hermesai", label: "HermesAI" },
-] as const;
+const PROVIDERS = MODEL_DISCOVERY_PROVIDERS;
 
 // Providers that accept user API keys
 const KEY_PROVIDERS = PROVIDERS.filter(
@@ -342,8 +339,21 @@ function ApiKeysSection() {
 }
 
 function CustomModelsSection() {
-  const { models, isLoading, add, remove, exists, mutate } = useCustomModels();
-  const [provider, setProvider] = useState<string>(PROVIDERS[0].key);
+  const { models, isLoading, add, addMany, remove, mutate } = useCustomModels();
+  const { data: builtInProviders, isLoading: isBuiltInModelsLoading } = useSWR<
+    ChatModelProvider[]
+  >(
+    "/api/chat/models",
+    (url: string) => fetch(url).then((response) => response.json()),
+    {
+      dedupingInterval: 60_000 * 5,
+      revalidateOnFocus: false,
+    },
+  );
+  const [provider, setProvider] = useState<ModelDiscoveryProvider>(
+    PROVIDERS[0].key,
+  );
+  const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
   const [modelId, setModelId] = useState("");
   const [customLabel, setCustomLabel] = useState("");
   const [customBadge, setCustomBadge] = useState("");
@@ -359,14 +369,32 @@ function CustomModelsSection() {
   const [editBadge, setEditBadge] = useState("");
   const [editSupportsTools, setEditSupportsTools] = useState(true);
 
+  const knownModels = useMemo(
+    () => [
+      ...models,
+      ...(builtInProviders ?? []).flatMap((providerInfo) =>
+        providerInfo.models.map((model) => ({
+          provider: providerInfo.provider,
+          modelId: model.name,
+          supportsTools: !model.isToolCallUnsupported,
+        })),
+      ),
+    ],
+    [builtInProviders, models],
+  );
+
   const handleAdd = async () => {
     const trimmedId = modelId.trim();
     if (!trimmedId) {
       toast.error("Please provide a model ID");
       return;
     }
-    if (exists(provider, trimmedId)) {
-      toast.error("This model already exists for this provider");
+    const isKnownModel = knownModels.some(
+      (model) =>
+        model.provider === provider && model.modelId.trim() === trimmedId,
+    );
+    if (isKnownModel) {
+      toast.error("This model is already available for this provider");
       return;
     }
 
@@ -383,6 +411,14 @@ function CustomModelsSection() {
     setCustomBadge("");
     setSupportsTools(true);
     toast.success("Model added");
+  };
+
+  const handleAddDiscoveredModels = async (entries: CustomModelEntry[]) => {
+    const count = await addMany(entries);
+    if (count > 0) {
+      toast.success(`${count} discovered model${count === 1 ? "" : "s"} added`);
+    }
+    return count;
   };
 
   const handleRemove = async (prov: string, mid: string) => {
@@ -484,7 +520,19 @@ function CustomModelsSection() {
       <div className="space-y-3 p-3 sm:p-4 border rounded-lg bg-muted/30">
         {/* Provider grid — uniform 2-col on mobile, 3-col on sm+ */}
         <div className="space-y-2">
-          <Label className="text-xs">Provider</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label className="text-xs">Provider</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() => setIsDiscoveryOpen(true)}
+            >
+              <Search className="mr-1.5 size-3.5" />
+              Discover models
+            </Button>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
             {PROVIDERS.map((p) => (
               <button
@@ -511,6 +559,16 @@ function CustomModelsSection() {
             </span>
           </p>
         </div>
+
+        <ModelDiscovery
+          open={isDiscoveryOpen}
+          onOpenChange={setIsDiscoveryOpen}
+          provider={provider}
+          onProviderChange={setProvider}
+          existingModels={knownModels}
+          existingModelsLoading={isLoading || isBuiltInModelsLoading}
+          onAddModels={handleAddDiscoveredModels}
+        />
 
         <div className="space-y-1.5">
           <Label htmlFor="cm-modelId" className="text-xs">

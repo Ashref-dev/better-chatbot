@@ -9,7 +9,11 @@ import {
   UIMessage,
 } from "ai";
 
-import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
+import {
+  createOpenCodeSessionId,
+  customModelProvider,
+  isToolCallUnsupportedModel,
+} from "lib/ai/models";
 import { withReasoningEffortFallback } from "lib/ai/reasoning-effort-fallback";
 import {
   getReasoningEffortSupport,
@@ -128,7 +132,12 @@ export async function POST(request: Request) {
       ? getReasoningEffortSupport(chatModel)
       : undefined;
     const model = withReasoningEffortFallback(
-      customModelProvider.getModel(chatModel, customModelId, userApiKeys),
+      customModelProvider.getModel(
+        chatModel,
+        customModelId,
+        userApiKeys,
+        createOpenCodeSessionId(id),
+      ),
       reasoningSupport,
     );
 

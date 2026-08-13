@@ -53,20 +53,59 @@ const OPENCODE_GO_ANTHROPIC_MODELS = new Set([
   "qwen3.5-plus",
 ]);
 
+// Mimic the official opencode-copilot-chat extension request headers so
+// OpenCode requests from this app are indistinguishable from the real client.
+const OPENCODE_CLIENT_HEADERS = {
+  "x-opencode-client": "vscode-copilot-chat",
+  "User-Agent": "opencode-copilot-chat/0.6.0 VSCode",
+} as const;
+
+// FNV-1a 32-bit hash, hex-encoded (same scheme as the extension's stableHash)
+function fnv1a(str: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < str.length; i += 1) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(16).padStart(8, "0");
+}
+
+// Build the mimicked client headers. The session id is sticky per thread when
+// provided; otherwise a random session is generated so every request still
+// carries a valid session. The request id is always fresh per provider.
+function buildOpenCodeHeaders(sessionId?: string): Record<string, string> {
+  const session =
+    sessionId ?? `vscode-${fnv1a(`${Date.now()}-${Math.random()}`)}`;
+  const requestId = `req-${fnv1a(`${Date.now()}-${Math.random()}`)}`;
+  return {
+    ...OPENCODE_CLIENT_HEADERS,
+    "x-opencode-session": session,
+    "x-opencode-request": requestId,
+  };
+}
+
+// Stable OpenCode session id derived from a thread id, so all requests in the
+// same thread share the same session (rate-limit bucket / cache affinity).
+export const createOpenCodeSessionId = (threadId: string): string =>
+  `vscode-${fnv1a(threadId)}`;
+
 function createOpenCodeModel(
   modelId: string,
   apiKey?: string,
+  sessionId?: string,
 ): LanguageModelV2 {
   const isGoModel = modelId.startsWith(OPENCODE_GO_MODEL_PREFIX);
   const remoteModelId = isGoModel
     ? modelId.slice(OPENCODE_GO_MODEL_PREFIX.length)
     : modelId;
   const resolvedApiKey = apiKey ?? process.env.OPENCODE_API_KEY;
+  const headers = buildOpenCodeHeaders(sessionId);
 
   if (isGoModel && OPENCODE_GO_ANTHROPIC_MODELS.has(remoteModelId)) {
     return createAnthropic({
       baseURL: OPENCODE_GO_BASE_URL,
       apiKey: resolvedApiKey,
+      headers,
     })(remoteModelId) as LanguageModelV2;
   }
 
@@ -74,6 +113,7 @@ function createOpenCodeModel(
     name: "OpenCode",
     baseURL: isGoModel ? OPENCODE_GO_BASE_URL : OPENCODE_ZEN_BASE_URL,
     apiKey: resolvedApiKey,
+    headers,
   })(remoteModelId) as LanguageModelV2;
 }
 
@@ -289,7 +329,14 @@ function createProviderModel(
   provider: string,
   modelId: string,
   userApiKey?: string,
+  sessionId?: string,
 ): LanguageModel {
+  // OpenCode always goes through createOpenCodeModel so the mimicked client
+  // headers (sticky session) are attached on every path.
+  if (provider === "openCode") {
+    return createOpenCodeModel(modelId, userApiKey, sessionId);
+  }
+
   if (userApiKey) {
     switch (provider) {
       case "openai":
@@ -316,8 +363,6 @@ function createProviderModel(
           baseURL: "https://integrate.api.nvidia.com/v1",
           apiKey: userApiKey,
         })(modelId) as LanguageModel;
-      case "openCode":
-        return createOpenCodeModel(modelId, userApiKey);
       case "ollama":
         return createOllama({
           baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
@@ -330,7 +375,6 @@ function createProviderModel(
   // Default providers (env-based keys)
   const defaultMap: Record<string, (id: string) => LanguageModel> = {
     openRouter: (id) => openrouter(id) as LanguageModel,
-    openCode: (id) => createOpenCodeModel(id),
     nvidia: (id) => nvidia(id) as LanguageModel,
     groq: (id) => groq(id) as LanguageModel,
     openai: (id) => openai(id) as LanguageModel,
@@ -359,6 +403,7 @@ export const customModelProvider = {
     model?: ChatModel,
     customModelId?: string,
     userApiKeys?: Record<string, string>,
+    sessionId?: string,
   ): LanguageModel => {
     if (!model) return fallbackModel;
 
@@ -366,18 +411,35 @@ export const customModelProvider = {
 
     // Custom model ID → always create dynamically
     if (customModelId) {
-      return createProviderModel(model.provider, customModelId, userKey);
+      return createProviderModel(
+        model.provider,
+        customModelId,
+        userKey,
+        sessionId,
+      );
     }
 
     // User has their own API key → create provider with that key
     if (userKey) {
-      return createProviderModel(model.provider, model.model, userKey);
+      return createProviderModel(
+        model.provider,
+        model.model,
+        userKey,
+        sessionId,
+      );
     }
 
     const modelId =
       model.provider === "openRouter"
         ? (OPENROUTER_MODEL_ID_ALIASES[model.model] ?? model.model)
         : model.model;
+
+    // OpenCode: create a fresh provider so the mimicked client headers are
+    // attached even when using the env key (static models carry a random
+    // session, but the chat route wants a sticky per-thread session).
+    if (model.provider === "openCode") {
+      return createProviderModel(model.provider, modelId, undefined, sessionId);
+    }
 
     return allModels[model.provider]?.[modelId] || fallbackModel;
   },

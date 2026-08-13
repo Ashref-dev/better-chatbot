@@ -39,6 +39,44 @@ const nvidia = createOpenAICompatible({
   apiKey: process.env.NVIDIA_API_KEY,
 });
 
+const OPENCODE_ZEN_BASE_URL = "https://opencode.ai/zen/v1";
+const OPENCODE_GO_BASE_URL = "https://opencode.ai/zen/go/v1";
+const OPENCODE_GO_MODEL_PREFIX = "opencode-go/";
+const OPENCODE_GO_ANTHROPIC_MODELS = new Set([
+  "minimax-m3",
+  "minimax-m2.7",
+  "minimax-m2.5",
+  "qwen3.7-max",
+  "qwen3.8-max",
+  "qwen3.7-plus",
+  "qwen3.6-plus",
+  "qwen3.5-plus",
+]);
+
+function createOpenCodeModel(
+  modelId: string,
+  apiKey?: string,
+): LanguageModelV2 {
+  const isGoModel = modelId.startsWith(OPENCODE_GO_MODEL_PREFIX);
+  const remoteModelId = isGoModel
+    ? modelId.slice(OPENCODE_GO_MODEL_PREFIX.length)
+    : modelId;
+  const resolvedApiKey = apiKey ?? process.env.OPENCODE_API_KEY;
+
+  if (isGoModel && OPENCODE_GO_ANTHROPIC_MODELS.has(remoteModelId)) {
+    return createAnthropic({
+      baseURL: OPENCODE_GO_BASE_URL,
+      apiKey: resolvedApiKey,
+    })(remoteModelId) as LanguageModelV2;
+  }
+
+  return createOpenAICompatible({
+    name: "OpenCode",
+    baseURL: isGoModel ? OPENCODE_GO_BASE_URL : OPENCODE_ZEN_BASE_URL,
+    apiKey: resolvedApiKey,
+  })(remoteModelId) as LanguageModelV2;
+}
+
 // Internal model used for conversation title generation. It is intentionally
 // separate from the visible model catalog and is available to every role.
 export const titleGenerationModel = nvidia("openai/gpt-oss-20b");
@@ -95,6 +133,17 @@ const staticModels = {
     "google/gemma-4-26b-a4b-it:free": openrouter(
       "google/gemma-4-26b-a4b-it:free",
     ),
+  },
+  openCode: {
+    "big-pickle": createOpenCodeModel("big-pickle"),
+    "deepseek-v4-flash-free": createOpenCodeModel("deepseek-v4-flash-free"),
+    "mimo-v2.5-free": createOpenCodeModel("mimo-v2.5-free"),
+    "hy3-free": createOpenCodeModel("hy3-free"),
+    "nemotron-3-ultra-free": createOpenCodeModel("nemotron-3-ultra-free"),
+    "nemotron-3.5-lightning-free": createOpenCodeModel(
+      "nemotron-3.5-lightning-free",
+    ),
+    "laguna-s-2.1-free": createOpenCodeModel("laguna-s-2.1-free"),
   },
   nvidia: {
     "thinkingmachines/inkling": nvidia("thinkingmachines/inkling"),
@@ -267,6 +316,8 @@ function createProviderModel(
           baseURL: "https://integrate.api.nvidia.com/v1",
           apiKey: userApiKey,
         })(modelId) as LanguageModel;
+      case "openCode":
+        return createOpenCodeModel(modelId, userApiKey);
       case "ollama":
         return createOllama({
           baseURL: process.env.OLLAMA_BASE_URL || "http://localhost:11434/api",
@@ -279,6 +330,7 @@ function createProviderModel(
   // Default providers (env-based keys)
   const defaultMap: Record<string, (id: string) => LanguageModel> = {
     openRouter: (id) => openrouter(id) as LanguageModel,
+    openCode: (id) => createOpenCodeModel(id),
     nvidia: (id) => nvidia(id) as LanguageModel,
     groq: (id) => groq(id) as LanguageModel,
     openai: (id) => openai(id) as LanguageModel,
@@ -360,6 +412,9 @@ function checkProviderAPIKey(provider: keyof typeof staticModels) {
       break;
     case "nvidia":
       key = process.env.NVIDIA_API_KEY;
+      break;
+    case "openCode":
+      key = process.env.OPENCODE_API_KEY;
       break;
     default:
       return true; // assume the provider has an API key

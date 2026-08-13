@@ -20,15 +20,9 @@ import {
   MCPToolInfo,
 } from "app-types/mcp";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import {
-  ArrowLeft,
-  ChevronRight,
-  Info,
-  Loader,
-  Trash2,
-  Wrench,
-} from "lucide-react";
+import { ArrowLeft, Info, Loader, Trash2, Wrench } from "lucide-react";
 import { Button } from "ui/button";
+import { Checkbox } from "ui/checkbox";
 import { Textarea } from "ui/textarea";
 import { safe } from "ts-safe";
 import { z } from "zod";
@@ -39,6 +33,7 @@ import { ToolDetailPopupContent } from "./tool-detail-popup";
 import { ExamplePlaceholder } from "ui/example-placeholder";
 import { Input } from "ui/input";
 import { appStore } from "@/app/store";
+import { useMcpToolSelection } from "@/hooks/use-mcp-tool-selection";
 import { useShallow } from "zustand/shallow";
 
 export function McpCustomizationPopup() {
@@ -80,6 +75,7 @@ export function McpServerCustomizationContent({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const [selectedTool, setSelectedTool] = useState<MCPToolInfo | null>(null);
+  const toolSelection = useMcpToolSelection(toolInfo, id);
 
   const handleSave = () => {
     setIsProcessing(true);
@@ -298,24 +294,35 @@ export function McpServerCustomizationContent({
                   <Alert
                     key={tool.name}
                     onClick={() => setSelectedTool(tool)}
-                    className="cursor-pointer hover:bg-input"
+                    className="min-w-0 cursor-pointer overflow-hidden hover:bg-input"
                   >
                     <Wrench className="size-3.5" />
-                    <div className="flex w-full gap-2 items-center">
-                      <div className="flex-1 min-w-0">
-                        <AlertTitle>{tool.name}</AlertTitle>
-                        <AlertDescription className="flex gap-2 w-full min-w-0 items-start">
+                    <div className="flex min-w-0 w-full items-center gap-2">
+                      <div className="min-w-0 flex-1 overflow-hidden">
+                        <AlertTitle className="min-w-0 truncate">
+                          {tool.name}
+                        </AlertTitle>
+                        <AlertDescription className="min-w-0 w-full overflow-hidden">
                           <p
                             className={cn(
                               !tool.prompt && "italic",
-                              "text-xs text-muted-foreground whitespace-pre-wrap break-all line-clamp-3",
+                              "min-w-0 text-xs text-muted-foreground whitespace-pre-wrap break-all line-clamp-3",
                             )}
                           >
                             {tool.prompt || "None"}
                           </p>
                         </AlertDescription>
                       </div>
-                      <ChevronRight className="size-3.5 flex-shrink-0" />
+                      <Checkbox
+                        checked={toolSelection.selectedToolNames.has(tool.name)}
+                        onCheckedChange={() =>
+                          toolSelection.toggleTool(tool.name)
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        aria-label={`${tool.name}: ${toolSelection.selectedToolNames.has(tool.name) ? "enabled" : "disabled"}`}
+                        className="shrink-0"
+                      />
                     </div>
                   </Alert>
                 );

@@ -23,6 +23,7 @@ import { Button } from "ui/button";
 import { Badge } from "ui/badge";
 import { Markdown } from "./markdown";
 import { cn, safeJSONParse, truncateString } from "lib/utils";
+import { getModelProviderLabel } from "lib/ai/provider-labels";
 import JsonView from "ui/json-view";
 import { useMemo, useState, memo, useEffect, useRef, useCallback } from "react";
 import { MessageEditor } from "./message-editor";
@@ -507,7 +508,9 @@ export const AssistMessagePart = memo(function AssistMessagePart({
                           <div className="space-y-0.5 flex-1">
                             <div className="text-sm font-medium text-foreground">
                               {metadata.modelProviderPresentation?.label ??
-                                metadata.chatModel.provider}
+                                getModelProviderLabel(
+                                  metadata.chatModel.provider,
+                                )}
                             </div>
                             <div className="text-xs text-muted-foreground">
                               <span className="mr-1">

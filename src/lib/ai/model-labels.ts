@@ -60,6 +60,27 @@ const DEFAULT_LABELS: Record<string, { label: string; badge?: string }> = {
     badge: "26B · free",
   },
 
+  // OpenCode
+  "big-pickle": { label: "Big Pickle", badge: "free" },
+  "deepseek-v4-flash-free": {
+    label: "DeepSeek V4",
+    badge: "flash · free",
+  },
+  "mimo-v2.5-free": { label: "Mimo 2.5", badge: "free" },
+  "hy3-free": { label: "HY3", badge: "free" },
+  "nemotron-3-ultra-free": {
+    label: "Nemotron 3",
+    badge: "ultra · free",
+  },
+  "nemotron-3.5-lightning-free": {
+    label: "Nemotron 3.5",
+    badge: "lightning · free",
+  },
+  "laguna-s-2.1-free": {
+    label: "Laguna 2.1",
+    badge: "XS · free",
+  },
+
   // NVIDIA (using full model IDs as keys)
   "deepseek-ai/deepseek-v4-flash": { label: "DeepSeek V4", badge: "flash" },
   "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {

@@ -201,21 +201,21 @@ export default function MCPEditor({
           </div>
 
           {/* Split view for config editor */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Left side: Textarea for editing */}
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Textarea
                 id="config-editor"
                 value={jsonString}
                 onChange={(e) => handleConfigChange(e.target.value)}
                 data-testid="mcp-config-editor"
-                className="font-mono h-[40vh] resize-none overflow-y-auto"
+                className="h-[40vh] min-w-0 max-w-full resize-none overflow-x-hidden overflow-y-auto font-mono break-all sm:break-normal"
                 placeholder={STDIO_ARGS_ENV_PLACEHOLDER}
               />
             </div>
 
             {/* Right side: JSON view */}
-            <div className="space-y-2 hidden sm:block">
+            <div className="hidden min-w-0 space-y-2 sm:block">
               <div className="border border-input rounded-md p-4 h-[40vh] overflow-auto relative bg-secondary">
                 <Label
                   htmlFor="config-view"

@@ -1,6 +1,7 @@
 import { customModelProvider } from "lib/ai/models";
 import { getModelProvidersForRole } from "lib/ai/model-access";
 import { getSession } from "auth/server";
+import { userRepository } from "lib/db/repository";
 
 export const GET = async () => {
   const session = await getSession();
@@ -12,9 +13,15 @@ export const GET = async () => {
     session.user.role,
     customModelProvider.modelsInfo,
   );
+  const preferences = await userRepository.getPreferences(session.user.id);
+  const userApiKeys = preferences?.apiKeys ?? {};
+  const modelsWithUserKeys = models.map((provider) => ({
+    ...provider,
+    hasAPIKey: provider.hasAPIKey || Boolean(userApiKeys[provider.provider]),
+  }));
 
   return Response.json(
-    models.sort((a, b) => {
+    modelsWithUserKeys.sort((a, b) => {
       if (a.hasAPIKey && !b.hasAPIKey) return -1;
       if (!a.hasAPIKey && b.hasAPIKey) return 1;
       return 0;

@@ -37,6 +37,7 @@ import { toast } from "sonner";
 
 const PROVIDERS = [
   { key: "openRouter", label: "OpenRouter" },
+  { key: "openCode", label: "OpenCode" },
   { key: "nvidia", label: "NVIDIA" },
   { key: "groq", label: "Groq" },
   { key: "openai", label: "OpenAI" },
@@ -520,7 +521,9 @@ function CustomModelsSection() {
             placeholder={
               provider === "openRouter"
                 ? "e.g., openai/gpt-5-beta"
-                : "e.g., my-custom-model"
+                : provider === "openCode"
+                  ? "e.g., opencode-go/kimi-k3"
+                  : "e.g., my-custom-model"
             }
             value={modelId}
             onChange={(e) => setModelId(e.target.value)}

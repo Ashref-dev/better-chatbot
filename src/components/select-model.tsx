@@ -28,6 +28,7 @@ import {
 } from "ui/command";
 import { ModelProviderIcon } from "ui/model-provider-icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
+import { getModelProviderLabel } from "lib/ai/provider-labels";
 import { ManageOpenRouterModelsDialog } from "./manage-openrouter-models-dialog";
 
 interface SelectModelProps {
@@ -267,7 +268,7 @@ const ProviderHeader = memo(function ProviderHeader({
           className="size-3"
         />
       )}
-      {presentation?.label ?? provider}
+      {presentation?.label ?? getModelProviderLabel(provider)}
       {provider === "openRouter" && onManageModels && (
         <button
           onClick={(e) => {

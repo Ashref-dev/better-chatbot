@@ -81,6 +81,22 @@ describe("customModelProvider file support metadata", () => {
     expect(modelNames).not.toContain("qwen/qwen3-coder-480b-a35b-instruct");
   });
 
+  it("registers only OpenCode free models by default", () => {
+    const openCodeProvider = modelsModule.customModelProvider.modelsInfo.find(
+      (item) => item.provider === "openCode",
+    );
+
+    expect(openCodeProvider?.models.map((model) => model.name)).toEqual([
+      "big-pickle",
+      "deepseek-v4-flash-free",
+      "mimo-v2.5-free",
+      "hy3-free",
+      "nemotron-3-ultra-free",
+      "nemotron-3.5-lightning-free",
+      "laguna-s-2.1-free",
+    ]);
+  });
+
   it("includes default file support for OpenAI gpt-5.6-sol", () => {
     const { customModelProvider, getFilePartSupportedMimeTypes } = modelsModule;
     const model = customModelProvider.getModel({

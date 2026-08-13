@@ -19,6 +19,8 @@ function hasEnvKey(provider: string): boolean {
       return !!process.env.GROQ_API_KEY;
     case "nvidia":
       return !!process.env.NVIDIA_API_KEY;
+    case "openCode":
+      return !!process.env.OPENCODE_API_KEY;
     case "openRouter":
       return !!process.env.OPENROUTER_API_KEY;
     default:
@@ -50,6 +52,7 @@ export async function GET() {
       "xai",
       "groq",
       "nvidia",
+      "openCode",
       "openRouter",
     ];
 

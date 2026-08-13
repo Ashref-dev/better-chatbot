@@ -14,6 +14,7 @@ import { Badge } from "ui/badge";
 import { Button } from "ui/button";
 import { Input } from "ui/input";
 import { ModelProviderIcon } from "ui/model-provider-icon";
+import { getModelProviderLabel } from "lib/ai/provider-labels";
 
 type ModelRow = {
   provider: string;
@@ -156,7 +157,9 @@ export function ModelLabelsContent() {
                 <div key={key} className="p-4 flex flex-col gap-3">
                   <div className="flex flex-wrap gap-2 items-center">
                     <ModelProviderIcon provider={provider} className="size-4" />
-                    <span className="text-sm font-medium">{provider}</span>
+                    <span className="text-sm font-medium">
+                      {getModelProviderLabel(provider)}
+                    </span>
                     <span className="text-xs text-muted-foreground truncate max-w-[60ch]">
                       {model}
                     </span>

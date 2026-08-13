@@ -66,7 +66,7 @@ export function CustomModelsContent() {
             "Manage provider keys used by your account (synced across devices).",
         },
         models: {
-          title: "Custom Models",
+          title: "Models",
           description:
             "Add/edit provider model IDs and tool-call support (synced across devices).",
         },
@@ -85,7 +85,7 @@ export function CustomModelsContent() {
         {(
           [
             { id: "keys", label: "API Keys", icon: Key },
-            { id: "models", label: "Custom Models", icon: Boxes },
+            { id: "models", label: "Models", icon: Boxes },
             { id: "visibility", label: "Visibility", icon: Eye },
           ] as const
         ).map(({ id, label, icon: Icon }) => (

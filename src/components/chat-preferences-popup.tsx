@@ -45,6 +45,8 @@ type PreferenceTabId =
   | "modelLabels"
   | "backgroundEffects";
 
+const MOBILE_TAB_TRANSITION_MS = 300;
+
 export function ChatPreferencesPopup() {
   const { data: session } = authClient.useSession();
   const canManageModels = hasFullModelAccess(session?.user.role);
@@ -271,6 +273,13 @@ function MobileTabScroller({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<number | null>(null);
+  const previousTabRef = useRef(tab);
+  const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const [transitioningFrom, setTransitioningFrom] = useState<number | null>(
+    null,
+  );
 
   const goNext = useCallback(() => {
     if (tab < tabs.length - 1) setTab(tab + 1);
@@ -297,6 +306,37 @@ function MobileTabScroller({
   const canGoPrev = tab > 0;
   const canGoNext = tab < tabs.length - 1;
 
+  // Keep the card that was centered visible for the duration of the track
+  // animation. The ref fallback prevents a one-frame flash before the effect
+  // records the outgoing tab.
+  const outgoingTab =
+    previousTabRef.current !== tab ? previousTabRef.current : transitioningFrom;
+
+  useEffect(() => {
+    const previousTab = previousTabRef.current;
+    if (previousTab === tab) return;
+
+    previousTabRef.current = tab;
+    setTransitioningFrom(previousTab);
+
+    if (transitionTimeoutRef.current) {
+      clearTimeout(transitionTimeoutRef.current);
+    }
+
+    transitionTimeoutRef.current = setTimeout(() => {
+      setTransitioningFrom(null);
+      transitionTimeoutRef.current = null;
+    }, MOBILE_TAB_TRANSITION_MS);
+  }, [tab]);
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="md:hidden flex items-center gap-2 pb-3">
       <button
@@ -322,30 +362,39 @@ function MobileTabScroller({
           className="flex gap-4 px-4"
           style={{
             transform: `translateX(calc(50% - ${tab * 216 + 108}px))`,
-            transition: "transform 300ms ease-out",
+            transition: `transform ${MOBILE_TAB_TRANSITION_MS}ms ease-out`,
           }}
         >
-          {tabs.map((tabItem, index) => (
-            <div
-              key={index}
-              onClick={() => setTab(index)}
-              className={`flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl font-medium cursor-pointer shrink-0 ${
-                tab === index
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted/50 text-muted-foreground hover:opacity-60"
-              }`}
-              style={{
-                width: "200px",
-                transform: tab === index ? "scale(1)" : "scale(0.9)",
-                opacity: tab === index ? 1 : 0.4,
-                transition:
-                  "transform 300ms ease-out, opacity 300ms ease-out, background-color 300ms ease-out",
-              }}
-            >
-              {tabItem.icon}
-              <span className="text-sm whitespace-nowrap">{tabItem.label}</span>
-            </div>
-          ))}
+          {tabs.map((tabItem, index) => {
+            const isActive = tab === index;
+            const isVisible = isActive || outgoingTab === index;
+
+            return (
+              <div
+                key={index}
+                onClick={() => setTab(index)}
+                aria-hidden={!isVisible}
+                className={`flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl font-medium shrink-0 ${
+                  isVisible ? "visible" : "invisible"
+                } ${
+                  isActive
+                    ? "bg-primary text-primary-foreground cursor-pointer"
+                    : "bg-muted/50 text-muted-foreground pointer-events-none"
+                }`}
+                style={{
+                  width: "200px",
+                  transform: isActive ? "scale(1)" : "scale(0.9)",
+                  opacity: isActive ? 1 : 0.4,
+                  transition: `transform ${MOBILE_TAB_TRANSITION_MS}ms ease-out, opacity ${MOBILE_TAB_TRANSITION_MS}ms ease-out, background-color ${MOBILE_TAB_TRANSITION_MS}ms ease-out`,
+                }}
+              >
+                {tabItem.icon}
+                <span className="text-sm whitespace-nowrap">
+                  {tabItem.label}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

@@ -354,6 +354,9 @@ function CustomModelsSection() {
     PROVIDERS[0].key,
   );
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
+  const [dialogContainer, setDialogContainer] = useState<HTMLElement | null>(
+    null,
+  );
   const [modelId, setModelId] = useState("");
   const [customLabel, setCustomLabel] = useState("");
   const [customBadge, setCustomBadge] = useState("");
@@ -419,6 +422,17 @@ function CustomModelsSection() {
       toast.success(`${count} discovered model${count === 1 ? "" : "s"} added`);
     }
     return count;
+  };
+
+  const handleDiscoveryOpenChange = (open: boolean) => {
+    setIsDiscoveryOpen(open);
+    if (open) {
+      setDialogContainer(
+        document.querySelector<HTMLElement>("[data-chat-preferences-drawer]"),
+      );
+    } else {
+      setDialogContainer(null);
+    }
   };
 
   const handleRemove = async (prov: string, mid: string) => {
@@ -527,7 +541,7 @@ function CustomModelsSection() {
               variant="outline"
               size="sm"
               className="h-8 text-xs"
-              onClick={() => setIsDiscoveryOpen(true)}
+              onClick={() => handleDiscoveryOpenChange(true)}
             >
               <Search className="mr-1.5 size-3.5" />
               Discover models
@@ -562,7 +576,8 @@ function CustomModelsSection() {
 
         <ModelDiscovery
           open={isDiscoveryOpen}
-          onOpenChange={setIsDiscoveryOpen}
+          onOpenChange={handleDiscoveryOpenChange}
+          container={dialogContainer}
           provider={provider}
           onProviderChange={setProvider}
           existingModels={knownModels}

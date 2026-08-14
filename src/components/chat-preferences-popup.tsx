@@ -149,9 +149,8 @@ export function ChatPreferencesPopup() {
       onOpenChange={(open) => appStoreMutate({ openChatPreferences: open })}
     >
       <DrawerContent
-        style={{
-          userSelect: "text",
-        }}
+        data-chat-preferences-drawer
+        style={{ userSelect: "text" }}
         className="max-h-[100vh]! w-full h-full border-none rounded-none flex flex-col bg-card overflow-hidden p-4 md:p-6"
       >
         <div className="flex items-center justify-end">

@@ -8,6 +8,7 @@ export const REASONING_EFFORT_LABELS: Record<ReasoningEffort, string> = {
   medium: "Medium",
   high: "High",
   xhigh: "Extra high",
+  max: "Max",
 };
 
 type ReasoningProviderOptionKey = "openai" | "openai-compatible";
@@ -32,17 +33,29 @@ const OPENAI_REASONING_MODEL_IDS = new Set([
 
 const OPENAI_REASONING_SUPPORT = {
   providerOptionKey: "openai",
-  efforts: ["minimal", "low", "medium", "high"],
+  efforts: ["minimal", "low", "medium", "high", "max"],
 } as const satisfies ReasoningEffortSupport;
 
 const GPT_OSS_REASONING_SUPPORT = {
   providerOptionKey: "openai-compatible",
-  efforts: ["low", "medium", "high"],
+  efforts: ["low", "medium", "high", "max"],
 } as const satisfies ReasoningEffortSupport;
 
 const INKLING_REASONING_SUPPORT = {
   providerOptionKey: "openai-compatible",
   efforts: ["none", "minimal", "low", "medium", "high", "xhigh"],
+} as const satisfies ReasoningEffortSupport;
+
+const OPENCODE_DEEPSEEK_REASONING_SUPPORT = {
+  providerOptionKey: "openai-compatible",
+  efforts: ["low", "high", "max"],
+} as const satisfies ReasoningEffortSupport;
+
+const OPENCODE_BIG_PICKLE_REASONING_SUPPORT = {
+  providerOptionKey: "openai-compatible",
+  efforts: ["none", "on"],
+  optionMode: "thinking-toggle",
+  defaultEffort: "none",
 } as const satisfies ReasoningEffortSupport;
 
 const DEEPSEEK_V4_REASONING_SUPPORT = {
@@ -104,6 +117,17 @@ export function getReasoningEffortSupport(
     model.model === "thinkingmachines/inkling"
   ) {
     return INKLING_REASONING_SUPPORT;
+  }
+
+  if (
+    model.provider === "openCode" &&
+    model.model === "deepseek-v4-flash-free"
+  ) {
+    return OPENCODE_DEEPSEEK_REASONING_SUPPORT;
+  }
+
+  if (model.provider === "openCode" && model.model === "big-pickle") {
+    return OPENCODE_BIG_PICKLE_REASONING_SUPPORT;
   }
 
   if (

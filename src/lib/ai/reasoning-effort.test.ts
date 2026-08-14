@@ -14,14 +14,14 @@ describe("reasoning effort support", () => {
       }),
     ).toEqual({
       providerOptionKey: "openai",
-      efforts: ["minimal", "low", "medium", "high"],
+      efforts: ["minimal", "low", "medium", "high", "max"],
     });
   });
 
   it("enables GPT OSS reasoning levels through OpenRouter and NVIDIA", () => {
     const support = {
       providerOptionKey: "openai-compatible",
-      efforts: ["low", "medium", "high"],
+      efforts: ["low", "medium", "high", "max"],
     };
 
     expect(
@@ -43,6 +43,14 @@ describe("reasoning effort support", () => {
       ),
     ).toEqual({
       "openai-compatible": { reasoningEffort: "high" },
+    });
+    expect(
+      getReasoningProviderOptions(
+        { provider: "nvidia", model: "openai/gpt-oss-120b" },
+        "max",
+      ),
+    ).toEqual({
+      "openai-compatible": { reasoningEffort: "max" },
     });
   });
 
@@ -82,6 +90,45 @@ describe("reasoning effort support", () => {
     });
     expect(getReasoningProviderOptions(model, "high")).toEqual({
       "openai-compatible": { reasoningEffort: "high" },
+    });
+  });
+
+  it("supports OpenCode DeepSeek V4 Flash's low, high, and max levels", () => {
+    const model = {
+      provider: "openCode",
+      model: "deepseek-v4-flash-free",
+    };
+
+    expect(getReasoningEffortSupport(model)).toEqual({
+      providerOptionKey: "openai-compatible",
+      efforts: ["low", "high", "max"],
+    });
+    expect(getReasoningProviderOptions(model, "max")).toEqual({
+      "openai-compatible": { reasoningEffort: "max" },
+    });
+  });
+
+  it("keeps OpenCode Big Pickle reasoning disabled by default", () => {
+    const model = {
+      provider: "openCode",
+      model: "big-pickle",
+    };
+
+    expect(getReasoningEffortSupport(model)).toEqual({
+      providerOptionKey: "openai-compatible",
+      efforts: ["none", "on"],
+      optionMode: "thinking-toggle",
+      defaultEffort: "none",
+    });
+    expect(getReasoningProviderOptions(model, undefined)).toEqual({
+      "openai-compatible": {
+        chat_template_kwargs: { enable_thinking: false },
+      },
+    });
+    expect(getReasoningProviderOptions(model, "on")).toEqual({
+      "openai-compatible": {
+        chat_template_kwargs: { enable_thinking: true },
+      },
     });
   });
 

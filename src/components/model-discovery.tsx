@@ -16,7 +16,14 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type TouchEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { Button } from "ui/button";
 import {
@@ -47,6 +54,103 @@ const PAGE_SIZE = 50;
 
 function normalizeModelId(modelId: string): string {
   return modelId.trim();
+}
+
+type DiscoveryProviderOption = (typeof MODEL_DISCOVERY_PROVIDERS)[number];
+
+function MobileProviderCarousel({
+  providers,
+  selectedProvider,
+  onSelect,
+}: {
+  providers: readonly DiscoveryProviderOption[];
+  selectedProvider: ModelDiscoveryProvider;
+  onSelect: (provider: ModelDiscoveryProvider) => void;
+}) {
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const selectedIndex = Math.max(
+    0,
+    providers.findIndex((entry) => entry.key === selectedProvider),
+  );
+
+  const moveBy = (direction: -1 | 1) => {
+    const nextIndex = selectedIndex + direction;
+    if (nextIndex < 0 || nextIndex >= providers.length) return;
+    onSelect(providers[nextIndex].key);
+  };
+
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    const touch = event.changedTouches[0];
+    touchStartRef.current = null;
+    if (!start || !touch) return;
+
+    const deltaX = start.x - touch.clientX;
+    const deltaY = start.y - touch.clientY;
+    if (Math.abs(deltaX) < 36 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+    moveBy(deltaX > 0 ? 1 : -1);
+  };
+
+  return (
+    <div
+      className="relative mt-2 h-8 overflow-hidden touch-pan-y sm:hidden"
+      role="tablist"
+      aria-label="Model discovery providers"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={() => {
+        touchStartRef.current = null;
+      }}
+    >
+      {providers.map((entry, index) => {
+        const distance = index - selectedIndex;
+        const isSelected = distance === 0;
+        const isVisible = Math.abs(distance) <= 1;
+        const transform =
+          distance === 0
+            ? "translateX(-50%)"
+            : distance < 0
+              ? "translateX(calc(-50% - 100% - 0.5rem))"
+              : "translateX(calc(-50% + 100% + 0.5rem))";
+
+        return (
+          <button
+            key={entry.key}
+            type="button"
+            role="tab"
+            aria-selected={isSelected}
+            aria-hidden={!isVisible}
+            tabIndex={isVisible ? 0 : -1}
+            onClick={() => onSelect(entry.key)}
+            className={`absolute top-0 left-1/2 inline-flex h-8 min-w-0 items-center justify-center gap-1 rounded-md border px-1.5 text-[11px] font-medium whitespace-nowrap transition-[transform,opacity,background-color,border-color] duration-300 ease-out focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              isSelected
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-transparent bg-muted/60 text-muted-foreground opacity-50 hover:bg-muted hover:text-foreground hover:opacity-80"
+            }`}
+            style={{
+              width: "calc((100% - 1rem) / 3)",
+              transform,
+              opacity: isVisible ? (isSelected ? 1 : 0.5) : 0,
+              pointerEvents: isVisible ? "auto" : "none",
+            }}
+          >
+            <ModelProviderIcon
+              provider={entry.key}
+              className="size-3 shrink-0"
+            />
+            <span className="truncate">{entry.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export function ModelDiscovery({
@@ -234,14 +338,16 @@ export function ModelDiscovery({
         container={container}
         className="pointer-events-auto isolate z-[11001] flex h-[calc(100dvh-1rem)] max-h-[860px] w-[calc(100vw-1rem)] max-w-5xl! flex-col gap-0 overflow-hidden p-0 sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)]"
       >
-        <DialogHeader className="shrink-0 border-b px-5 py-5 pr-12 sm:px-6">
-          <DialogTitle>Discover {providerLabel} models</DialogTitle>
-          <DialogDescription>
-            Browse the provider&apos;s live model list and add models to your
-            synced catalog without closing this window.
-          </DialogDescription>
+        <DialogHeader className="shrink-0 border-b px-5 py-5 sm:px-6">
+          <div className="flex flex-col gap-2 pr-7">
+            <DialogTitle>Discover {providerLabel} models</DialogTitle>
+            <DialogDescription>
+              Browse the provider&apos;s live model list and add models to your
+              synced catalog without closing this window.
+            </DialogDescription>
+          </div>
           <div
-            className="-mx-1 mt-2 overflow-x-auto pb-1"
+            className="-mx-1 mt-2 hidden overflow-x-auto pb-1 sm:block"
             role="tablist"
             aria-label="Model discovery providers"
           >
@@ -272,6 +378,11 @@ export function ModelDiscovery({
               })}
             </div>
           </div>
+          <MobileProviderCarousel
+            providers={MODEL_DISCOVERY_PROVIDERS}
+            selectedProvider={selectedProvider}
+            onSelect={selectProvider}
+          />
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col">

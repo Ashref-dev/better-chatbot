@@ -68,7 +68,7 @@ export function ModelLabelsContent() {
 
     const resolved = resolveModelDisplay(provider, model, overrides);
     return {
-      label: resolved.source === "fallback" ? "" : resolved.label,
+      label: resolved.label,
       badge: resolved.badge || "",
     };
   };

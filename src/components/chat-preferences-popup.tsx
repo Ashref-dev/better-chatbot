@@ -270,7 +270,6 @@ function MobileTabScroller({
   tab: number;
   setTab: (i: number) => void;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<number | null>(null);
   const previousTabRef = useRef(tab);
   const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -305,9 +304,8 @@ function MobileTabScroller({
   const canGoPrev = tab > 0;
   const canGoNext = tab < tabs.length - 1;
 
-  // Keep the card that was centered visible for the duration of the track
-  // animation. The ref fallback prevents a one-frame flash before the effect
-  // records the outgoing tab.
+  // Keep the previously centered card mounted during the crossfade. The ref
+  // fallback prevents a one-frame flash before the effect records it.
   const outgoingTab =
     previousTabRef.current !== tab ? previousTabRef.current : transitioningFrom;
 
@@ -352,49 +350,40 @@ function MobileTabScroller({
       </button>
 
       <div
-        ref={containerRef}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="flex-1 overflow-hidden relative"
+        className="relative h-10 min-w-0 flex-1 overflow-hidden"
       >
-        <div
-          className="flex gap-4 px-4"
-          style={{
-            transform: `translateX(calc(50% - ${tab * 216 + 108}px))`,
-            transition: `transform ${MOBILE_TAB_TRANSITION_MS}ms ease-out`,
-          }}
-        >
-          {tabs.map((tabItem, index) => {
-            const isActive = tab === index;
-            const isVisible = isActive || outgoingTab === index;
+        {tabs.map((tabItem, index) => {
+          const isActive = tab === index;
+          const isVisible = isActive || outgoingTab === index;
 
-            return (
-              <div
-                key={index}
-                onClick={() => setTab(index)}
-                aria-hidden={!isVisible}
-                className={`flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl font-medium shrink-0 ${
-                  isVisible ? "visible" : "invisible"
-                } ${
-                  isActive
-                    ? "bg-primary text-primary-foreground cursor-pointer"
-                    : "bg-muted/50 text-muted-foreground pointer-events-none"
-                }`}
-                style={{
-                  width: "200px",
-                  transform: isActive ? "scale(1)" : "scale(0.9)",
-                  opacity: isActive ? 1 : 0.4,
-                  transition: `transform ${MOBILE_TAB_TRANSITION_MS}ms ease-out, opacity ${MOBILE_TAB_TRANSITION_MS}ms ease-out, background-color ${MOBILE_TAB_TRANSITION_MS}ms ease-out`,
-                }}
-              >
-                {tabItem.icon}
-                <span className="text-sm whitespace-nowrap">
-                  {tabItem.label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+          return (
+            <div
+              key={index}
+              onClick={() => setTab(index)}
+              aria-hidden={!isVisible}
+              className={`absolute inset-x-0 top-0 mx-auto flex h-10 min-w-0 items-center justify-center gap-2.5 rounded-xl px-4 font-medium ${
+                isVisible ? "visible" : "invisible"
+              } ${
+                isActive
+                  ? "bg-primary text-primary-foreground cursor-pointer"
+                  : "pointer-events-none bg-muted/50 text-muted-foreground"
+              }`}
+              style={{
+                width: "min(200px, 100%)",
+                transform: `scale(${isActive ? 1 : 0.96})`,
+                opacity: isActive ? 1 : 0,
+                transition: `transform ${MOBILE_TAB_TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${MOBILE_TAB_TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), background-color ${MOBILE_TAB_TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+              }}
+            >
+              {tabItem.icon}
+              <span className="truncate text-sm whitespace-nowrap">
+                {tabItem.label}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <button

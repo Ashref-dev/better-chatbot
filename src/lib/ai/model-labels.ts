@@ -133,10 +133,11 @@ export const resolveModelDisplay = (
 
   const overrideLabel = override?.label?.trim();
   const overrideBadge = override?.badge?.trim();
+  const fallbackDisplay = beautifyModelId(rawModel);
 
   if (overrideLabel || overrideBadge) {
     return {
-      label: overrideLabel || defaultDisplay?.label || rawModel,
+      label: overrideLabel || defaultDisplay?.label || fallbackDisplay.label,
       badge: overrideBadge,
       source: "override",
     };
@@ -155,10 +156,9 @@ export const resolveModelDisplay = (
   }
 
   // Auto-beautify: extract model name from "org/model-name" format
-  const beautified = beautifyModelId(rawModel);
   return {
-    label: beautified.label,
-    badge: beautified.badge,
+    label: fallbackDisplay.label,
+    badge: fallbackDisplay.badge,
     source: "fallback",
   };
 };
